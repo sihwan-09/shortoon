@@ -11,15 +11,12 @@ export default function Home() {
       <nav className="bottom-nav" aria-label="Main navigation">
         <a className="bottom-nav-item is-active" href="/" aria-current="page" aria-label="Home">
           <span className="home-icon" aria-hidden="true" />
-          <small>HOME</small>
         </a>
         <button className="bottom-nav-item upload-nav-item" type="button" aria-label="Upload shorttoon">
           <span className="plus-icon" aria-hidden="true">+</span>
-          <small>UPLOAD</small>
         </button>
         <button className="bottom-nav-item" type="button" aria-label="My page">
           <span className="my-icon" aria-hidden="true">MY</span>
-          <small>MY</small>
         </button>
       </nav>
     </main>
