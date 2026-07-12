@@ -94,6 +94,37 @@ a { color: inherit; text-decoration: none; }
 .comic-meta strong { font-size: 16px; }
 .comic-meta span { color: var(--text-muted); font-size: 12px; }
 .cut-count { font-size: 12px; font-weight: 900; font-variant-numeric: tabular-nums; }
+.action-rail { position: absolute; z-index: 9; right: 16px; bottom: 100px; display: flex; flex-direction: column; gap: 12px; }
+.action-rail a, .action-rail button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; padding: 0; color: var(--text); background: transparent; border: 0; cursor: pointer; }
+.action-rail span { display: grid; width: 44px; height: 44px; place-items: center; background: rgba(17,17,17,.82); border: 1px solid rgba(255,255,255,.18); border-radius: 50%; font-size: 18px; font-weight: 900; backdrop-filter: blur(9px); }
+.action-rail small { color: rgba(255,255,255,.78); font-size: 8px; font-weight: 800; letter-spacing: .06em; }
+.sheet-backdrop { position: fixed; z-index: 50; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.68); }
+.comment-sheet { display: flex; flex-direction: column; width: min(100%, 480px); max-height: 88dvh; padding: 10px 18px calc(16px + env(safe-area-inset-bottom)); background: var(--card); border: 1px solid var(--divider); border-bottom: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -24px 60px rgba(0,0,0,.45); }
+.sheet-handle { width: 38px; height: 4px; margin: 0 auto 12px; background: #55555a; border-radius: 4px; }
+.comment-sheet > header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 14px; border-bottom: 1px solid var(--divider); }
+.comment-sheet > header div { display: flex; flex-direction: column; gap: 3px; }
+.comment-sheet > header span { color: var(--primary); font-size: 9px; font-weight: 900; letter-spacing: .14em; }
+.comment-sheet > header strong { font-size: 17px; }
+.comment-sheet > header button { width: 36px; height: 36px; color: var(--text); background: #2b2b2e; border: 0; border-radius: 50%; font-size: 24px; cursor: pointer; }
+.comment-list { min-height: 120px; overflow-y: auto; padding: 8px 0; }
+.no-comments { padding: 30px 0; color: var(--text-muted); text-align: center; font-size: 13px; }
+.comment-card { padding: 13px 2px; border-bottom: 1px solid var(--divider); }
+.comment-card > div { display: flex; align-items: center; gap: 8px; }
+.comment-card strong { font-size: 13px; }
+.comment-card div span { padding: 3px 6px; color: #111; background: var(--warning); border-radius: 4px; font-size: 8px; font-weight: 900; }
+.comment-card p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; }
+.comment-card.spoiler-hidden p { color: transparent; text-shadow: 0 0 8px rgba(255,255,255,.65); user-select: none; }
+.comment-card > button { margin-top: 9px; padding: 7px 10px; color: var(--warning); background: rgba(255,159,28,.1); border: 1px solid rgba(255,159,28,.42); border-radius: 7px; font-size: 11px; font-weight: 800; cursor: pointer; }
+.comment-form { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--divider); }
+.comment-form input, .comment-form textarea { width: 100%; color: var(--text); background: #151517; border: 1px solid var(--divider); border-radius: 9px; outline: 0; }
+.comment-form input { height: 38px; padding: 0 11px; }
+.comment-form textarea { min-height: 68px; padding: 10px 11px; resize: none; font: inherit; }
+.comment-form input:focus, .comment-form textarea:focus { border-color: var(--primary); }
+.comment-form > div { display: flex; align-items: center; justify-content: space-between; }
+.comment-form label { display: flex; align-items: center; gap: 7px; color: var(--text-muted); font-size: 12px; }
+.comment-form label input { width: 16px; height: 16px; accent-color: var(--warning); }
+.comment-form button[type="submit"] { min-width: 78px; height: 38px; color: #111; background: var(--primary); border: 0; border-radius: 8px; font-weight: 900; cursor: pointer; }
+.comment-form button:disabled { opacity: .55; cursor: wait; }
 @keyframes float { 50% { transform: translateY(-7px); } }
 
 @media (prefers-reduced-motion: reduce) { .swipe-tip { animation: none; } }
