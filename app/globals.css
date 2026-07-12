@@ -105,8 +105,8 @@ a { color: inherit; text-decoration: none; }
 .comic-feed { display: flex; width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
 .comic-feed::-webkit-scrollbar, .panel-stack::-webkit-scrollbar { display: none; }
 .comic-column { position: relative; flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: start; overflow: hidden; background: var(--card); }
-.panel-stack { width: 100%; height: 100%; overflow-y: auto; scroll-snap-type: y mandatory; scrollbar-width: none; }
-.comic-panel { position: relative; display: flex; min-height: 100%; padding: 52px 24px 108px; align-items: flex-end; overflow: hidden; scroll-snap-align: start; isolation: isolate; }
+.panel-stack { width: 100%; height: 100%; overflow-y: auto; scroll-behavior: auto; scrollbar-width: none; }
+.comic-panel { position: relative; display: flex; min-height: 100%; padding: 52px 24px 108px; align-items: flex-end; overflow: hidden; isolation: isolate; }
 .comic-panel::before { content: ""; position: absolute; inset: 0; z-index: -3; background: radial-gradient(circle at 78% 18%, rgba(255,255,255,.18), transparent 26%), linear-gradient(150deg, #252529 5%, #0b0b0d 78%); }
 .tone-lime::before { background: radial-gradient(circle at 78% 18%, rgba(199,255,61,.34), transparent 28%), linear-gradient(145deg, #293310, #080b05 75%); }
 .tone-violet::before { background: radial-gradient(circle at 72% 22%, rgba(139,124,255,.42), transparent 27%), linear-gradient(145deg, #242044, #090812 76%); }
