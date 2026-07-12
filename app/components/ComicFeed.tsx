@@ -28,6 +28,7 @@ export function ComicFeed() {
   const [comics, setComics] = useState(fallbackComics);
   const [activeComic, setActiveComic] = useState(0);
   const [activePanels, setActivePanels] = useState<Record<number, number>>({});
+  const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
@@ -36,6 +37,7 @@ export function ComicFeed() {
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const feedRef = useRef<HTMLDivElement>(null);
+  const lastScrollTop = useRef<Record<number, number>>({});
 
   useEffect(() => {
     fetch("/api/comics").then((response) => response.ok ? response.json() : Promise.reject())
@@ -78,6 +80,12 @@ export function ComicFeed() {
           <article className="comic-column" key={comic.id} aria-label={comic.title}>
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
+              const previousTop = lastScrollTop.current[comic.id] ?? element.scrollTop;
+              const delta = element.scrollTop - previousTop;
+              if (Math.abs(delta) > 2) {
+                setMetaHidden((current) => ({ ...current, [comic.id]: delta > 0 }));
+                lastScrollTop.current[comic.id] = element.scrollTop;
+              }
               setActivePanels((current) => ({ ...current, [comic.id]: Math.round(element.scrollTop / element.clientHeight) }));
             }}>
               {comic.panels.map((panel, panelIndex) => (
@@ -95,7 +103,7 @@ export function ComicFeed() {
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>{comic.publisher}</small></a>
               <button type="button" onClick={() => openComments(comic)} aria-label={`Comments for ${comic.title}`}><span>•••</span><small>COMMENT</small></button>
             </div>
-            <footer className="comic-meta">
+            <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
               <div><strong>{comic.title}</strong><span>{comic.creator} · {comic.genre}</span></div>
               <div className="cut-count" style={{ color: comic.accent }}>{(activePanels[comic.id] ?? 0) + 1}/{comic.panels.length}</div>
             </footer>
