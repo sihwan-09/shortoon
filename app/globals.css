@@ -47,17 +47,17 @@ a { color: inherit; text-decoration: none; }
 .brand {
   display: grid;
   place-items: center;
-  width: 84px;
-  height: 44px;
+  width: 68px;
+  height: 40px;
   overflow: hidden;
   border-radius: 10px;
 }
 
 .brand-logo {
   display: block;
-  width: 84px;
-  height: 40px;
-  background: url("/shorttoon-logo.png") center / 120px 120px no-repeat;
+  width: 68px;
+  height: 36px;
+  background: url("/shorttoon-logo.png") center / 92px 92px no-repeat;
 }
 
 .search-button {
