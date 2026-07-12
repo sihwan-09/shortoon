@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+:root {
+  --background: #111111;
+  --card: #1c1c1e;
+  --primary: #c7ff3d;
+  --text: #ffffff;
+  --text-muted: #a7a7a7;
+  --like: #ff4d6d;
+  --warning: #ff9f1c;
+  --divider: #2b2b2e;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; min-height: 100%; background: var(--background); }
+
+body {
+  color: var(--text);
+  font-family: Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.app-shell {
+  width: 100%;
+  min-height: 100dvh;
+  background: var(--background);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: calc(64px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 20px 0;
+  background: rgba(17, 17, 17, 0.94);
+  border-bottom: 1px solid var(--divider);
+  backdrop-filter: blur(14px);
+}
+
+.header-spacer { width: 96px; }
+
+.brand {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.brand-logo {
+  display: block;
+  width: 96px;
+  height: 44px;
+  background: url("/shorttoon-logo.png") center / 150px 150px no-repeat;
+}
+
+.feed-stage {
+  display: grid;
+  min-height: calc(100dvh - 65px - env(safe-area-inset-top));
+  place-items: center;
+  padding: 32px 24px;
+}
+
+.empty-state { width: min(100%, 390px); }
+
+.eyebrow {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.empty-state h1 {
+  margin: 0;
+  font-size: clamp(34px, 10vw, 48px);
+  line-height: 1.16;
+  letter-spacing: -0.05em;
+}
+
+.empty-state p {
+  margin: 18px 0 0;
+  color: var(--text-muted);
+  font-size: 15px;
+}
+
+@media (min-width: 600px) {
+  .app-shell { max-width: 480px; margin: 0 auto; border-inline: 1px solid var(--divider); }
+}
