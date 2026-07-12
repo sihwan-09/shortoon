@@ -27,7 +27,6 @@ const fallbackComics: Comic[] = [
 export function ComicFeed() {
   const [comics, setComics] = useState(fallbackComics);
   const [activeComic, setActiveComic] = useState(0);
-  const [activePanels, setActivePanels] = useState<Record<number, number>>({});
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -86,7 +85,6 @@ export function ComicFeed() {
                 setMetaHidden((current) => ({ ...current, [comic.id]: delta > 0 }));
                 lastScrollTop.current[comic.id] = element.scrollTop;
               }
-              setActivePanels((current) => ({ ...current, [comic.id]: Math.round(element.scrollTop / element.clientHeight) }));
             }}>
               {comic.panels.map((panel, panelIndex) => (
                 <section className={`comic-panel tone-${panel.tone}`} key={panel.id}>
@@ -105,7 +103,6 @@ export function ComicFeed() {
             </div>
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
               <div><strong>{comic.title}</strong><span>{comic.creator} · {comic.genre}</span></div>
-              <div className="cut-count" style={{ color: comic.accent }}>{(activePanels[comic.id] ?? 0) + 1}/{comic.panels.length}</div>
             </footer>
           </article>
         ))}
