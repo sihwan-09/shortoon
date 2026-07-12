@@ -80,7 +80,7 @@ export function ComicFeed() {
           <article className="comic-column" key={comic.id} aria-label={comic.title}>
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
-              const previousTop = lastScrollTop.current[comic.id] ?? element.scrollTop;
+              const previousTop = lastScrollTop.current[comic.id] ?? 0;
               const delta = element.scrollTop - previousTop;
               if (Math.abs(delta) > 2) {
                 setMetaHidden((current) => ({ ...current, [comic.id]: delta > 0 }));
