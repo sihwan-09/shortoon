@@ -167,6 +167,22 @@ a { color: inherit; text-decoration: none; }
 .home-icon::before { content: ""; position: absolute; left: 50%; top: -7px; width: 14px; height: 14px; border-top: 2px solid currentColor; border-left: 2px solid currentColor; transform: translateX(-50%) rotate(45deg); border-radius: 2px 0 0; }
 .plus-icon { display: grid; width: 27px; height: 27px; place-items: center; color: #111; background: var(--primary); border-radius: 50%; font-size: 24px; font-weight: 500; line-height: 1; }
 .my-icon { display: grid; min-width: 30px; height: 24px; place-items: center; color: currentColor; font-size: 13px; font-weight: 900; letter-spacing: -.04em; }
+.my-page { min-height: calc(100dvh - 129px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 46px 22px 108px; overflow-y: auto; }
+.my-profile { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 8px 0 40px; }
+.profile-avatar { position: relative; display: grid; width: 92px; height: 92px; place-items: end center; overflow: hidden; background: linear-gradient(145deg, #c7ff3d, #607d19); border: 3px solid rgba(255,255,255,.86); border-radius: 50%; box-shadow: 0 14px 34px rgba(199,255,61,.16); }
+.profile-avatar::before { content: ""; position: absolute; top: 19px; width: 26px; height: 26px; background: #111; border-radius: 50%; }
+.profile-avatar span { display: block; width: 54px; height: 34px; margin-bottom: -2px; background: #111; border-radius: 32px 32px 0 0; }
+.my-profile h1 { margin: 0; font-size: 20px; letter-spacing: -.04em; }
+.my-stats { border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider); }
+.my-stat-row, .my-links button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 64px; padding: 0; color: var(--text); background: transparent; border: 0; font: inherit; text-align: left; cursor: pointer; }
+.my-stat-row + .my-stat-row { border-top: 1px solid var(--divider); }
+.my-stat-row > span { font-size: 15px; font-weight: 700; }
+.my-stat-row strong { color: var(--primary); font-size: 17px; font-variant-numeric: tabular-nums; }
+.my-stat-row strong span { margin-left: 2px; color: var(--text-muted); font-size: 12px; font-weight: 500; }
+.my-links { margin-top: 30px; }
+.my-links button { min-height: 54px; border-bottom: 1px solid var(--divider); font-size: 14px; font-weight: 600; }
+.my-links button span { color: var(--text-muted); font-size: 24px; font-weight: 400; }
+.my-links .logout-button { margin-top: 18px; color: var(--like); border-bottom: 0; }
 @keyframes float { 50% { transform: translateY(-7px); } }
 
 @media (prefers-reduced-motion: reduce) { .swipe-tip { animation: none; } }
