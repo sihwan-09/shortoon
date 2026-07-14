@@ -132,6 +132,8 @@ a { color: inherit; text-decoration: none; }
 .action-rail { position: absolute; z-index: 9; right: 16px; bottom: 100px; display: flex; flex-direction: column; gap: 12px; }
 .action-rail a, .action-rail button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; padding: 0; color: var(--text); background: transparent; border: 0; cursor: pointer; }
 .action-rail span { display: grid; width: 44px; height: 44px; place-items: center; background: rgba(17,17,17,.82); border: 1px solid rgba(255,255,255,.18); border-radius: 50%; font-size: 18px; font-weight: 900; backdrop-filter: blur(9px); }
+.action-rail .like-action span { color: rgba(255,255,255,.9); transition: color .2s ease, background .2s ease, transform .2s ease; }
+.action-rail .like-action.liked span { color: var(--like); background: rgba(255,77,109,.16); border-color: rgba(255,77,109,.65); transform: scale(1.06); }
 .action-rail small { color: rgba(255,255,255,.78); font-size: 8px; font-weight: 800; letter-spacing: .06em; }
 .sheet-backdrop { position: fixed; z-index: 50; inset: 0; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.68); }
 .comment-sheet { display: flex; flex-direction: column; width: min(100%, 480px); max-height: 88dvh; padding: 10px 18px calc(16px + env(safe-area-inset-bottom)); background: var(--card); border: 1px solid var(--divider); border-bottom: 0; border-radius: 22px 22px 0 0; box-shadow: 0 -24px 60px rgba(0,0,0,.45); }

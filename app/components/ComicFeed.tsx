@@ -27,6 +27,7 @@ const fallbackComics: Comic[] = [
 export function ComicFeed() {
   const [comics, setComics] = useState(fallbackComics);
   const [activeComic, setActiveComic] = useState(0);
+  const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -98,6 +99,7 @@ export function ComicFeed() {
               ))}
             </div>
             <div className="action-rail">
+              <button type="button" className={`like-action ${likedComics[comic.id] ? "liked" : ""}`} onClick={() => setLikedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${likedComics[comic.id] ? "Unlike" : "Like"} ${comic.title}`} aria-pressed={Boolean(likedComics[comic.id])}><span aria-hidden="true">♥</span><small>LIKE</small></button>
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>{comic.publisher}</small></a>
               <button type="button" onClick={() => openComments(comic)} aria-label={`Comments for ${comic.title}`}><span>•••</span><small>COMMENT</small></button>
             </div>
