@@ -99,9 +99,6 @@ a { color: inherit; text-decoration: none; }
 }
 
 .feed-wrap { position: relative; height: calc(100dvh - 129px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow: hidden; }
-.feed-progress { position: absolute; z-index: 12; top: 10px; left: 50%; display: flex; gap: 5px; transform: translateX(-50%); }
-.feed-progress span { width: 18px; height: 2px; border-radius: 2px; background: rgba(255,255,255,.25); transition: width .25s, background .25s; }
-.feed-progress span.active { width: 30px; background: var(--primary); }
 .comic-feed { display: flex; width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
 .comic-feed::-webkit-scrollbar, .panel-stack::-webkit-scrollbar { display: none; }
 .comic-column { position: relative; flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: start; overflow: hidden; background: var(--card); }

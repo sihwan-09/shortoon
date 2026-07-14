@@ -26,7 +26,6 @@ const fallbackComics: Comic[] = [
 
 export function ComicFeed() {
   const [comics, setComics] = useState(fallbackComics);
-  const [activeComic, setActiveComic] = useState(0);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
@@ -36,19 +35,12 @@ export function ComicFeed() {
   const [body, setBody] = useState("");
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const feedRef = useRef<HTMLDivElement>(null);
   const lastScrollTop = useRef<Record<number, number>>({});
 
   useEffect(() => {
     fetch("/api/comics").then((response) => response.ok ? response.json() : Promise.reject())
       .then((data) => data.comics?.length && setComics(data.comics)).catch(() => undefined);
   }, []);
-
-  const onHorizontalScroll = () => {
-    const feed = feedRef.current;
-    if (!feed) return;
-    setActiveComic(Math.round(feed.scrollLeft / feed.clientWidth));
-  };
 
   const openComments = async (comic: Comic) => {
     setCommentComic(comic);
@@ -72,10 +64,7 @@ export function ComicFeed() {
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
-      <div className="feed-progress" aria-label={`Comic ${activeComic + 1} of ${comics.length}`}>
-        {comics.map((comic, index) => <span key={comic.id} className={index === activeComic ? "active" : ""} />)}
-      </div>
-      <div className="comic-feed" ref={feedRef} onScroll={onHorizontalScroll}>
+      <div className="comic-feed">
         {comics.map((comic, comicIndex) => (
           <article className="comic-column" key={comic.id} aria-label={comic.title}>
             <div className="panel-stack" onScroll={(event) => {
