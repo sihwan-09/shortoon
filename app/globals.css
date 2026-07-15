@@ -172,6 +172,7 @@ a { color: inherit; text-decoration: none; }
 .my-icon { display: grid; min-width: 30px; height: 24px; place-items: center; color: currentColor; font-size: 13px; font-weight: 900; letter-spacing: -.04em; }
 .my-page { min-height: calc(100dvh - 129px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); padding: 46px 22px 108px; overflow-y: auto; }
 .my-profile { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 8px 0 40px; }
+.my-profile { color: var(--text); background: transparent; border: 0; font: inherit; cursor: pointer; }
 .profile-avatar { position: relative; display: grid; width: 92px; height: 92px; place-items: end center; overflow: hidden; background: linear-gradient(145deg, #c7ff3d, #607d19); border: 3px solid rgba(255,255,255,.86); border-radius: 50%; box-shadow: 0 14px 34px rgba(199,255,61,.16); }
 .profile-avatar::before { content: ""; position: absolute; top: 19px; width: 26px; height: 26px; background: #111; border-radius: 50%; }
 .profile-avatar span { display: block; width: 54px; height: 34px; margin-bottom: -2px; background: #111; border-radius: 32px 32px 0 0; }
@@ -186,6 +187,21 @@ a { color: inherit; text-decoration: none; }
 .my-links button { min-height: 54px; border-bottom: 1px solid var(--divider); font-size: 14px; font-weight: 600; }
 .my-links button span { color: var(--text-muted); font-size: 24px; font-weight: 400; }
 .my-links .logout-button { margin-top: 18px; color: var(--like); border-bottom: 0; }
+.channel-page { min-height: 100dvh; padding: 18px 22px 42px; overflow-y: auto; }
+.channel-back { width: 42px; height: 42px; padding: 0; color: var(--text); background: transparent; border: 0; font-size: 30px; font-weight: 300; line-height: 1; cursor: pointer; }
+.channel-profile { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 34px 0 44px; }
+.channel-profile h1 { margin: 0; font-size: 21px; letter-spacing: -.04em; }
+.channel-intro { padding: 18px 0 22px; border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider); }
+.channel-intro > div { display: flex; align-items: center; justify-content: space-between; }
+.channel-intro strong { font-size: 15px; }
+.channel-intro span { color: var(--text-muted); font-size: 11px; }
+.channel-intro p { margin: 14px 0 0; color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+.channel-tabs { display: grid; grid-template-columns: repeat(2, 1fr); border-bottom: 1px solid var(--divider); }
+.channel-tabs button { position: relative; min-height: 58px; color: var(--text-muted); background: transparent; border: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.channel-tabs button span { margin-left: 4px; color: inherit; font-size: 12px; font-weight: 500; }
+.channel-tabs button.is-active { color: var(--primary); }
+.channel-tabs button.is-active::after { content: ""; position: absolute; right: 18%; bottom: -1px; left: 18%; height: 2px; background: var(--primary); }
+.channel-empty { padding: 74px 0; color: var(--text-muted); text-align: center; font-size: 13px; }
 @keyframes float { 50% { transform: translateY(-7px); } }
 
 @media (prefers-reduced-motion: reduce) { .swipe-tip { animation: none; } }

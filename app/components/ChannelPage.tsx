@@ -1,0 +1,24 @@
+"use client";
+
+type ChannelPageProps = { onBack: () => void };
+
+export function ChannelPage({ onBack }: ChannelPageProps) {
+  return (
+    <section className="channel-page" aria-label="My channel">
+      <button className="channel-back" type="button" onClick={onBack} aria-label="Back to my page">←</button>
+      <div className="channel-profile">
+        <div className="profile-avatar" aria-label="Profile image" role="img"><span /></div>
+        <h1>시화 작가</h1>
+      </div>
+      <div className="channel-intro">
+        <div><strong>채널 소개</strong><span>0/150</span></div>
+        <p>숏툰으로 전하는 짧고 강한 이야기</p>
+      </div>
+      <div className="channel-tabs" role="tablist" aria-label="Channel content">
+        <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>0</span></button>
+        <button type="button" role="tab" aria-selected="false">좋아요 <span>0</span></button>
+      </div>
+      <div className="channel-empty">아직 등록된 숏툰이 없습니다.</div>
+    </section>
+  );
+}

@@ -1,12 +1,14 @@
 "use client";
 
-export function MyPage() {
+type MyPageProps = { onOpenChannel: () => void };
+
+export function MyPage({ onOpenChannel }: MyPageProps) {
   return (
     <section className="my-page" aria-label="My page">
-      <div className="my-profile">
+      <button className="my-profile" type="button" onClick={onOpenChannel} aria-label="View my channel">
         <div className="profile-avatar" aria-label="Profile image" role="img"><span /></div>
         <h1>시화님</h1>
-      </div>
+      </button>
 
       <div className="my-stats" aria-label="Shorttoon activity">
         <button type="button" className="my-stat-row">
