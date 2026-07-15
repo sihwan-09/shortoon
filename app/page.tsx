@@ -12,7 +12,10 @@ export default function Home() {
     <main className="app-shell">
       <header className="app-header" aria-label="Shorttoon header">
         <a className="brand" href="/" aria-label="Shorttoon home"><span className="brand-logo" role="img" aria-label="Shorttoon" /></a>
-        <button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>
+        <div className="header-tools">
+          <button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>
+          {activeTab === "channel" && <button className="more-button" type="button" aria-label="More channel options">⋮</button>}
+        </div>
       </header>
       {activeTab === "home" ? <ComicFeed /> : activeTab === "my" ? <MyPage onOpenChannel={() => setActiveTab("channel")} /> : <ChannelPage onBack={() => setActiveTab("my")} />}
       {activeTab !== "channel" && <nav className="bottom-nav" aria-label="Main navigation">
