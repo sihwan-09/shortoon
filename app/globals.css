@@ -191,6 +191,9 @@ a { color: inherit; text-decoration: none; }
 .channel-back { width: 42px; height: 42px; padding: 0; color: var(--text); background: transparent; border: 0; font-size: 30px; font-weight: 300; line-height: 1; cursor: pointer; }
 .channel-profile { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 34px 0 44px; }
 .channel-profile h1 { margin: 0; font-size: 21px; letter-spacing: -.04em; }
+.channel-actions { display: flex; gap: 8px; margin-top: 2px; }
+.channel-actions button { min-width: 104px; height: 36px; padding: 0 16px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 8px; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.channel-actions button:last-child { color: #111; background: var(--primary); border-color: var(--primary); }
 .channel-intro { padding: 18px 0 22px; border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider); }
 .channel-intro > div { display: flex; align-items: center; justify-content: space-between; }
 .channel-intro strong { font-size: 15px; }

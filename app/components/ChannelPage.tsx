@@ -9,6 +9,10 @@ export function ChannelPage({ onBack }: ChannelPageProps) {
       <div className="channel-profile">
         <div className="profile-avatar" aria-label="Profile image" role="img"><span /></div>
         <h1>시화 작가</h1>
+        <div className="channel-actions">
+          <button type="button">분석</button>
+          <button type="button">채널 수정</button>
+        </div>
       </div>
       <div className="channel-intro">
         <div><strong>채널 소개</strong><span>0/150</span></div>
