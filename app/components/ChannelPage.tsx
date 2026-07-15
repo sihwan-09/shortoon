@@ -15,18 +15,17 @@ export function ChannelPage({ onBack }: ChannelPageProps) {
         <div className="channel-identity">
           <h1>시화 작가</h1>
           <span>구독자 0명</span>
-          <div className="channel-actions">
-            <button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button>
-            <button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => setActiveAction("edit")} aria-pressed={activeAction === "edit"}>채널 수정</button>
-          </div>
         </div>
       </div>
       <div className="channel-intro">
         <p>숏툰으로 전하는 짧고 강한 이야기</p>
       </div>
+      <div className="channel-actions">
+        <button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button>
+        <button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => setActiveAction("edit")} aria-pressed={activeAction === "edit"}>채널 수정</button>
+      </div>
       <div className="channel-tabs" role="tablist" aria-label="Channel content">
         <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>0</span></button>
-        <button type="button" role="tab" aria-selected="false">좋아요 <span>0</span></button>
       </div>
       <div className="channel-empty">아직 등록된 숏툰이 없습니다.</div>
     </section>
