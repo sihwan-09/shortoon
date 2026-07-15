@@ -189,16 +189,15 @@ a { color: inherit; text-decoration: none; }
 .my-links .logout-button { margin-top: 18px; color: var(--like); border-bottom: 0; }
 .channel-page { min-height: 100dvh; padding: 18px 22px 42px; overflow-y: auto; }
 .channel-back { width: 42px; height: 42px; padding: 0; color: var(--text); background: transparent; border: 0; font-size: 30px; font-weight: 300; line-height: 1; cursor: pointer; }
-.channel-profile { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 34px 0 44px; }
+.channel-profile { display: flex; align-items: center; gap: 18px; padding: 34px 0 22px; }
+.channel-identity { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 7px; }
 .channel-profile h1 { margin: 0; font-size: 21px; letter-spacing: -.04em; }
+.channel-identity > span { color: var(--text-muted); font-size: 12px; }
 .channel-actions { display: flex; gap: 8px; margin-top: 2px; }
-.channel-actions button { min-width: 104px; height: 36px; padding: 0 16px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 8px; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.channel-actions button { min-width: 92px; height: 34px; padding: 0 12px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 8px; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
 .channel-actions button.is-active { color: #111; background: var(--primary); border-color: var(--primary); }
-.channel-intro { padding: 18px 0 22px; border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider); }
-.channel-intro > div { display: flex; align-items: center; justify-content: space-between; }
-.channel-intro strong { font-size: 15px; }
-.channel-intro span { color: var(--text-muted); font-size: 11px; }
-.channel-intro p { margin: 14px 0 0; color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+.channel-intro { padding: 0 0 22px; border-bottom: 1px solid var(--divider); }
+.channel-intro p { margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.6; }
 .channel-tabs { display: grid; grid-template-columns: repeat(2, 1fr); border-bottom: 1px solid var(--divider); }
 .channel-tabs button { position: relative; min-height: 58px; color: var(--text-muted); background: transparent; border: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .channel-tabs button span { margin-left: 4px; color: inherit; font-size: 12px; font-weight: 500; }
