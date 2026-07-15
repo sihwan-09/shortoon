@@ -1,8 +1,12 @@
 "use client";
 
+import { useState } from "react";
+
 type ChannelPageProps = { onBack: () => void };
 
 export function ChannelPage({ onBack }: ChannelPageProps) {
+  const [activeAction, setActiveAction] = useState<"analytics" | "edit">("analytics");
+
   return (
     <section className="channel-page" aria-label="My channel">
       <button className="channel-back" type="button" onClick={onBack} aria-label="Back to my page">←</button>
@@ -10,8 +14,8 @@ export function ChannelPage({ onBack }: ChannelPageProps) {
         <div className="profile-avatar" aria-label="Profile image" role="img"><span /></div>
         <h1>시화 작가</h1>
         <div className="channel-actions">
-          <button type="button">분석</button>
-          <button type="button">채널 수정</button>
+          <button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button>
+          <button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => setActiveAction("edit")} aria-pressed={activeAction === "edit"}>채널 수정</button>
         </div>
       </div>
       <div className="channel-intro">
