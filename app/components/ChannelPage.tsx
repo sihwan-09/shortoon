@@ -26,6 +26,7 @@ export function ChannelPage({ onBack, onEdit }: ChannelPageProps) {
       </div>
       <div className="channel-tabs" role="tablist" aria-label="Channel content">
         <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>0</span></button>
+        <button type="button" role="tab" aria-selected="false">작품 목록</button>
       </div>
       <div className="channel-empty">아직 등록된 숏툰이 없습니다.</div>
     </section>

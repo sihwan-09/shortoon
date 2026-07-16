@@ -204,7 +204,7 @@ a { color: inherit; text-decoration: none; }
 .channel-actions button.is-active { color: #111; background: var(--primary); border-color: var(--primary); }
 .channel-intro { padding: 0 0 22px; border-bottom: 1px solid var(--divider); }
 .channel-intro p { margin: 0; color: var(--text-muted); font-size: 13px; line-height: 1.6; }
-.channel-tabs { display: grid; grid-template-columns: 1fr; border-bottom: 1px solid var(--divider); }
+.channel-tabs { display: grid; grid-template-columns: repeat(2, 1fr); border-bottom: 1px solid var(--divider); }
 .channel-tabs button { position: relative; min-height: 58px; color: var(--text-muted); background: transparent; border: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .channel-tabs button span { margin-left: 4px; color: inherit; font-size: 12px; font-weight: 500; }
 .channel-tabs button.is-active { color: var(--primary); }
