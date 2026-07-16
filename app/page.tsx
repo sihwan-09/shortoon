@@ -3,22 +3,19 @@
 import { useState } from "react";
 import { ComicFeed } from "./components/ComicFeed";
 import { ChannelPage } from "./components/ChannelPage";
+import { ChannelEditPage } from "./components/ChannelEditPage";
 import { MyPage } from "./components/MyPage";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"home" | "my" | "channel">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "my" | "channel" | "edit">("home");
 
   return (
     <main className="app-shell">
       <header className="app-header" aria-label="Shorttoon header">
-        <a className="brand" href="/" aria-label="Shorttoon home"><span className="brand-logo" role="img" aria-label="Shorttoon" /></a>
-        <div className="header-tools">
-          <button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>
-          {activeTab === "channel" && <button className="more-button" type="button" aria-label="More channel options">⋮</button>}
-        </div>
+        {activeTab === "edit" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("channel")} aria-label="Back to channel">←</button><strong className="edit-header-title">채널 수정</strong><span /></> : <><a className="brand" href="/" aria-label="Shorttoon home"><span className="brand-logo" role="img" aria-label="Shorttoon" /></a><div className="header-tools"><button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>{activeTab === "channel" && <button className="more-button" type="button" aria-label="More channel options">⋮</button>}</div></>}
       </header>
-      {activeTab === "home" ? <ComicFeed /> : activeTab === "my" ? <MyPage onOpenChannel={() => setActiveTab("channel")} /> : <ChannelPage onBack={() => setActiveTab("my")} />}
-      <nav className="bottom-nav" aria-label="Main navigation">
+      {activeTab === "home" ? <ComicFeed /> : activeTab === "my" ? <MyPage onOpenChannel={() => setActiveTab("channel")} /> : activeTab === "channel" ? <ChannelPage onBack={() => setActiveTab("my")} onEdit={() => setActiveTab("edit")} /> : <ChannelEditPage onBack={() => setActiveTab("channel")} />}
+      {activeTab !== "edit" && <nav className="bottom-nav" aria-label="Main navigation">
         <button className={`bottom-nav-item ${activeTab === "home" ? "is-active" : ""}`} type="button" onClick={() => setActiveTab("home")} aria-current={activeTab === "home" ? "page" : undefined} aria-label="Home">
           <span className="home-icon" aria-hidden="true" />
         </button>
@@ -28,7 +25,7 @@ export default function Home() {
         <button className={`bottom-nav-item ${activeTab === "my" || activeTab === "channel" ? "is-active" : ""}`} type="button" onClick={() => setActiveTab("my")} aria-current={activeTab === "my" || activeTab === "channel" ? "page" : undefined} aria-label="My page">
           <span className="my-icon" aria-hidden="true">MY</span>
         </button>
-      </nav>
+      </nav>}
     </main>
   );
 }

@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 
-type ChannelPageProps = { onBack: () => void };
+type ChannelPageProps = { onBack: () => void; onEdit: () => void };
 
-export function ChannelPage({ onBack }: ChannelPageProps) {
+export function ChannelPage({ onBack, onEdit }: ChannelPageProps) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
 
   return (
@@ -22,7 +22,7 @@ export function ChannelPage({ onBack }: ChannelPageProps) {
       </div>
       <div className="channel-actions">
         <button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button>
-        <button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => setActiveAction("edit")} aria-pressed={activeAction === "edit"}>채널 수정</button>
+        <button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button>
       </div>
       <div className="channel-tabs" role="tablist" aria-label="Channel content">
         <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>0</span></button>
