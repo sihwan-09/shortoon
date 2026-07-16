@@ -18,17 +18,17 @@ export default function Home() {
         </div>
       </header>
       {activeTab === "home" ? <ComicFeed /> : activeTab === "my" ? <MyPage onOpenChannel={() => setActiveTab("channel")} /> : <ChannelPage onBack={() => setActiveTab("my")} />}
-      {activeTab !== "channel" && <nav className="bottom-nav" aria-label="Main navigation">
+      <nav className="bottom-nav" aria-label="Main navigation">
         <button className={`bottom-nav-item ${activeTab === "home" ? "is-active" : ""}`} type="button" onClick={() => setActiveTab("home")} aria-current={activeTab === "home" ? "page" : undefined} aria-label="Home">
           <span className="home-icon" aria-hidden="true" />
         </button>
         <button className="bottom-nav-item upload-nav-item" type="button" aria-label="Upload shorttoon">
           <span className="plus-icon" aria-hidden="true">+</span>
         </button>
-        <button className={`bottom-nav-item ${activeTab === "my" ? "is-active" : ""}`} type="button" onClick={() => setActiveTab("my")} aria-current={activeTab === "my" ? "page" : undefined} aria-label="My page">
+        <button className={`bottom-nav-item ${activeTab === "my" || activeTab === "channel" ? "is-active" : ""}`} type="button" onClick={() => setActiveTab("my")} aria-current={activeTab === "my" || activeTab === "channel" ? "page" : undefined} aria-label="My page">
           <span className="my-icon" aria-hidden="true">MY</span>
         </button>
-      </nav>}
+      </nav>
     </main>
   );
 }

@@ -5,7 +5,7 @@ import { useState } from "react";
 type ChannelPageProps = { onBack: () => void };
 
 export function ChannelPage({ onBack }: ChannelPageProps) {
-  const [activeAction, setActiveAction] = useState<"analytics" | "edit">("analytics");
+  const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
 
   return (
     <section className="channel-page" aria-label="My channel">
