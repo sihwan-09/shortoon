@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 
-type ChannelEditPageProps = { onBack: () => void };
+type ChannelLink = { title: string; url: string };
+type ChannelEditPageProps = { onBack: () => void; onAddLink: () => void; link: ChannelLink | null };
 
-export function ChannelEditPage({ onBack }: ChannelEditPageProps) {
+export function ChannelEditPage({ onBack, onAddLink, link }: ChannelEditPageProps) {
   const [channelName, setChannelName] = useState("시화 작가");
   const [intro, setIntro] = useState("숏툰으로 전하는 짧고 강한 이야기");
 
@@ -19,7 +20,7 @@ export function ChannelEditPage({ onBack }: ChannelEditPageProps) {
         <label>채널 아이디<div className="channel-id-input"><span>@</span><input defaultValue="shorttoon_creator" maxLength={30} /></div></label>
         <label>소개<textarea value={intro} onChange={(event) => setIntro(event.target.value)} maxLength={150} /><small>{intro.length}/150</small></label>
       </div>
-      <div className="edit-links"><button type="button">링크 추가 <span aria-hidden="true">＋</span></button></div>
+      <div className="edit-links"><button type="button" onClick={onAddLink}>링크 추가 <span aria-hidden="true">＋</span></button>{link && <a href={link.url} target="_blank" rel="noreferrer"><strong>{link.title}</strong><span>{link.url}</span></a>}</div>
       <button className="save-channel-button" type="button" onClick={onBack}>변경사항 저장</button>
     </section>
   );

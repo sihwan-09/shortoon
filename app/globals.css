@@ -227,7 +227,17 @@ a { color: inherit; text-decoration: none; }
 .edit-links { padding: 22px 0 36px; }
 .edit-links button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 14px; font-weight: 800; }
 .edit-links span { color: var(--primary); font-size: 24px; font-weight: 400; }
+.edit-links a { display: flex; flex-direction: column; gap: 5px; margin-top: 18px; padding: 13px 0; border-top: 1px solid var(--divider); }
+.edit-links a strong { font-size: 13px; }
+.edit-links a span { overflow: hidden; color: var(--text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .save-channel-button { width: 100%; height: 48px; color: #111; background: var(--primary); border: 0; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; }
+.save-channel-button:disabled { opacity: .45; cursor: not-allowed; }
+.link-edit-page { min-height: calc(100dvh - 129px - env(safe-area-inset-top)); padding: 24px 20px 28px; }
+.link-edit-form { display: grid; gap: 22px; padding: 8px 0 34px; }
+.link-edit-form label { display: block; font-size: 13px; font-weight: 800; }
+.link-edit-form input { display: block; width: 100%; height: 46px; margin-top: 9px; padding: 0 12px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 8px; font: inherit; outline: none; }
+.link-edit-form input:focus { border-color: var(--primary); }
+.link-cancel-button { display: block; width: 100%; margin-top: 12px; padding: 8px; color: var(--text-muted); background: transparent; border: 0; font: inherit; font-size: 12px; cursor: pointer; }
 @keyframes float { 50% { transform: translateY(-7px); } }
 
 @media (prefers-reduced-motion: reduce) { .swipe-tip { animation: none; } }
