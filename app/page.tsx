@@ -25,7 +25,7 @@ export default function Home() {
         <button className="bottom-nav-item upload-nav-item" type="button" aria-label="Upload shorttoon">
           <span className="plus-icon" aria-hidden="true">+</span>
         </button>
-        <button className={`bottom-nav-item ${activeTab === "my" || activeTab === "channel" ? "is-active" : ""}`} type="button" onClick={() => setActiveTab("my")} aria-current={activeTab === "my" || activeTab === "channel" ? "page" : undefined} aria-label="My page">
+        <button className={`bottom-nav-item ${activeTab === "my" || activeTab === "channel" || activeTab === "edit" || activeTab === "link-edit" ? "is-active" : ""}`} type="button" onClick={() => setActiveTab("my")} aria-current={activeTab === "my" || activeTab === "channel" || activeTab === "edit" || activeTab === "link-edit" ? "page" : undefined} aria-label="My page">
           <span className="my-icon" aria-hidden="true">MY</span>
         </button>
       </nav>
