@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 
-type LinkEditPageProps = { onBack: () => void; onSave: (link: { title: string; url: string }) => void };
+type ChannelLink = { title: string; url: string };
+type LinkEditPageProps = { onBack: () => void; onSave: (link: ChannelLink) => void; onDelete: () => void; initialLink: ChannelLink | null };
 
-export function LinkEditPage({ onBack, onSave }: LinkEditPageProps) {
-  const [title, setTitle] = useState("");
-  const [url, setUrl] = useState("");
+export function LinkEditPage({ onBack, onSave, onDelete, initialLink }: LinkEditPageProps) {
+  const [title, setTitle] = useState(initialLink?.title ?? "");
+  const [url, setUrl] = useState(initialLink?.url ?? "");
+  const isEditing = Boolean(initialLink);
+  const isUnchanged = isEditing && title === initialLink?.title && url === initialLink?.url;
 
   return (
     <section className="link-edit-page" aria-label="Add link">
@@ -14,8 +17,8 @@ export function LinkEditPage({ onBack, onSave }: LinkEditPageProps) {
         <label>링크 제목<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="예: 인스타그램" maxLength={30} /></label>
         <label>URL<input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://" type="url" /></label>
       </div>
-      <button className="save-channel-button" type="button" disabled={!title.trim() || !url.trim()} onClick={() => onSave({ title: title.trim(), url: url.trim() })}>변경사항 저장</button>
-      <button className="link-cancel-button" type="button" onClick={onBack}>취소</button>
+      <button className="save-channel-button" type="button" disabled={!title.trim() || !url.trim() || isUnchanged} onClick={() => onSave({ title: title.trim(), url: url.trim() })}>변경사항 저장</button>
+      {isEditing && <button className="delete-link-button" type="button" onClick={onDelete}>링크 삭제</button>}
     </section>
   );
 }
