@@ -238,6 +238,40 @@ a { color: inherit; text-decoration: none; }
 .link-edit-form input { display: block; width: 100%; height: 46px; margin-top: 9px; padding: 0 12px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 8px; font: inherit; outline: none; }
 .link-edit-form input:focus { border-color: var(--primary); }
 .delete-link-button { display: block; width: 100%; margin-top: 12px; padding: 8px; color: var(--like); background: transparent; border: 0; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.upload-close { font-size: 28px; font-weight: 300; }
+.upload-page { min-height: calc(100dvh - 129px - env(safe-area-inset-top)); padding: 0 20px 112px; overflow-y: auto; }
+.upload-progress { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px 0 12px; border-bottom: 1px solid var(--divider); }
+.progress-label { color: var(--text-muted); font-size: 11px; font-weight: 800; }
+.progress-label.is-active { color: var(--primary); }
+.progress-line { width: 72px; height: 3px; background: var(--divider); border-radius: 9px; }
+.progress-line.is-active { background: var(--primary); }
+.upload-section { padding: 22px 0; border-bottom: 1px solid var(--divider); }
+.upload-section h2 { margin: 0 0 15px; font-size: 14px; }
+.upload-dropzone { display: flex; min-height: 230px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #151517; border: 1px dashed #55555a; border-radius: 10px; text-align: center; cursor: pointer; }
+.upload-dropzone input, .add-more-button input { display: none; }
+.upload-plus { color: var(--primary); font-size: 34px; line-height: 1; }
+.upload-dropzone strong { font-size: 14px; }
+.upload-dropzone small { color: var(--text-muted); font-size: 10px; line-height: 1.7; }
+.upload-limits { margin: 13px 0 0; color: var(--text-muted); font-size: 11px; line-height: 1.8; }
+.upload-errors { margin: 14px 0 0; padding: 11px 12px; color: var(--warning); background: rgba(255,159,28,.1); border: 1px solid rgba(255,159,28,.35); border-radius: 8px; font-size: 11px; line-height: 1.5; }
+.upload-errors p { margin: 0; }
+.upload-errors p + p { margin-top: 5px; }
+.uploaded-section { padding-bottom: 20px; }
+.upload-empty { margin: 34px 0; color: var(--text-muted); text-align: center; font-size: 12px; }
+.upload-list { display: grid; gap: 10px; }
+.upload-item { position: relative; display: flex; align-items: center; gap: 11px; min-height: 76px; padding: 8px 36px 8px 8px; background: var(--card); border: 1px solid var(--divider); border-radius: 9px; }
+.upload-item img { width: 48px; height: 58px; object-fit: cover; background: #0d0d0e; border-radius: 5px; }
+.upload-item-info { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.upload-item-info strong { font-size: 12px; }
+.upload-item-info span, .upload-item-info small { color: var(--text-muted); font-size: 10px; }
+.drag-handle, .remove-upload { position: absolute; display: grid; width: 30px; height: 30px; place-items: center; color: var(--text-muted); background: transparent; border: 0; cursor: grab; }
+.drag-handle { top: 8px; right: 7px; font-size: 22px; letter-spacing: -3px; }
+.drag-handle.is-dragging { color: var(--primary); }
+.remove-upload { right: 7px; bottom: 4px; color: var(--text-muted); font-size: 20px; font-weight: 300; cursor: pointer; }
+.add-more-button { display: flex; align-items: center; justify-content: center; height: 42px; margin-top: 12px; color: var(--primary); border: 1px dashed rgba(199,255,61,.5); border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; }
+.upload-summary { display: flex; flex-direction: column; gap: 6px; padding: 20px 0 14px; color: var(--text-muted); font-size: 12px; }
+.next-upload-button { width: 100%; height: 48px; color: #111; background: var(--primary); border: 0; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; }
+.next-upload-button:disabled { opacity: .35; cursor: not-allowed; }
 @keyframes float { 50% { transform: translateY(-7px); } }
 
 @media (prefers-reduced-motion: reduce) { .swipe-tip { animation: none; } }
