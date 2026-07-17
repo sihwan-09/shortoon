@@ -247,11 +247,12 @@ a { color: inherit; text-decoration: none; }
 .progress-line.is-active { background: var(--primary); }
 .upload-section { padding: 22px 0; border-bottom: 1px solid var(--divider); }
 .upload-section h2 { margin: 0 0 15px; font-size: 14px; }
-.upload-dropzone { display: flex; height: calc(100dvh - 64px - 64px - 58px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 420px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #151517; border: 1px dashed #55555a; border-radius: 0; text-align: center; cursor: pointer; }
-.upload-dropzone.has-previews { align-items: stretch; justify-content: flex-start; gap: 0; padding: 0; overflow: hidden; }
-.upload-preview-stack { display: flex; min-height: 0; flex: 1; flex-direction: column; gap: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--primary) transparent; }
-.upload-preview-stack::-webkit-scrollbar { width: 4px; }
-.upload-preview-stack::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+.upload-preview-shell { height: calc(100dvh - 64px - 64px - 58px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 420px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--primary) transparent; background: #151517; border: 1px dashed #55555a; border-radius: 0; }
+.upload-preview-shell::-webkit-scrollbar { width: 8px; }
+.upload-preview-shell::-webkit-scrollbar-thumb { background: var(--primary); border: 2px solid #151517; border-radius: 5px; }
+.upload-dropzone { display: flex; min-height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #151517; border: 0; text-align: center; cursor: pointer; }
+.upload-preview-shell.has-previews .upload-dropzone { align-items: stretch; justify-content: flex-start; gap: 0; width: calc(100% - 2px); min-height: 100%; padding: 0; }
+.upload-preview-stack { display: flex; min-height: 0; flex: none; flex-direction: column; gap: 0; overflow: visible; }
 .upload-preview-stack img { display: block; width: 100%; height: auto; flex: 0 0 auto; object-fit: contain; background: #0b0b0c; }
 .upload-preview-hint { position: absolute; right: 10px; bottom: 10px; left: 10px; z-index: 2; display: flex; min-height: 34px; align-items: center; justify-content: center; color: var(--primary); background: rgba(17,17,17,.88); font-size: 11px; font-weight: 800; }
 .upload-dropzone input, .add-more-button input { display: none; }
