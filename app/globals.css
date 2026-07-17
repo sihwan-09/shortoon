@@ -288,7 +288,7 @@ a { color: inherit; text-decoration: none; }
 .upload-summary { display: flex; flex-direction: column; gap: 6px; padding: 20px 0 14px; color: var(--text-muted); font-size: 12px; }
 .next-upload-button { width: 100%; height: 48px; color: #111; background: var(--primary); border: 0; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; }
 .next-upload-button:disabled { opacity: .35; cursor: not-allowed; }
-.upload-info-page { padding-bottom: 24px; }
+.upload-info-page { padding-bottom: calc(136px + env(safe-area-inset-bottom)); }
 .upload-info-page .upload-progress { margin-bottom: 0; }
 .info-type-section, .info-fields-section, .genre-section, .cover-section { padding: 24px 0; }
 .info-type-section h2, .genre-section h2, .cover-section h2 { margin-bottom: 14px; }
