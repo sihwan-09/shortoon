@@ -253,9 +253,9 @@ a { color: inherit; text-decoration: none; }
 .preview-scroll-rail { position: relative; left: -12px; display: flex; width: 16px; height: 100%; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px 0; background: var(--background); border: 1px solid var(--divider); }
 .preview-scroll-control { width: 14px; min-height: 0; flex: 1; margin: 0 auto; appearance: none; background: transparent; writing-mode: vertical-lr; direction: ltr; cursor: ns-resize; }
 .preview-scroll-control::-webkit-slider-runnable-track { width: 6px; background: var(--background); }
-.preview-scroll-control::-webkit-slider-thumb { width: 12px; height: 42px; margin-top: 0; margin-left: 1px; appearance: none; background: #a0a0a0; border: 0; border-radius: 2px; }
+.preview-scroll-control::-webkit-slider-thumb { width: 12px; height: 42px; margin-top: 0; margin-left: -2px; appearance: none; background: #a0a0a0; border: 0; border-radius: 2px; }
 .preview-scroll-control::-moz-range-track { width: 6px; background: var(--background); }
-.preview-scroll-control::-moz-range-thumb { width: 12px; height: 42px; transform: translateX(1px); background: #a0a0a0; border: 0; border-radius: 2px; }
+.preview-scroll-control::-moz-range-thumb { width: 12px; height: 42px; transform: translateX(-2px); background: #a0a0a0; border: 0; border-radius: 2px; }
 .scroll-arrow { width: 0; height: 0; border-right: 5px solid transparent; border-left: 5px solid transparent; }
 .scroll-arrow-up { border-bottom: 7px solid #8e8e8e; }
 .scroll-arrow-down { border-top: 7px solid #8e8e8e; }
