@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 type UploadItem = { id: string; file: File; url: string; width: number; height: number };
 
@@ -13,8 +13,6 @@ export function UploadPage({ onClose }: { onClose: () => void }) {
   const [errors, setErrors] = useState<string[]>([]);
   const [dragging, setDragging] = useState<number | null>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => () => items.forEach((item) => URL.revokeObjectURL(item.url)), [items]);
 
   const addFiles = (files: File[]) => {
     const nextErrors: string[] = [];
