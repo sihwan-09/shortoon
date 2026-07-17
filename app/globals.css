@@ -247,13 +247,7 @@ a { color: inherit; text-decoration: none; }
 .progress-line.is-active { background: var(--primary); }
 .upload-section { padding: 22px 0; border-bottom: 1px solid var(--divider); }
 .upload-section h2 { margin: 0 0 15px; font-size: 14px; }
-.upload-dropzone { position: relative; display: flex; min-height: 230px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; overflow: hidden; background: radial-gradient(circle at 78% 18%, rgba(199,255,61,.25), transparent 36%), linear-gradient(145deg, #293310, #080b05 78%); border: 1px dashed rgba(199,255,61,.62); border-radius: 10px; text-align: center; cursor: pointer; isolation: isolate; }
-.upload-dropzone::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(168deg, transparent 58%, rgba(255,255,255,.16) 58.4%, transparent 59.2%, transparent 72%, rgba(255,255,255,.09) 72.5%, transparent 73.2%); pointer-events: none; }
-.upload-art { position: absolute; inset: 0; z-index: -1; opacity: .82; pointer-events: none; }
-.upload-art i { position: absolute; top: 12%; right: 10%; width: 42%; aspect-ratio: 1; border: 2px solid rgba(255,255,255,.38); border-radius: 50%; box-shadow: 0 0 0 18px rgba(255,255,255,.045), 0 0 50px rgba(199,255,61,.14); }
-.upload-art b { position: absolute; top: 28%; left: 13%; width: 25%; height: 48%; background: linear-gradient(90deg, rgba(255,255,255,.16), rgba(255,255,255,.025)); clip-path: polygon(42% 0, 72% 25%, 86% 100%, 20% 100%, 26% 31%); }
-.upload-art em { position: absolute; left: -12%; right: -12%; bottom: 25%; height: 2px; background: rgba(255,255,255,.2); box-shadow: 0 -30px rgba(255,255,255,.08), 0 30px rgba(255,255,255,.08); transform: rotate(-7deg); }
-.upload-dropzone > :not(.upload-art) { position: relative; z-index: 1; text-shadow: 0 2px 12px rgba(0,0,0,.9); }
+.upload-dropzone { display: flex; height: calc(100dvh - 64px - 64px - 58px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 420px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #151517; border: 1px dashed #55555a; border-radius: 0; text-align: center; cursor: pointer; }
 .upload-dropzone input, .add-more-button input { display: none; }
 .upload-plus { color: var(--primary); font-size: 34px; line-height: 1; }
 .upload-dropzone strong { font-size: 14px; }
