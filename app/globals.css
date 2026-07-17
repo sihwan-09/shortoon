@@ -247,7 +247,7 @@ a { color: inherit; text-decoration: none; }
 .progress-line.is-active { background: var(--primary); }
 .upload-section { padding: 22px 0; border-bottom: 1px solid var(--divider); }
 .upload-section h2 { margin: 0 0 15px; font-size: 14px; }
-.upload-preview-shell { position: relative; left: 4px; display: grid; grid-template-columns: minmax(0, 1fr) 16px; width: min(690px, 100%); height: calc(100dvh - 64px - 64px - 58px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 420px; margin-inline: auto; overflow: hidden; background: transparent; border: 0; border-radius: 0; column-gap: 10px; }
+.upload-preview-shell { position: relative; left: 12px; display: grid; grid-template-columns: minmax(0, 1fr) 16px; width: min(690px, 100%); height: calc(100dvh - 64px - 64px - 58px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 420px; margin-inline: auto; overflow: hidden; background: transparent; border: 0; border-radius: 0; column-gap: 10px; }
 .upload-preview-viewport { min-width: 0; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .upload-preview-viewport::-webkit-scrollbar { display: none; }
 .preview-scroll-control { width: 16px; height: 100%; margin: 0; accent-color: var(--primary); writing-mode: vertical-lr; direction: rtl; cursor: ns-resize; }
