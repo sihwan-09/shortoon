@@ -250,7 +250,7 @@ a { color: inherit; text-decoration: none; }
 .upload-preview-shell { position: relative; left: 12px; display: grid; grid-template-columns: minmax(0, 1fr) 16px; width: min(690px, 100%); height: calc(100dvh - 64px - 64px - 58px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 420px; margin-inline: auto; overflow: hidden; background: transparent; border: 0; border-radius: 0; column-gap: 10px; }
 .upload-preview-viewport { min-width: 0; min-height: 0; overflow-y: auto; scrollbar-width: none; }
 .upload-preview-viewport::-webkit-scrollbar { display: none; }
-.preview-scroll-rail { display: flex; width: 16px; height: 100%; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px 0; background: var(--background); border: 1px solid var(--divider); }
+.preview-scroll-rail { position: relative; left: -2px; display: flex; width: 16px; height: 100%; flex-direction: column; align-items: center; justify-content: space-between; padding: 5px 0; background: var(--background); border: 1px solid var(--divider); }
 .preview-scroll-control { width: 14px; min-height: 0; flex: 1; margin: 0 auto; appearance: none; background: transparent; writing-mode: vertical-lr; direction: ltr; cursor: ns-resize; }
 .preview-scroll-control::-webkit-slider-runnable-track { width: 6px; background: var(--background); }
 .preview-scroll-control::-webkit-slider-thumb { width: 12px; height: 42px; margin-top: 0; margin-left: 1px; appearance: none; background: #a0a0a0; border: 0; border-radius: 2px; }
