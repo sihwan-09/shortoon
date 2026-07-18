@@ -20,6 +20,7 @@ export function UploadPage({ onClose, step, onStepChange }: { onClose: () => voi
   const [description, setDescription] = useState("");
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [coverError, setCoverError] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -54,15 +55,16 @@ export function UploadPage({ onClose, step, onStepChange }: { onClose: () => voi
   const toggleGenre = (genre: string) => setSelectedGenres((current) => current.includes(genre) ? current.filter((item) => item !== genre) : current.length >= 3 ? current : [...current, genre]);
   const selectCoverFile = (file?: File) => {
     if (!file) return;
-    if (!file.type.match(/^image\/(jpeg|png)$/i)) { setErrors(["대표 이미지는 JPG 또는 PNG 파일만 업로드할 수 있습니다."]); return; }
-    if (file.size > 2 * 1024 * 1024) { setErrors([`대표 이미지 파일 용량이 2MB를 초과했습니다. 현재 용량: ${(file.size / 1024 / 1024).toFixed(1)}MB`]); return; }
+    if (!file.type.match(/^image\/(jpeg|png)$/i)) { setCoverError("JPG 또는 PNG 파일만 업로드할 수 있습니다."); return; }
+    if (file.size > 2 * 1024 * 1024) { setCoverError(`파일 용량이 2MB를 초과했습니다. 현재 용량: ${(file.size / 1024 / 1024).toFixed(1)}MB`); return; }
     const image = new Image();
     image.onload = () => {
-      if (image.width !== 690 || image.height !== 980) { setErrors([`대표 이미지 크기는 690×980px이어야 합니다. 현재 크기: ${image.width}×${image.height}px`]); return; }
+      if (image.width !== 690) { setCoverError(`가로 폭이 690px가 아닙니다. 현재 크기: ${image.width}×${image.height}px`); return; }
+      if (image.height !== 980) { setCoverError(`세로 길이가 980px가 아닙니다. 현재 크기: ${image.width}×${image.height}px`); return; }
       setCoverUrl(URL.createObjectURL(file));
-      setErrors([]);
+      setCoverError(null);
     };
-    image.onerror = () => setErrors(["대표 이미지를 읽을 수 없습니다."]);
+    image.onerror = () => setCoverError("이미지를 읽을 수 없습니다.");
     image.src = URL.createObjectURL(file);
   };
 
@@ -73,8 +75,8 @@ export function UploadPage({ onClose, step, onStepChange }: { onClose: () => voi
     <div className="upload-section info-type-section"><h2>콘텐츠 유형</h2><select className="upload-select" value={contentType} onChange={(event) => setContentType(event.target.value)}><option>하이라이트 웹툰</option><option>짧은 웹툰</option><option>썰툰</option></select></div>
     <div className="upload-section info-fields-section"><label className="upload-field-label" htmlFor="shorttoon-title">제목</label><input id="shorttoon-title" className="upload-text-input" maxLength={100} value={title} onChange={(event) => setTitle(event.target.value)} /><span className="character-count">{title.length}/100</span><label className="upload-field-label description-label" htmlFor="shorttoon-description">설명 추가</label><textarea id="shorttoon-description" className="upload-textarea" maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} /><span className="character-count">{description.length}/500</span></div>
     <div className="upload-section genre-section"><h2>장르</h2><div className="genre-grid">{genres.map((genre) => <label className={`genre-option ${selectedGenres.includes(genre) ? "is-selected" : ""}`} key={genre}><input type="checkbox" checked={selectedGenres.includes(genre)} onChange={() => toggleGenre(genre)} /><span>{genre}</span></label>)}</div><span className="character-count genre-count">{selectedGenres.length}/3</span></div>
-    <div className="upload-section cover-section"><h2>대표 이미지</h2><div className="upload-preview-shell cover-upload-shell"><div className="upload-preview-viewport"><label className="upload-dropzone cover-dropzone"><input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectCoverFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />{coverUrl ? <div className="upload-preview-stack"><img className="cover-image" src={coverUrl} alt="대표 이미지 미리보기" /></div> : <><span className="upload-plus">＋</span><strong>이미지 선택</strong><small>JPG 또는 PNG<br />가로 690px · 세로 980px<br />파일당 최대 2MB</small></>}</label></div><span className="cover-scroll-spacer" aria-hidden="true" /></div><p className="cover-fallback-note">대표 이미지를 선택하지 않으면 '업로드한 이미지'의 '1번 이미지' 상단 부분이 대표 이미지로 적용됩니다.</p><label className="cover-change-button"><input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectCoverFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />대표 이미지 변경</label></div>
-    <button className="next-upload-button" type="button" onClick={() => onStepChange(1)}>다음</button>
+    <div className="upload-section cover-section"><h2>대표 이미지</h2><div className="upload-preview-shell cover-upload-shell"><div className="upload-preview-viewport"><label className="upload-dropzone cover-dropzone"><input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectCoverFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />{coverUrl ? <div className="upload-preview-stack"><img className="cover-image" src={coverUrl} alt="대표 이미지 미리보기" /></div> : <><span className="upload-plus">＋</span><strong>이미지 선택</strong><small>JPG 또는 PNG<br />가로 690px · 세로 980px<br />파일당 최대 2MB</small></>}</label></div><span className="cover-scroll-spacer" aria-hidden="true" /></div>{coverError && <div className="upload-errors cover-errors" role="alert"><p>{coverError}</p></div>}<p className="cover-fallback-note">대표 이미지를 선택하지 않으면 '업로드한 이미지'의 '1번 이미지' 상단 부분이 대표 이미지로 적용됩니다.</p><label className="cover-change-button"><input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectCoverFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />대표 이미지 변경</label></div>
+    <button className="next-upload-button" type="button" disabled={Boolean(coverError)} onClick={() => onStepChange(1)}>다음</button>
   </section>;
 
   return <section className="upload-page" aria-label="숏툰 업로드 이미지 단계">
