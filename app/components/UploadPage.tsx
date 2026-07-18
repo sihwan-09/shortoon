@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 
 type UploadItem = { id: string; file: File; url: string; width: number; height: number };
-type UploadStep = 1 | 2;
+type UploadStep = 1 | 2 | 3;
 
 const MAX_FILES = 10;
 const MAX_SIZE = 3 * 1024 * 1024;
@@ -24,6 +24,9 @@ export function UploadPage({ onClose, step, onStepChange }: { onClose: () => voi
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
+  const [allowComments, setAllowComments] = useState(true);
+  const [showFullLink, setShowFullLink] = useState(true);
+  const [rightsConfirmed, setRightsConfirmed] = useState([false, false, false]);
   const previewRef = useRef<HTMLDivElement>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -73,7 +76,14 @@ export function UploadPage({ onClose, step, onStepChange }: { onClose: () => voi
     image.src = URL.createObjectURL(file);
   };
 
-  const progress = <div className="upload-progress"><span className="progress-label is-active">이미지</span><i className="progress-line is-active" /><span className={`progress-label ${step === 2 ? "is-active" : ""}`}>정보</span><i className="progress-line" /><span className="progress-label">게시</span></div>;
+  const progress = <div className="upload-progress"><span className="progress-label is-active">이미지</span><i className={`progress-line ${step >= 2 ? "is-active" : ""}`} /><span className={`progress-label ${step >= 2 ? "is-active" : ""}`}>정보</span><i className={`progress-line ${step >= 3 ? "is-active" : ""}`} /><span className={`progress-label ${step >= 3 ? "is-active" : ""}`}>게시</span></div>;
+
+  if (step === 3) return <section className="upload-page upload-publish-page" aria-label="숏툰 게시">
+    {progress}
+    <div className="upload-section publish-settings-section"><h2>게시 설정</h2><label className="publish-toggle-row"><span>댓글 허용</span><input type="checkbox" checked={allowComments} onChange={(event) => setAllowComments(event.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label><label className="publish-toggle-row"><span>풀버전 링크 표시</span><input type="checkbox" checked={showFullLink} onChange={(event) => setShowFullLink(event.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label></div>
+    <div className="upload-section rights-section"><h2>저작권 및 권리 확인</h2>{["이 콘텐츠를 업로드하고 공개할 권리가 있습니다.", "타인의 저작물을 무단으로 사용하지 않았습니다.", "타 플랫폼 연재 작품인 경우 외부 홍보 권한을 확인했습니다."].map((right, index) => <label className="right-check-row" key={right}><input type="checkbox" checked={rightsConfirmed[index]} onChange={(event) => setRightsConfirmed((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value))} /><span>{right}</span></label>)}</div>
+    <button className="next-upload-button publish-button" type="button" disabled={!rightsConfirmed.every(Boolean)}>게시하기</button>
+  </section>;
 
   if (step === 2) return <section className="upload-page upload-info-page" aria-label="숏툰 정보 입력">
     {progress}
@@ -82,7 +92,7 @@ export function UploadPage({ onClose, step, onStepChange }: { onClose: () => voi
     {isHighlight && <div className="upload-section full-link-section"><h2>풀버전 링크</h2><label className="upload-field-label" htmlFor="full-link-platform">플랫폼</label><select id="full-link-platform" className="upload-select" value={platform} onChange={(event) => setPlatform(event.target.value)}><option>네이버웹툰</option><option>카카오웹툰</option></select><label className="upload-field-label link-url-label" htmlFor="full-link-url">URL</label><input id="full-link-url" className="upload-text-input" type="url" placeholder="https://" value={fullUrl} onChange={(event) => setFullUrl(event.target.value)} required /></div>}
     <div className="upload-section genre-section"><h2>장르</h2><div className="genre-grid">{genres.map((genre) => <label className={`genre-option ${selectedGenres.includes(genre) ? "is-selected" : ""}`} key={genre}><input type="checkbox" checked={selectedGenres.includes(genre)} onChange={() => toggleGenre(genre)} /><span>{genre}</span></label>)}</div><span className="character-count genre-count">{selectedGenres.length}/3</span></div>
     <div className="upload-section cover-section"><h2>대표 이미지</h2><div className="upload-preview-shell cover-upload-shell"><div className="upload-preview-viewport"><label className="upload-dropzone cover-dropzone"><input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectCoverFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />{coverUrl ? <div className="upload-preview-stack"><img className="cover-image" src={coverUrl} alt="대표 이미지 미리보기" /></div> : <><span className="upload-plus">＋</span><strong>이미지 선택</strong><small>JPG 또는 PNG<br />가로 690px · 세로 980px<br />파일당 최대 2MB</small></>}</label></div><span className="cover-scroll-spacer" aria-hidden="true" /></div>{coverError && <div className="upload-errors cover-errors" role="alert"><p>{coverError}</p></div>}<p className="cover-fallback-note">대표 이미지를 선택하지 않으면 '업로드한 이미지'의 '1번 이미지' 상단 부분이 대표 이미지로 적용됩니다.</p><label className="cover-change-button"><input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectCoverFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />대표 이미지 변경</label></div>
-    <button className="next-upload-button" type="button" disabled={!canProceedFromInfo} onClick={() => onStepChange(1)}>다음</button>
+    <button className="next-upload-button" type="button" disabled={!canProceedFromInfo} onClick={() => onStepChange(3)}>다음</button>
   </section>;
 
   return <section className="upload-page" aria-label="숏툰 업로드 이미지 단계">
