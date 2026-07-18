@@ -53,7 +53,7 @@ export function UploadPage({ onClose, step, onStepChange }: { onClose: () => voi
   const totalSize = items.reduce((sum, item) => sum + item.file.size, 0);
   const totalHeight = items.reduce((sum, item) => sum + item.height, 0);
   const toggleGenre = (genre: string) => setSelectedGenres((current) => current.includes(genre) ? current.filter((item) => item !== genre) : current.length >= 3 ? current : [...current, genre]);
-  const canProceedFromInfo = title.trim().length > 0 && selectedGenres.length > 0 && Boolean(coverUrl) && !coverError;
+  const canProceedFromInfo = title.trim().length > 0 && selectedGenres.length > 0 && Boolean(coverUrl);
   const selectCoverFile = (file?: File) => {
     if (!file) return;
     if (!file.type.match(/^image\/(jpeg|png)$/i)) { setCoverError("JPG 또는 PNG 파일만 업로드할 수 있습니다."); return; }
