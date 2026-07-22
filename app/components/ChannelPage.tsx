@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type ChannelPageProps = { onBack: () => void; onEdit: () => void };
 
-type ChannelPost = { title: string; coverUrl: string };
+type ChannelPost = { title: string; coverUrl: string; imageUrls: string[] };
 
 export function ChannelPage({ onBack, onEdit, posts, onOpenPost }: ChannelPageProps & { posts: ChannelPost[]; onOpenPost: (post: ChannelPost) => void }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);

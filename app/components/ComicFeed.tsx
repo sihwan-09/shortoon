@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
-type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string };
+type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
 type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[] };
-type SelectedPost = { title: string; coverUrl: string };
+type SelectedPost = { title: string; coverUrl: string; imageUrls: string[] };
 type Comment = { id: number; comicId: number; author: string; body: string; isSpoiler: number | boolean; createdAt: number };
 
 const fallbackComics: Comic[] = [
@@ -64,13 +64,13 @@ export function ComicFeed({ selectedPost }: { selectedPost?: SelectedPost | null
     setSubmitting(false);
   };
 
-  const visibleComics = selectedPost ? [{ id: -1, title: selectedPost.title, creator: "나", genre: "숏툰", accent: "#C7FF3D", publisher: "", fullUrl: "", panels: [{ id: -1, position: 1, eyebrow: "NEW SHORTTOON", line: selectedPost.title, tone: "lime", coverUrl: selectedPost.coverUrl }] }] : comics;
+  const visibleComics = selectedPost ? [{ id: -1, title: selectedPost.title, creator: "나", genre: "숏툰", accent: "#C7FF3D", publisher: "", fullUrl: "", panels: (selectedPost.imageUrls.length ? selectedPost.imageUrls : [selectedPost.coverUrl]).map((imageUrl, index) => ({ id: -1 - index, position: index + 1, eyebrow: `${index + 1} / ${selectedPost.imageUrls.length || 1}`, line: selectedPost.title, tone: "lime", imageUrl })) }] : comics;
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
       <div className="comic-feed">
         {visibleComics.map((comic, comicIndex) => (
-          <article className="comic-column" key={comic.id} aria-label={comic.title}>
+          <article className={`comic-column ${selectedPost ? "uploaded-comic" : ""}`} key={comic.id} aria-label={comic.title}>
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
               const previousTop = lastScrollTop.current[comic.id] ?? 0;
@@ -81,8 +81,8 @@ export function ComicFeed({ selectedPost }: { selectedPost?: SelectedPost | null
               }
             }}>
               {comic.panels.map((panel, panelIndex) => (
-                <section className={`comic-panel tone-${panel.tone}`} key={panel.id}>
-                  <div className="panel-art" aria-hidden="true">{"coverUrl" in panel && panel.coverUrl ? <img className="panel-art-image" src={panel.coverUrl} alt="" /> : <><i /><b /><em /></>}</div>
+                <section className={`comic-panel tone-${panel.tone} ${selectedPost ? "uploaded-panel" : ""}`} key={panel.id}>
+                  <div className="panel-art" aria-hidden="true">{panel.imageUrl ? <img className="panel-art-image" src={panel.imageUrl} alt="" /> : <><i /><b /><em /></>}</div>
                   <div className="panel-copy">
                     <span>{panel.eyebrow}</span>
                     <h2>{panel.line}</h2>
