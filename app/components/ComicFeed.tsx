@@ -32,6 +32,7 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [author, setAuthor] = useState("");
   const [body, setBody] = useState("");
@@ -47,7 +48,11 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
   const openComments = async (comic: Comic) => {
     setCommentComic(comic);
     const response = await fetch(`/api/comments?comicId=${comic.id}`);
-    if (response.ok) setComments((await response.json()).comments ?? []);
+    if (response.ok) {
+      const loadedComments = (await response.json()).comments ?? [];
+      setComments(loadedComments);
+      setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
+    }
   };
 
   const submitComment = async (event: React.FormEvent) => {
@@ -58,6 +63,7 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
     if (response.ok) {
       const { comment } = await response.json();
       setComments((current) => [comment, ...current]);
+      setCommentCounts((current) => ({ ...current, [commentComic.id]: (current[commentComic.id] ?? 0) + 1 }));
       setBody("");
       setIsSpoiler(false);
     }
@@ -94,10 +100,10 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
               ))}
             </div>
             <div className="action-rail">
-              <button type="button" className={`like-action ${likedComics[comic.id] ? "liked" : ""}`} onClick={() => setLikedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${likedComics[comic.id] ? "Unlike" : "Like"} ${comic.title}`} aria-pressed={Boolean(likedComics[comic.id])}><span aria-hidden="true">♥</span><small>LIKE</small></button>
-              <button type="button" onClick={() => openComments(comic)} aria-label={`Comments for ${comic.title}`}><span>•••</span><small>COMMENT</small></button>
-              <button type="button" className={`save-action ${savedComics[comic.id] ? "saved" : ""}`} onClick={() => setSavedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${savedComics[comic.id] ? "Remove" : "Save"} ${comic.title}`} aria-pressed={Boolean(savedComics[comic.id])}><span className="save-symbol" aria-hidden="true" /><small>SAVE</small></button>
-              <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>{comic.publisher}</small></a>
+              <button type="button" className={`like-action ${likedComics[comic.id] ? "liked" : ""}`} onClick={() => setLikedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${likedComics[comic.id] ? "Unlike" : "Like"} ${comic.title}`} aria-pressed={Boolean(likedComics[comic.id])}><span aria-hidden="true">♥</span><small>{likedComics[comic.id] ? 1 : 0}</small></button>
+              <button type="button" onClick={() => openComments(comic)} aria-label={`Comments for ${comic.title}`}><span>•••</span><small>{commentCounts[comic.id] ?? 0}</small></button>
+              <button type="button" className={`save-action ${savedComics[comic.id] ? "saved" : ""}`} onClick={() => setSavedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${savedComics[comic.id] ? "Remove" : "Save"} ${comic.title}`} aria-pressed={Boolean(savedComics[comic.id])}><span className="save-symbol" aria-hidden="true" /><small>저장</small></button>
+              <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
               <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><strong>{comic.title}</strong><span>{comic.genre}</span></div>
