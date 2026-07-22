@@ -85,7 +85,6 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
                 <section className={`comic-panel tone-${panel.tone} ${selectedPost ? "uploaded-panel" : ""}`} key={panel.id}>
                   <div className="panel-art" aria-hidden="true">{panel.imageUrl ? <img className="panel-art-image" src={panel.imageUrl} alt="" /> : <><i /><b /><em /></>}</div>
                   <div className="panel-copy">
-                    <div className="post-author"><span className="post-author-avatar" aria-hidden="true" /><span>{comic.creator}</span><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div>
                     <span>{panel.eyebrow}</span>
                     <h2>{panel.line}</h2>
                     <em className="post-genre">{comic.genre}</em>
@@ -101,7 +100,7 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>{comic.publisher}</small></a>
             </div>
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
-              <div><strong>{comic.title}</strong><span>{comic.creator} · {comic.genre}</span></div>
+              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><strong>{comic.creator}</strong><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><strong>{comic.title}</strong><span>{comic.genre}</span></div>
             </footer>
           </article>
         ))}
