@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { ComicFeed } from "./components/ComicFeed";
 import { ChannelPage } from "./components/ChannelPage";
 import { ChannelEditPage } from "./components/ChannelEditPage";
@@ -13,6 +14,12 @@ export default function Home() {
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [channelLink, setChannelLink] = useState<{ title: string; url: string } | null>(null);
   const [editingLink, setEditingLink] = useState(false);
+
+  useEffect(() => {
+    void supabase.auth.getSession().then(({ error }) => {
+      if (error) console.error("Supabase 연결 확인 실패", error);
+    });
+  }, []);
 
   return (
     <main className="app-shell">
