@@ -4,7 +4,9 @@ import { useState } from "react";
 
 type ChannelPageProps = { onBack: () => void; onEdit: () => void };
 
-export function ChannelPage({ onBack, onEdit }: ChannelPageProps) {
+type ChannelPost = { title: string; coverUrl: string };
+
+export function ChannelPage({ onBack, onEdit, posts }: ChannelPageProps & { posts: ChannelPost[] }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
 
   return (
@@ -29,7 +31,10 @@ export function ChannelPage({ onBack, onEdit }: ChannelPageProps) {
         <button type="button" role="tab" aria-selected="false">작품 목록</button>
       </div>
       <div className="channel-thumbnail-grid" aria-label="숏툰 썸네일 목록">
-        {Array.from({ length: 9 }, (_, index) => <div className="channel-thumbnail-tile" key={index} aria-hidden="true" />)}
+        {Array.from({ length: 9 }, (_, index) => {
+          const post = posts[index];
+          return <div className={`channel-thumbnail-tile ${post ? "has-post" : ""}`} key={index}>{post && <><img src={post.coverUrl} alt="" /><span>{post.title}</span></>}</div>;
+        })}
       </div>
     </section>
   );
