@@ -6,7 +6,7 @@ type ChannelPageProps = { onBack: () => void; onEdit: () => void };
 
 type ChannelPost = { title: string; coverUrl: string };
 
-export function ChannelPage({ onBack, onEdit, posts }: ChannelPageProps & { posts: ChannelPost[] }) {
+export function ChannelPage({ onBack, onEdit, posts, onOpenPost }: ChannelPageProps & { posts: ChannelPost[]; onOpenPost: (post: ChannelPost) => void }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
 
   return (
@@ -33,7 +33,7 @@ export function ChannelPage({ onBack, onEdit, posts }: ChannelPageProps & { post
       <div className="channel-thumbnail-grid" aria-label="숏툰 썸네일 목록">
         {Array.from({ length: 9 }, (_, index) => {
           const post = posts[index];
-          return <div className={`channel-thumbnail-tile ${post ? "has-post" : ""}`} key={index}>{post && <><img src={post.coverUrl} alt="" /><span>{post.title}</span></>}</div>;
+          return <button className={`channel-thumbnail-tile ${post ? "has-post" : ""}`} key={index} type="button" disabled={!post} onClick={() => post && onOpenPost(post)} aria-label={post ? `${post.title} 게시물 보기` : "빈 썸네일"}>{post && <><img src={post.coverUrl} alt="" /><span>{post.title}</span></>}</button>;
         })}
       </div>
     </section>
