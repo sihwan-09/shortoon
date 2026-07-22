@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type UploadItem = { id: string; file: File; url: string; width: number; height: number };
 type UploadStep = 1 | 2 | 3;
@@ -27,6 +27,11 @@ export function UploadPage({ onClose, step, onStepChange, onPublish, onAddLink }
   const [rightsConfirmed, setRightsConfirmed] = useState([false, false, false]);
   const previewRef = useRef<HTMLDivElement>(null);
   const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    document.querySelector<HTMLElement>(".upload-page")?.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
 
   const addFiles = (files: File[]) => {
     const nextErrors: string[] = [];
