@@ -17,12 +17,11 @@ export function UploadPage({ onClose, step, onStepChange, onPublish }: { onClose
   const [errors, setErrors] = useState<string[]>([]);
   const [dragging, setDragging] = useState<number | null>(null);
   const [previewScroll, setPreviewScroll] = useState(0);
-  const [contentType, setContentType] = useState("하이라이트 웹툰");
   const [title, setTitle] = useState("");
-  const [originalWork, setOriginalWork] = useState("");
   const [description, setDescription] = useState("");
-  const [platform, setPlatform] = useState("네이버웹툰");
-  const [fullUrl, setFullUrl] = useState("");
+  const [channelLinkTitle, setChannelLinkTitle] = useState("");
+  const [channelLinkUrl, setChannelLinkUrl] = useState("");
+  const [showChannelLink, setShowChannelLink] = useState(false);
   const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
@@ -61,8 +60,7 @@ export function UploadPage({ onClose, step, onStepChange, onPublish }: { onClose
   const totalSize = items.reduce((sum, item) => sum + item.file.size, 0);
   const totalHeight = items.reduce((sum, item) => sum + item.height, 0);
   const toggleGenre = (genre: string) => setSelectedGenres((current) => current.includes(genre) ? current.filter((item) => item !== genre) : current.length >= 3 ? current : [...current, genre]);
-  const isHighlight = contentType === "하이라이트 웹툰";
-  const canProceedFromInfo = title.trim().length > 0 && selectedGenres.length > 0 && Boolean(coverUrl) && (!isHighlight || (originalWork.trim().length > 0 && fullUrl.trim().length > 0));
+  const canProceedFromInfo = title.trim().length > 0 && selectedGenres.length > 0 && Boolean(coverUrl);
   const selectCoverFile = (file?: File) => {
     if (!file) return;
     if (!file.type.match(/^image\/(jpeg|png)$/i)) { setCoverError("JPG 또는 PNG 파일만 업로드할 수 있습니다."); return; }
@@ -89,9 +87,8 @@ export function UploadPage({ onClose, step, onStepChange, onPublish }: { onClose
 
   if (step === 2) return <section className="upload-page upload-info-page" aria-label="숏툰 정보 입력">
     {progress}
-    <div className="upload-section info-type-section"><h2>콘텐츠 유형</h2><select className="upload-select" value={contentType} onChange={(event) => setContentType(event.target.value)}><option>하이라이트 웹툰</option><option>짧은 웹툰</option><option>썰툰</option></select></div>
-    <div className="upload-section info-fields-section"><label className="upload-field-label" htmlFor="shorttoon-title">제목</label><input id="shorttoon-title" className="upload-text-input" maxLength={100} value={title} onChange={(event) => setTitle(event.target.value)} /><span className="character-count">{title.length}/100</span>{isHighlight && <><label className="upload-field-label original-work-label" htmlFor="original-work">원작 작품명</label><input id="original-work" className="upload-text-input" maxLength={50} value={originalWork} onChange={(event) => setOriginalWork(event.target.value)} /><span className="character-count">{originalWork.length}/50</span></>}<label className="upload-field-label description-label" htmlFor="shorttoon-description">설명 추가</label><textarea id="shorttoon-description" className="upload-textarea" maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} /><span className="character-count">{description.length}/500</span></div>
-    {isHighlight && <div className="upload-section full-link-section"><h2>풀버전 링크</h2><label className="upload-field-label" htmlFor="full-link-platform">플랫폼</label><select id="full-link-platform" className="upload-select" value={platform} onChange={(event) => setPlatform(event.target.value)}><option>네이버웹툰</option><option>카카오웹툰</option></select><label className="upload-field-label link-url-label" htmlFor="full-link-url">URL</label><input id="full-link-url" className="upload-text-input" type="url" placeholder="https://" value={fullUrl} onChange={(event) => setFullUrl(event.target.value)} required /></div>}
+    <div className="upload-section info-fields-section"><label className="upload-field-label" htmlFor="shorttoon-title">제목</label><input id="shorttoon-title" className="upload-text-input" maxLength={100} value={title} onChange={(event) => setTitle(event.target.value)} /><span className="character-count">{title.length}/100</span><label className="upload-field-label description-label" htmlFor="shorttoon-description">설명 추가</label><textarea id="shorttoon-description" className="upload-textarea" maxLength={500} value={description} onChange={(event) => setDescription(event.target.value)} /><span className="character-count">{description.length}/500</span></div>
+    <div className="upload-section upload-channel-link-section"><h2>링크 추가</h2><div className="edit-links"><button type="button" onClick={() => setShowChannelLink((value) => !value)}>링크 추가 <span aria-hidden="true">＋</span></button></div>{showChannelLink && <div className="upload-link-fields"><input className="upload-text-input" placeholder="링크 제목" value={channelLinkTitle} onChange={(event) => setChannelLinkTitle(event.target.value)} /><input className="upload-text-input" type="url" placeholder="https://" value={channelLinkUrl} onChange={(event) => setChannelLinkUrl(event.target.value)} /></div>}</div>
     <div className="upload-section genre-section"><h2>장르</h2><div className="genre-grid">{genres.map((genre) => <label className={`genre-option ${selectedGenres.includes(genre) ? "is-selected" : ""}`} key={genre}><input type="checkbox" checked={selectedGenres.includes(genre)} onChange={() => toggleGenre(genre)} /><span>{genre}</span></label>)}</div><span className="character-count genre-count">{selectedGenres.length}/3</span></div>
     <div className="upload-section cover-section"><h2>대표 이미지</h2><div className="upload-preview-shell cover-upload-shell"><div className="upload-preview-viewport"><label className="upload-dropzone cover-dropzone"><input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectCoverFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />{coverUrl ? <div className="upload-preview-stack"><img className="cover-image" src={coverUrl} alt="대표 이미지 미리보기" /></div> : <><span className="upload-plus">＋</span><strong>이미지 선택</strong><small>JPG 또는 PNG<br />가로 690px · 세로 980px<br />파일당 최대 2MB</small></>}</label></div><span className="cover-scroll-spacer" aria-hidden="true" /></div>{coverError && <div className="upload-errors cover-errors" role="alert"><p>{coverError}</p></div>}<p className="cover-fallback-note">대표 이미지를 선택하지 않으면 '업로드한 이미지'의 '1번 이미지' 상단 부분이 대표 이미지로 적용됩니다.</p><label className="cover-change-button"><input type="file" accept="image/jpeg,image/png" onChange={(event) => { selectCoverFile(event.target.files?.[0]); event.currentTarget.value = ""; }} />대표 이미지 변경</label></div>
     <button className="next-upload-button" type="button" disabled={!canProceedFromInfo} onClick={() => onStepChange(3)}>다음</button>

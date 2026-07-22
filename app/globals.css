@@ -253,6 +253,7 @@ a { color: inherit; text-decoration: none; }
 .edit-links .existing-link { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-top: 18px; padding: 13px 0; color: inherit; background: transparent; border: 0; border-top: 1px solid var(--divider); text-align: left; cursor: pointer; }
 .edit-links .existing-link strong { font-size: 13px; }
 .edit-links .existing-link span { overflow: hidden; color: var(--text-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.upload-link-fields { display: grid; gap: 10px; margin-top: 12px; }
 .save-channel-button { width: 100%; height: 48px; color: #111; background: var(--primary); border: 0; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; }
 .save-channel-button:disabled { opacity: .45; cursor: not-allowed; }
 .link-edit-page { min-height: calc(100dvh - 129px - env(safe-area-inset-top)); padding: 24px 20px 112px; }
