@@ -10,7 +10,7 @@ const MAX_SIZE = 3 * 1024 * 1024;
 const MAX_HEIGHT = 30000;
 const genres = ["로맨스", "판타지", "일상", "액션", "개그", "공포", "스릴러", "순정", "드라마", "시대극", "스포츠", "감성"];
 
-export type PublishedShorttoon = { title: string; coverUrl: string; imageUrls: string[] };
+export type PublishedShorttoon = { title: string; coverUrl: string; imageUrls: string[]; genre: string };
 
 export function UploadPage({ onClose, step, onStepChange, onPublish }: { onClose: () => void; step: UploadStep; onStepChange: (step: UploadStep) => void; onPublish: (post: PublishedShorttoon) => void }) {
   const [items, setItems] = useState<UploadItem[]>([]);
@@ -84,7 +84,7 @@ export function UploadPage({ onClose, step, onStepChange, onPublish }: { onClose
     {progress}
     <div className="upload-section publish-settings-section"><h2>게시 설정</h2><label className="publish-toggle-row"><span>댓글 허용</span><input type="checkbox" checked={allowComments} onChange={(event) => setAllowComments(event.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label><label className="publish-toggle-row"><span>풀버전 링크 표시</span><input type="checkbox" checked={showFullLink} onChange={(event) => setShowFullLink(event.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label></div>
     <div className="upload-section rights-section"><h2>저작권 및 권리 확인</h2>{["이 콘텐츠를 업로드하고 공개할 권리가 있습니다.", "타인의 저작물을 무단으로 사용하지 않았습니다.", "타 플랫폼 연재 작품인 경우 외부 홍보 권한을 확인했습니다."].map((right, index) => <label className="right-check-row" key={right}><input type="checkbox" checked={rightsConfirmed[index]} onChange={(event) => setRightsConfirmed((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value))} /><span>{right}</span></label>)}</div>
-    <button className="next-upload-button publish-button" type="button" disabled={!rightsConfirmed.every(Boolean) || !coverUrl || !title.trim()} onClick={() => { if (coverUrl && title.trim()) onPublish({ title: title.trim(), coverUrl, imageUrls: items.map((item) => item.url) }); }}>게시하기</button>
+    <button className="next-upload-button publish-button" type="button" disabled={!rightsConfirmed.every(Boolean) || !coverUrl || !title.trim()} onClick={() => { if (coverUrl && title.trim()) onPublish({ title: title.trim(), coverUrl, imageUrls: items.map((item) => item.url), genre: selectedGenres.join(" · ") }); }}>게시하기</button>
   </section>;
 
   if (step === 2) return <section className="upload-page upload-info-page" aria-label="숏툰 정보 입력">
