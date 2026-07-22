@@ -100,7 +100,7 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>{comic.publisher}</small></a>
             </div>
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
-              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><strong>{comic.creator}</strong><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><strong>{comic.title}</strong><span>{comic.genre}</span></div>
+              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><strong>{comic.title}</strong><span>{comic.genre}</span></div>
             </footer>
           </article>
         ))}
