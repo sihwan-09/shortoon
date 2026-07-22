@@ -85,8 +85,10 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
                 <section className={`comic-panel tone-${panel.tone} ${selectedPost ? "uploaded-panel" : ""}`} key={panel.id}>
                   <div className="panel-art" aria-hidden="true">{panel.imageUrl ? <img className="panel-art-image" src={panel.imageUrl} alt="" /> : <><i /><b /><em /></>}</div>
                   <div className="panel-copy">
+                    <div className="post-author"><span className="post-author-avatar" aria-hidden="true" /><span>{comic.creator}</span><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div>
                     <span>{panel.eyebrow}</span>
                     <h2>{panel.line}</h2>
+                    <em className="post-genre">{comic.genre}</em>
                   </div>
                   {panelIndex === 0 && <div className="swipe-tip">Swipe up for next cut</div>}
                 </section>
