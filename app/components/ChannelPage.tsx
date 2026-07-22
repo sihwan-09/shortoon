@@ -28,7 +28,9 @@ export function ChannelPage({ onBack, onEdit }: ChannelPageProps) {
         <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>0</span></button>
         <button type="button" role="tab" aria-selected="false">작품 목록</button>
       </div>
-      <div className="channel-empty">아직 등록된 숏툰이 없습니다.</div>
+      <div className="channel-thumbnail-grid" aria-label="숏툰 썸네일 목록">
+        {Array.from({ length: 9 }, (_, index) => <div className="channel-thumbnail-tile" key={index} aria-hidden="true" />)}
+      </div>
     </section>
   );
 }
