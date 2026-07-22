@@ -25,7 +25,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost }: { selectedPost?: SelectedPost | null }) {
+export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: SelectedPost | null; onExitPost?: () => void }) {
   const [comics, setComics] = useState(fallbackComics);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
@@ -68,6 +68,7 @@ export function ComicFeed({ selectedPost }: { selectedPost?: SelectedPost | null
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
+      {selectedPost && onExitPost && <button className="post-view-back" type="button" onClick={onExitPost} aria-label="내 채널로 돌아가기">←</button>}
       <div className="comic-feed">
         {visibleComics.map((comic, comicIndex) => (
           <article className={`comic-column ${selectedPost ? "uploaded-comic" : ""}`} key={comic.id} aria-label={comic.title}>
