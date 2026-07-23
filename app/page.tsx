@@ -15,8 +15,7 @@ export default function Home() {
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
   const [channelLink, setChannelLink] = useState<{ title: string; url: string } | null>(null);
   const [editingLink, setEditingLink] = useState(false);
-  const testPosts: PublishedShorttoon[] = Array.from({ length: 100 }, (_, index) => ({ title: "TEST", coverUrl: "", imageUrls: [], genre: "테스트", isTest: true }));
-  const [channelPosts, setChannelPosts] = useState<PublishedShorttoon[]>(testPosts);
+  const [channelPosts, setChannelPosts] = useState<PublishedShorttoon[]>([]);
   const [selectedPost, setSelectedPost] = useState<PublishedShorttoon | null>(null);
   const [channelScrollTop, setChannelScrollTop] = useState(0);
   const [channelTargetIndex, setChannelTargetIndex] = useState<number | null>(null);
