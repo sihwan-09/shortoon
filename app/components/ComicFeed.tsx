@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
-type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[] };
-type SelectedPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string };
+type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; link?: { title: string; url: string } };
+type SelectedPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string; link?: { title: string; url: string } };
 type Comment = { id: number; comicId: number; author: string; body: string; isSpoiler: number | boolean; createdAt: number };
 
 const fallbackComics: Comic[] = [
@@ -70,7 +70,7 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
     setSubmitting(false);
   };
 
-  const visibleComics = selectedPost ? [{ id: -1, title: selectedPost.title, creator: "나", genre: selectedPost.genre, accent: "#C7FF3D", publisher: "", fullUrl: "", panels: (selectedPost.imageUrls.length ? selectedPost.imageUrls : [selectedPost.coverUrl]).map((imageUrl, index) => ({ id: -1 - index, position: index + 1, eyebrow: `${index + 1} / ${selectedPost.imageUrls.length || 1}`, line: selectedPost.title, tone: "lime", imageUrl })) }] : comics;
+  const visibleComics = selectedPost ? [{ id: -1, title: selectedPost.title, creator: "나", genre: selectedPost.genre, accent: "#C7FF3D", publisher: "", fullUrl: "", link: selectedPost.link, panels: (selectedPost.imageUrls.length ? selectedPost.imageUrls : [selectedPost.coverUrl]).map((imageUrl, index) => ({ id: -1 - index, position: index + 1, eyebrow: `${index + 1} / ${selectedPost.imageUrls.length || 1}`, line: selectedPost.title, tone: "lime", imageUrl })) }] : comics;
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
@@ -106,7 +106,7 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
-              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><strong>{comic.title}</strong><span>{comic.genre}</span></div>
+              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><strong>{comic.title}</strong><div className="comic-tag-cluster">{comic.link && <a href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}<span>{comic.genre}</span></div></div>
             </footer>
           </article>
         ))}
