@@ -202,7 +202,7 @@ a { color: inherit; text-decoration: none; }
 .my-links button { min-height: 54px; border-bottom: 1px solid var(--divider); font-size: 14px; font-weight: 600; }
 .my-links button span { color: var(--text-muted); font-size: 24px; font-weight: 400; }
 .my-links .logout-button { margin-top: 18px; color: var(--like); border-bottom: 0; }
-.channel-page { min-height: 100dvh; padding: 18px 22px calc(128px + env(safe-area-inset-bottom)); overflow-y: auto; }
+.channel-page { min-height: 100dvh; padding: 18px 22px calc(64px + env(safe-area-inset-bottom)); overflow-y: auto; }
 .channel-back { width: 42px; height: 42px; padding: 0; color: var(--text); background: transparent; border: 0; font-size: 30px; font-weight: 300; line-height: 1; cursor: pointer; }
 .channel-profile { display: flex; align-items: center; gap: 18px; padding: 34px 0 22px; }
 .channel-identity { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 7px; }
