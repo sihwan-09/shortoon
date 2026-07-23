@@ -14,7 +14,8 @@ export default function Home() {
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [channelLink, setChannelLink] = useState<{ title: string; url: string } | null>(null);
   const [editingLink, setEditingLink] = useState(false);
-  const [channelPosts, setChannelPosts] = useState<PublishedShorttoon[]>([]);
+  const testPosts: PublishedShorttoon[] = Array.from({ length: 100 }, (_, index) => ({ title: "TEST", coverUrl: "", imageUrls: [], genre: "테스트", isTest: true }));
+  const [channelPosts, setChannelPosts] = useState<PublishedShorttoon[]>(testPosts);
   const [selectedPost, setSelectedPost] = useState<PublishedShorttoon | null>(null);
 
   useEffect(() => {

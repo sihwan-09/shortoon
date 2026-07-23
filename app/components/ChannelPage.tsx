@@ -4,7 +4,7 @@ import { useState } from "react";
 
 type ChannelPageProps = { onBack: () => void; onEdit: () => void };
 
-type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string };
+type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string; isTest?: boolean };
 
 export function ChannelPage({ onBack, onEdit, posts, onOpenPost }: ChannelPageProps & { posts: ChannelPost[]; onOpenPost: (post: ChannelPost) => void }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
@@ -31,7 +31,7 @@ export function ChannelPage({ onBack, onEdit, posts, onOpenPost }: ChannelPagePr
         <button type="button" role="tab" aria-selected="false">작품 목록</button>
       </div>
       <div className="channel-thumbnail-grid" aria-label="숏툰 썸네일 목록">
-        {posts.map((post) => <button className="channel-thumbnail-tile has-post" key={`${post.title}-${post.coverUrl}`} type="button" onClick={() => onOpenPost(post)} aria-label={`${post.title} 게시물 보기`}><img src={post.coverUrl} alt="" /><span>{post.title}</span></button>)}
+        {posts.map((post, index) => <button className={`channel-thumbnail-tile has-post ${post.isTest ? "is-test" : ""}`} key={`${post.title}-${post.coverUrl}-${index}`} type="button" onClick={() => onOpenPost(post)} aria-label={`${post.title} 게시물 보기`}>{post.isTest ? <strong>TEST</strong> : <img src={post.coverUrl} alt="" />}<span>{post.title}</span></button>)}
       </div>
     </section>
   );
