@@ -23,7 +23,7 @@ export default function Home() {
 
   const afterChannelRender = (action: () => void) => window.requestAnimationFrame(() => window.requestAnimationFrame(action));
   const restoreChannelScroll = () => afterChannelRender(() => document.querySelector<HTMLElement>(".channel-page")?.scrollTo({ top: channelScrollTop, behavior: "auto" }));
-  const scrollToChannelIndex = (index: number) => afterChannelRender(() => document.querySelector<HTMLElement>(`.channel-thumbnail-tile[data-post-index="${index}"]`)?.scrollIntoView({ block: "center", behavior: "smooth" }));
+  const scrollToChannelIndex = (index: number) => afterChannelRender(() => document.querySelector<HTMLElement>(`.channel-thumbnail-tile[data-post-index="${index}"]`)?.scrollIntoView({ block: "center", behavior: "auto" }));
   const leaveUpload = () => { setActiveTab(uploadOrigin); if (uploadOrigin === "channel") restoreChannelScroll(); };
 
   useEffect(() => {
