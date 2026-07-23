@@ -25,7 +25,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: SelectedPost | null; onExitPost?: () => void }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void }) {
   const [comics, setComics] = useState(fallbackComics);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
@@ -39,6 +39,7 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const lastScrollTop = useRef<Record<number, number>>({});
+  const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/api/comics").then((response) => response.ok ? response.json() : Promise.reject())
@@ -70,12 +71,24 @@ export function ComicFeed({ selectedPost, onExitPost }: { selectedPost?: Selecte
     setSubmitting(false);
   };
 
-  const visibleComics = selectedPost ? [{ id: -1, title: selectedPost.title, creator: "나", genre: selectedPost.genre, accent: "#C7FF3D", publisher: "", fullUrl: "", link: selectedPost.link, panels: (selectedPost.imageUrls.length ? selectedPost.imageUrls : [selectedPost.coverUrl]).map((imageUrl, index) => ({ id: -1 - index, position: index + 1, eyebrow: `${index + 1} / ${selectedPost.imageUrls.length || 1}`, line: selectedPost.title, tone: "lime", imageUrl })) }] : comics;
+  const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
+  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: "나", genre: post.genre, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
+
+  useEffect(() => {
+    if (!selectedPosts?.length || !feedRef.current) return;
+    feedRef.current.scrollTo({ left: selectedPostIndex * feedRef.current.clientWidth, behavior: "auto" });
+  }, [selectedPosts, selectedPostIndex]);
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
       {selectedPost && onExitPost && <button className="post-view-back" type="button" onClick={onExitPost} aria-label="내 채널로 돌아가기">←</button>}
-      <div className="comic-feed">
+      <div ref={feedRef} className="comic-feed" onScroll={(event) => {
+        if (!selectedPosts?.length || !onSelectedPostChange) return;
+        const width = event.currentTarget.clientWidth;
+        if (!width) return;
+        const nextIndex = Math.max(0, Math.min(selectedPosts.length - 1, Math.round(event.currentTarget.scrollLeft / width)));
+        if (nextIndex !== selectedPostIndex) onSelectedPostChange(nextIndex);
+      }}>
         {visibleComics.map((comic, comicIndex) => (
           <article className={`comic-column ${selectedPost ? "uploaded-comic" : ""}`} key={comic.id} aria-label={comic.title}>
             <div className="panel-stack" onScroll={(event) => {
