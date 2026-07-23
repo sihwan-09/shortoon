@@ -27,14 +27,11 @@ export function ChannelPage({ onBack, onEdit, posts, onOpenPost }: ChannelPagePr
         <button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button>
       </div>
       <div className="channel-tabs" role="tablist" aria-label="Channel content">
-        <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>0</span></button>
+        <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>{posts.length}</span></button>
         <button type="button" role="tab" aria-selected="false">작품 목록</button>
       </div>
       <div className="channel-thumbnail-grid" aria-label="숏툰 썸네일 목록">
-        {Array.from({ length: 9 }, (_, index) => {
-          const post = posts[index];
-          return <button className={`channel-thumbnail-tile ${post ? "has-post" : ""}`} key={index} type="button" disabled={!post} onClick={() => post && onOpenPost(post)} aria-label={post ? `${post.title} 게시물 보기` : "빈 썸네일"}>{post && <><img src={post.coverUrl} alt="" /><span>{post.title}</span></>}</button>;
-        })}
+        {posts.map((post) => <button className="channel-thumbnail-tile has-post" key={`${post.title}-${post.coverUrl}`} type="button" onClick={() => onOpenPost(post)} aria-label={`${post.title} 게시물 보기`}><img src={post.coverUrl} alt="" /><span>{post.title}</span></button>)}
       </div>
     </section>
   );
