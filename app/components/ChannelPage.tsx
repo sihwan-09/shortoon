@@ -9,6 +9,7 @@ type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre
 
 export function ChannelPage({ onBack, onEdit, posts, onOpenPost, profile }: ChannelPageProps & { posts: ChannelPost[]; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
+  const displayedIntro = profile.intro.length > 52 ? `${profile.intro.slice(0, 52).trimEnd()}…` : profile.intro;
 
   return (
     <section className="channel-page" aria-label="My channel">
@@ -22,7 +23,7 @@ export function ChannelPage({ onBack, onEdit, posts, onOpenPost, profile }: Chan
         </div>
       </div>
       <div className="channel-intro">
-        <p>{profile.intro}</p>
+        <p title={profile.intro}>{displayedIntro}</p>
       </div>
       <div className="channel-actions">
         <button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button>
