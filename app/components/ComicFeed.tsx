@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPostComment, loadPostComments } from "../../lib/comments";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
-type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; link?: { title: string; url: string } };
+type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; link?: { title: string; url: string }; commentPostId?: string };
 type SelectedPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string; link?: { title: string; url: string } };
-type Comment = { id: number; comicId: number; author: string; body: string; isSpoiler: number | boolean; createdAt: number };
+type Comment = { id: number | string; comicId: number | string; author: string; body: string; isSpoiler: number | boolean; createdAt: number };
 
 const fallbackComics: Comic[] = [
   { id: 1, title: "Midnight Delivery", creator: "Haru", genre: "Mystery", accent: "#C7FF3D", publisher: "NAVER", fullUrl: "https://comic.naver.com", panels: [
@@ -48,11 +49,22 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const openComments = async (comic: Comic) => {
     setCommentComic(comic);
-    const response = await fetch(`/api/comments?comicId=${comic.id}`);
-    if (response.ok) {
-      const loadedComments = (await response.json()).comments ?? [];
-      setComments(loadedComments);
-      setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
+    try {
+      if (comic.commentPostId) {
+        const loadedComments = await loadPostComments(comic.commentPostId);
+        setComments(loadedComments);
+        setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
+      } else {
+        const response = await fetch(`/api/comments?comicId=${comic.id}`);
+        if (response.ok) {
+          const loadedComments = (await response.json()).comments ?? [];
+          setComments(loadedComments);
+          setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
+        }
+      }
+    } catch (error) {
+      console.error("댓글을 불러오지 못했습니다.", error);
+      setComments([]);
     }
   };
 
@@ -60,19 +72,24 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     event.preventDefault();
     if (!commentComic || !body.trim()) return;
     setSubmitting(true);
-    const response = await fetch("/api/comments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ comicId: commentComic.id, author, body, isSpoiler }) });
-    if (response.ok) {
-      const { comment } = await response.json();
+    try {
+      const comment = commentComic.commentPostId
+        ? await createPostComment(commentComic.commentPostId, body.trim(), isSpoiler)
+        : await fetch("/api/comments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ comicId: commentComic.id, author, body, isSpoiler }) }).then(async (response) => response.ok ? (await response.json()).comment : null);
+      if (comment) {
       setComments((current) => [comment, ...current]);
       setCommentCounts((current) => ({ ...current, [commentComic.id]: (current[commentComic.id] ?? 0) + 1 }));
       setBody("");
       setIsSpoiler(false);
+      }
+    } catch (error) {
+      console.error("댓글을 등록하지 못했습니다.", error);
     }
     setSubmitting(false);
   };
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
-  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: "나", genre: post.genre, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
+  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: "나", genre: post.genre, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: (post as SelectedPost & { id?: string }).id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
 
   useEffect(() => {
     if (!selectedPosts?.length || !feedRef.current) return;
