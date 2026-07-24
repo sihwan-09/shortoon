@@ -17,7 +17,7 @@ export default function Home() {
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
   const [channelLink, setChannelLink] = useState<{ title: string; url: string } | null>(null);
-  const [channelProfile, setChannelProfile] = useState<ChannelProfile>({ name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기" });
+  const [channelProfile, setChannelProfile] = useState<ChannelProfile>({ name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기", link: null });
   const [channelEditDraft, setChannelEditDraft] = useState<ChannelProfile>(channelProfile);
   const [legacyChannelNames, setLegacyChannelNames] = useState<string[]>([channelProfile.name]);
   const [channelProfileLoaded, setChannelProfileLoaded] = useState(false);
@@ -39,12 +39,12 @@ export default function Home() {
       if (error) console.error("Supabase 연결 확인 실패", error);
     });
     void loadPostsFromSupabase().then((posts) => setChannelPosts(posts)).catch(() => undefined);
-    void loadChannelProfile().then((profile) => { if (profile) { setChannelProfile(profile); setChannelEditDraft(profile); setLegacyChannelNames((names) => names.includes(profile.name) ? names : [...names, profile.name]); } setChannelProfileLoaded(true); }).catch((error) => { console.error("채널 프로필 불러오기 실패", error); setChannelProfileLoaded(true); });
+    void loadChannelProfile().then((profile) => { if (profile) { setChannelProfile(profile); setChannelEditDraft(profile); setChannelLink(profile.link ?? null); setLegacyChannelNames((names) => names.includes(profile.name) ? names : [...names, profile.name]); } setChannelProfileLoaded(true); }).catch((error) => { console.error("채널 프로필 불러오기 실패", error); setChannelProfileLoaded(true); });
   }, []);
 
   useEffect(() => {
-    if (channelProfileLoaded) void saveChannelProfile(channelProfile).catch((error) => console.error("채널 프로필 저장 실패", error));
-  }, [channelProfile, channelProfileLoaded]);
+    if (channelProfileLoaded) void saveChannelProfile(channelProfile, channelLink).catch((error) => console.error("채널 프로필 저장 실패", error));
+  }, [channelProfile, channelLink, channelProfileLoaded]);
 
   const publishPost = async (post: PublishedShorttoon) => {
     try {

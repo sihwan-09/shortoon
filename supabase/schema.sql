@@ -6,8 +6,13 @@ create table if not exists public.channel_profiles (
   channel_id text not null,
   intro text not null default '',
   profile_image_url text,
+  link_title text,
+  link_url text,
   updated_at timestamptz not null default now()
 );
+
+alter table public.channel_profiles add column if not exists link_title text;
+alter table public.channel_profiles add column if not exists link_url text;
 
 alter table public.channel_profiles enable row level security;
 drop policy if exists "channel profiles are readable" on public.channel_profiles;
