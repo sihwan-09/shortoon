@@ -34,7 +34,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
-  const [author, setAuthor] = useState("");
+  const [author] = useState("익명");
   const [body, setBody] = useState("");
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -58,7 +58,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const submitComment = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!commentComic || !author.trim() || !body.trim()) return;
+    if (!commentComic || !body.trim()) return;
     setSubmitting(true);
     const response = await fetch("/api/comments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ comicId: commentComic.id, author, body, isSpoiler }) });
     if (response.ok) {
@@ -114,7 +114,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             </div>
             <div className="action-rail">
               <button type="button" className={`like-action ${likedComics[comic.id] ? "liked" : ""}`} onClick={() => setLikedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${likedComics[comic.id] ? "Unlike" : "Like"} ${comic.title}`} aria-pressed={Boolean(likedComics[comic.id])}><span aria-hidden="true">♥</span><small>{likedComics[comic.id] ? 1 : 0}</small></button>
-              <button type="button" onClick={() => openComments(comic)} aria-label={`Comments for ${comic.title}`}><span>•••</span><small>{commentCounts[comic.id] ?? 0}</small></button>
+              <button type="button" onClick={() => openComments(comic)} aria-label={`${comic.title} 댓글 보기`}><span>•••</span><small>{commentCounts[comic.id] ?? 0}</small></button>
               <button type="button" className={`save-action ${savedComics[comic.id] ? "saved" : ""}`} onClick={() => setSavedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${savedComics[comic.id] ? "Remove" : "Save"} ${comic.title}`} aria-pressed={Boolean(savedComics[comic.id])}><span className="save-symbol" aria-hidden="true" /><small>저장</small></button>
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
@@ -125,24 +125,23 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         ))}
       </div>
       {commentComic && <div className="sheet-backdrop" role="presentation" onClick={() => setCommentComic(null)}>
-        <aside className="comment-sheet" role="dialog" aria-modal="true" aria-label={`Comments for ${commentComic.title}`} onClick={(event) => event.stopPropagation()}>
+        <aside className="comment-sheet" role="dialog" aria-modal="true" aria-label={`${commentComic.title} 댓글`} onClick={(event) => event.stopPropagation()}>
           <div className="sheet-handle" />
-          <header><div><span>COMMENTS</span><strong>{commentComic.title}</strong></div><button type="button" onClick={() => setCommentComic(null)} aria-label="Close comments">×</button></header>
+          <header><div><strong>{commentComic.title} 댓글</strong></div><button type="button" onClick={() => setCommentComic(null)} aria-label="댓글창 닫기">×</button></header>
           <div className="comment-list">
-            {comments.length === 0 && <p className="no-comments">Be the first to leave a comment.</p>}
+            {comments.length === 0 && <p className="no-comments">첫 댓글을 남겨보세요.</p>}
             {comments.map((comment) => {
               const hidden = Boolean(comment.isSpoiler) && !revealed.has(comment.id);
               return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} key={comment.id}>
                 <div><strong>{comment.author}</strong>{Boolean(comment.isSpoiler) && <span>SPOILER</span>}</div>
-                <p>{hidden ? "This comment contains a spoiler." : comment.body}</p>
-                {hidden && <button type="button" onClick={() => setRevealed((current) => new Set(current).add(comment.id))}>Reveal spoiler</button>}
+                <p>{hidden ? "스포일러가 포함된 댓글입니다." : comment.body}</p>
+                {hidden && <button type="button" onClick={() => setRevealed((current) => new Set(current).add(comment.id))}>스포일러 보기</button>}
               </article>;
             })}
           </div>
           <form className="comment-form" onSubmit={submitComment}>
-            <input value={author} onChange={(event) => setAuthor(event.target.value)} placeholder="Nickname" maxLength={20} aria-label="Nickname" required />
-            <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="Write a comment" maxLength={500} aria-label="Comment" required />
-            <div><label><input type="checkbox" checked={isSpoiler} onChange={(event) => setIsSpoiler(event.target.checked)} /> Contains spoiler</label><button type="submit" disabled={submitting}>{submitting ? "Posting..." : "Post"}</button></div>
+            <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="댓글을 입력하세요" maxLength={500} aria-label="댓글" required />
+            <div><label><input type="checkbox" checked={isSpoiler} onChange={(event) => setIsSpoiler(event.target.checked)} /> 스포일러 포함</label><button type="submit" disabled={submitting}>{submitting ? "등록 중..." : "등록"}</button></div>
           </form>
         </aside>
       </div>}
