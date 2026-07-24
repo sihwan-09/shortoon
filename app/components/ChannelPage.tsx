@@ -10,8 +10,8 @@ type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre
 export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, profile }: ChannelPageProps & { posts: ChannelPost[]; onOpenIntro: () => void; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
   const firstIntroLine = profile.intro.split(/\r?\n/)[0] ?? "";
-  const introHasOverflow = profile.intro.length > firstIntroLine.length || firstIntroLine.length > 52;
-  const displayedIntro = introHasOverflow ? `${firstIntroLine.slice(0, 51).trimEnd()}…` : firstIntroLine;
+  const introHasOverflow = profile.intro.length > firstIntroLine.length;
+  const displayedIntro = introHasOverflow ? `${firstIntroLine.trimEnd()}…` : firstIntroLine;
 
   return (
     <section className="channel-page" aria-label="My channel">
