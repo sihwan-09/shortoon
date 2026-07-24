@@ -10,7 +10,7 @@ const MAX_SIZE = 3 * 1024 * 1024;
 const MAX_HEIGHT = 30000;
 const genres = ["로맨스", "판타지", "일상", "액션", "개그", "공포", "스릴러", "순정", "드라마", "시대극", "스포츠", "감성"];
 
-export type PublishedShorttoon = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; link?: { title: string; url: string }; coverFile?: File | null; imageFiles?: File[]; isTest?: boolean };
+export type PublishedShorttoon = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; link?: { title: string; url: string }; authorName?: string; coverFile?: File | null; imageFiles?: File[]; isTest?: boolean };
 
 export function UploadPage({ onClose, step, onStepChange, onPublish, onAddLink, onEditLink, link, visible = true }: { onClose: () => void; step: UploadStep; onStepChange: (step: UploadStep) => void; onPublish: (post: PublishedShorttoon) => void; onAddLink: () => void; onEditLink: () => void; link?: { title: string; url: string } | null; visible?: boolean }) {
   const [items, setItems] = useState<UploadItem[]>([]);

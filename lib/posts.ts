@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
 
+const CHANNEL_NAME = "시화 작가";
+
 export type PostDraft = {
   title: string;
   genre: string;
@@ -30,11 +32,11 @@ export async function savePostToSupabase(draft: PostDraft) {
     const { error: imageError } = await supabase.from("post_images").insert(imageUrls.map((imageUrl, sortOrder) => ({ post_id: postId, image_url: imageUrl, sort_order: sortOrder })));
     if (imageError) throw imageError;
   }
-  return { id: postId, title: draft.title, coverUrl, imageUrls, genre: draft.genre, description: draft.description, link: draft.link };
+  return { id: postId, title: draft.title, coverUrl, imageUrls, genre: draft.genre, description: draft.description, link: draft.link, authorName: CHANNEL_NAME };
 }
 
 export async function loadPostsFromSupabase() {
-  const { data: posts, error: postsError } = await supabase.from("posts").select("id,title,genre,description,link_title,link_url,cover_image_url").eq("status", "published").order("created_at", { ascending: false });
+  const { data: posts, error: postsError } = await supabase.from("posts").select("id,title,genre,description,author_name,link_title,link_url,cover_image_url").eq("status", "published").order("created_at", { ascending: false });
   if (postsError) throw postsError;
   const postIds = (posts ?? []).map((post) => post.id);
   const { data: images, error: imagesError } = postIds.length
@@ -53,6 +55,7 @@ export async function loadPostsFromSupabase() {
     coverUrl: post.cover_image_url,
     imageUrls: (imagesByPost.get(post.id) ?? []).sort((a, b) => a.sort_order - b.sort_order).map((image) => image.image_url),
     genre: post.genre,
+    authorName: post.author_name ?? CHANNEL_NAME,
     description: post.description,
     link: post.link_title && post.link_url ? { title: post.link_title, url: post.link_url } : undefined,
   }));
