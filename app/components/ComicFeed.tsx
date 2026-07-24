@@ -127,7 +127,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       {commentComic && <div className="sheet-backdrop" role="presentation" onClick={() => setCommentComic(null)}>
         <aside className="comment-sheet" role="dialog" aria-modal="true" aria-label={`${commentComic.title} 댓글`} onClick={(event) => event.stopPropagation()}>
           <div className="sheet-handle" />
-          <header><div><strong>{commentComic.title} 댓글</strong></div><button type="button" onClick={() => setCommentComic(null)} aria-label="댓글창 닫기">×</button></header>
+          <header><div aria-hidden="true" /><button type="button" onClick={() => setCommentComic(null)} aria-label="댓글창 닫기">×</button></header>
           <div className="comment-list">
             {comments.length === 0 && <p className="no-comments">첫 댓글을 남겨보세요.</p>}
             {comments.map((comment) => {
