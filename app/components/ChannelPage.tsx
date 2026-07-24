@@ -9,7 +9,7 @@ type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre
 
 export function ChannelPage({ onBack, onEdit, posts, onOpenPost, profile }: ChannelPageProps & { posts: ChannelPost[]; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
-  const displayedIntro = profile.intro.length > 52 ? `${profile.intro.slice(0, 52).trimEnd()}…` : profile.intro;
+  const displayedIntro = profile.intro.length > 52 ? `${profile.intro.slice(0, 51).trimEnd()}…` : profile.intro;
 
   return (
     <section className="channel-page" aria-label="My channel">
