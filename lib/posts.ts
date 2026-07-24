@@ -32,7 +32,7 @@ export async function savePostToSupabase(draft: PostDraft) {
     const { error: imageError } = await supabase.from("post_images").insert(imageUrls.map((imageUrl, sortOrder) => ({ post_id: postId, image_url: imageUrl, sort_order: sortOrder })));
     if (imageError) throw imageError;
   }
-  return { id: postId, title: draft.title, coverUrl, imageUrls, genre: draft.genre, description: draft.description, link: draft.link, authorName: CHANNEL_NAME };
+  return { id: postId, title: draft.title, coverUrl, imageUrls, genre: draft.genre, description: draft.description, link: draft.link, authorName: draft.authorName ?? CHANNEL_NAME };
 }
 
 export async function loadPostsFromSupabase() {
