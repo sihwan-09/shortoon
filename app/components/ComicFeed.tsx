@@ -26,7 +26,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, channelName, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; channelName?: string; legacyChannelNames?: string[] }) {
   const [comics, setComics] = useState(fallbackComics);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
@@ -52,7 +52,8 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     try {
       if (comic.commentPostId) {
         const loadedComments = await loadPostComments(comic.commentPostId);
-        setComments(loadedComments);
+        const previousNames = new Set(legacyChannelNames);
+        setComments(channelName ? loadedComments.map((comment) => previousNames.has(comment.author) ? { ...comment, author: channelName } : comment) : loadedComments);
         setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
       } else {
         const response = await fetch(`/api/comments?comicId=${comic.id}`);
