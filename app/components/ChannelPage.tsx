@@ -3,10 +3,11 @@
 import { useState } from "react";
 
 type ChannelPageProps = { onBack: () => void; onEdit: () => void };
+type ChannelProfile = { name: string; channelId: string; intro: string };
 
 type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string; isTest?: boolean };
 
-export function ChannelPage({ onBack, onEdit, posts, onOpenPost }: ChannelPageProps & { posts: ChannelPost[]; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void }) {
+export function ChannelPage({ onBack, onEdit, posts, onOpenPost, profile }: ChannelPageProps & { posts: ChannelPost[]; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
 
   return (
@@ -15,12 +16,13 @@ export function ChannelPage({ onBack, onEdit, posts, onOpenPost }: ChannelPagePr
       <div className="channel-profile">
         <div className="profile-avatar" aria-label="Profile image" role="img"><span /></div>
         <div className="channel-identity">
-          <h1>시화 작가</h1>
+          <h1>{profile.name}</h1>
+          <span className="channel-id">@{profile.channelId}</span>
           <span>구독자 0명</span>
         </div>
       </div>
       <div className="channel-intro">
-        <p>숏툰으로 전하는 짧고 강한 이야기</p>
+        <p>{profile.intro}</p>
       </div>
       <div className="channel-actions">
         <button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button>
