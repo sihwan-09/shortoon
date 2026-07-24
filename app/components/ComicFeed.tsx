@@ -52,8 +52,9 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     try {
       if (comic.commentPostId) {
         const loadedComments = await loadPostComments(comic.commentPostId);
-        const previousNames = new Set(legacyChannelNames);
-        setComments(channelName ? loadedComments.map((comment) => previousNames.has(comment.author) ? { ...comment, author: channelName } : comment) : loadedComments);
+        // Channel-post comments are authored through the channel identity. Keep
+        // historical comments tied to that identity when the channel name changes.
+        setComments(channelName ? loadedComments.map((comment) => ({ ...comment, author: channelName })) : loadedComments);
         setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
       } else {
         const response = await fetch(`/api/comments?comicId=${comic.id}`);
