@@ -7,7 +7,7 @@ type ChannelProfile = { name: string; channelId: string; intro: string };
 
 type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string; isTest?: boolean };
 
-export function ChannelPage({ onBack, onEdit, posts, onOpenPost, profile }: ChannelPageProps & { posts: ChannelPost[]; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
+export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, profile }: ChannelPageProps & { posts: ChannelPost[]; onOpenIntro: () => void; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
   const displayedIntro = profile.intro.length > 52 ? `${profile.intro.slice(0, 51).trimEnd()}…` : profile.intro;
 
@@ -22,9 +22,9 @@ export function ChannelPage({ onBack, onEdit, posts, onOpenPost, profile }: Chan
           <span>구독자 0명</span>
         </div>
       </div>
-      <div className="channel-intro">
+      <button className="channel-intro" type="button" onClick={onOpenIntro} aria-label="소개 전체 보기">
         <p title={profile.intro}>{displayedIntro}</p>
-      </div>
+      </button>
       <div className="channel-actions">
         <button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button>
         <button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button>
