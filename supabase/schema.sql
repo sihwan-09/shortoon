@@ -1,3 +1,22 @@
+-- 숏툰 채널 프로필 저장 구조
+create table if not exists public.channel_profiles (
+  id text primary key,
+  owner_id uuid references auth.users(id) on delete set null,
+  name text not null,
+  channel_id text not null,
+  intro text not null default '',
+  profile_image_url text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.channel_profiles enable row level security;
+drop policy if exists "channel profiles are readable" on public.channel_profiles;
+create policy "channel profiles are readable" on public.channel_profiles for select using (true);
+drop policy if exists "channel profiles can be created" on public.channel_profiles;
+create policy "channel profiles can be created" on public.channel_profiles for insert with check (owner_id = auth.uid() or owner_id is null);
+drop policy if exists "channel profiles can be updated" on public.channel_profiles;
+create policy "channel profiles can be updated" on public.channel_profiles for update using (owner_id = auth.uid() or owner_id is null) with check (owner_id = auth.uid() or owner_id is null);
+
 -- 숏툰 게시물 저장 구조
 create table if not exists public.posts (
   id uuid primary key default gen_random_uuid(),

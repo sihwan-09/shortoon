@@ -9,6 +9,7 @@ import { LinkEditPage } from "./components/LinkEditPage";
 import { MyPage } from "./components/MyPage";
 import { PublishedShorttoon, UploadPage } from "./components/UploadPage";
 import { loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
+import { loadChannelProfile, saveChannelProfile } from "../lib/channel";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"home" | "my" | "channel" | "edit" | "link-edit" | "upload" | "upload-link" | "post">("home");
@@ -18,6 +19,7 @@ export default function Home() {
   const [channelProfile, setChannelProfile] = useState<ChannelProfile>({ name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기" });
   const [channelEditDraft, setChannelEditDraft] = useState<ChannelProfile>(channelProfile);
   const [legacyChannelNames, setLegacyChannelNames] = useState<string[]>([channelProfile.name]);
+  const [channelProfileLoaded, setChannelProfileLoaded] = useState(false);
   const [uploadLink, setUploadLink] = useState<{ title: string; url: string } | null>(null);
   const [editingLink, setEditingLink] = useState(false);
   const [channelPosts, setChannelPosts] = useState<PublishedShorttoon[]>([]);
@@ -36,7 +38,12 @@ export default function Home() {
       if (error) console.error("Supabase 연결 확인 실패", error);
     });
     void loadPostsFromSupabase().then((posts) => setChannelPosts(posts)).catch(() => undefined);
+    void loadChannelProfile().then((profile) => { if (profile) { setChannelProfile(profile); setChannelEditDraft(profile); setLegacyChannelNames((names) => names.includes(profile.name) ? names : [...names, profile.name]); } setChannelProfileLoaded(true); }).catch((error) => { console.error("채널 프로필 불러오기 실패", error); setChannelProfileLoaded(true); });
   }, []);
+
+  useEffect(() => {
+    if (channelProfileLoaded) void saveChannelProfile(channelProfile).catch((error) => console.error("채널 프로필 저장 실패", error));
+  }, [channelProfile, channelProfileLoaded]);
 
   const publishPost = async (post: PublishedShorttoon) => {
     try {
