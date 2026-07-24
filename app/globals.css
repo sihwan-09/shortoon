@@ -220,7 +220,7 @@ a { color: inherit; text-decoration: none; }
 .channel-intro-page { position: relative; min-height: 100%; overflow-y: auto; padding: 32px 20px 120px; }
 .channel-intro-page h1 { margin: 0 0 28px; font-size: 24px; }
 .channel-intro-full { color: var(--text); font-size: 15px; line-height: 1.8; }
-.channel-intro-full p { margin: 0; white-space: normal; word-break: break-all; }
+.channel-intro-full p { margin: 0; white-space: pre-wrap; word-break: break-all; }
 .channel-intro-link { display: flex; flex-direction: column; gap: 6px; margin-top: 32px; padding: 16px; border: 1px solid var(--divider); border-radius: 12px; color: var(--text); text-decoration: none; }
 .channel-intro-link strong { font-size: 15px; }
 .channel-intro-link span { color: var(--text-muted); font-size: 13px; overflow-wrap: anywhere; }
