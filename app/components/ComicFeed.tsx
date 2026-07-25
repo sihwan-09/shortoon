@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { createPostComment, loadPostComments } from "../../lib/comments";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
-type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; link?: { title: string; url: string }; commentPostId?: string };
-type SelectedPost = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; link?: { title: string; url: string }; authorName?: string };
+type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
+type SelectedPost = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
 type Comment = { id: number | string; comicId: number | string; author: string; body: string; isSpoiler: number | boolean; createdAt: number };
 
 const fallbackComics: Comic[] = [
@@ -32,6 +32,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
+  const [infoComic, setInfoComic] = useState<Comic | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
@@ -91,7 +92,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   };
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
-  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
+  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
 
   useEffect(() => {
     if (!selectedPosts?.length || !feedRef.current) return;
@@ -138,7 +139,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
-              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><strong>{comic.title}</strong><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
+              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
             </footer>
           </article>
         ))}
@@ -162,6 +163,21 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="댓글을 입력하세요" maxLength={500} aria-label="댓글" required />
             <div><label><input type="checkbox" checked={isSpoiler} onChange={(event) => setIsSpoiler(event.target.checked)} /> 스포일러 포함</label><button type="submit" disabled={submitting}>{submitting ? "등록 중..." : "등록"}</button></div>
           </form>
+        </aside>
+      </div>}
+      {infoComic && <div className="sheet-backdrop" role="presentation" onClick={() => setInfoComic(null)}>
+        <aside className="comment-sheet info-sheet" role="dialog" aria-modal="true" aria-label={`${infoComic.title} 설명`} onClick={(event) => event.stopPropagation()}>
+          <div className="sheet-handle" />
+          <header><strong>설명</strong><button type="button" onClick={() => setInfoComic(null)} aria-label="설명 닫기">×</button></header>
+          <div className="info-sheet-body">
+            <h2>{infoComic.title}</h2>
+            <div className="info-stats">
+              <div><strong>{infoComic.likeCount ?? 0}</strong><span>좋아요</span></div>
+              <div><strong>{infoComic.viewCount ?? 0}</strong><span>조회수</span></div>
+              <div><strong>{infoComic.createdAt ? new Date(infoComic.createdAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" }) : "-"}</strong><span>{infoComic.createdAt ? new Date(infoComic.createdAt).getFullYear() + "년" : "게시일"}</span></div>
+            </div>
+            <p className="info-description">{infoComic.description?.trim() || "설명이 없습니다."}</p>
+          </div>
         </aside>
       </div>}
     </section>
