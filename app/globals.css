@@ -223,7 +223,7 @@ a { color: inherit; text-decoration: none; }
 .channel-intro-full p { margin: 0; white-space: pre-wrap; word-break: break-all; }
 .channel-intro-link { display: flex; flex-direction: column; gap: 6px; margin-top: 32px; padding: 16px; border: 1px solid var(--divider); border-radius: 12px; color: var(--text); text-decoration: none; }
 .channel-intro-link strong { font-size: 15px; }
-.channel-intro-link span { color: var(--text-muted); font-size: 13px; overflow-wrap: anywhere; }
+.channel-intro-link span { color: #4da3ff; font-size: 13px; overflow-wrap: anywhere; }
 .channel-tabs { display: grid; grid-template-columns: repeat(2, 1fr); border-bottom: 1px solid var(--divider); }
 .channel-tabs button { position: relative; min-height: 58px; color: var(--text-muted); background: transparent; border: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .channel-tabs button span { margin-left: 4px; color: inherit; font-size: 12px; font-weight: 500; }
