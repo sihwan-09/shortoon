@@ -231,10 +231,10 @@ a { color: inherit; text-decoration: none; }
 .channel-intro-info-row { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .channel-intro-info-row > span:last-child { min-width: 0; overflow-wrap: anywhere; }
 .channel-info-icon { display: inline-flex; width: 30px; flex: 0 0 30px; align-items: center; justify-content: center; color: var(--text); font-size: 26px; line-height: 1; }
-.link-info-icon { position: relative; height: 30px; }
-.link-info-icon::before, .link-info-icon::after { content: ""; position: absolute; width: 18px; height: 10px; border: 3px solid currentColor; border-radius: 8px; transform: rotate(-45deg); }
-.link-info-icon::before { left: 1px; top: 5px; }
-.link-info-icon::after { right: 1px; bottom: 5px; }
+.link-info-icon { position: relative; width: 46px; flex-basis: 46px; height: 46px; }
+.link-info-icon::before, .link-info-icon::after { content: ""; position: absolute; width: 25px; height: 14px; border: 5px solid currentColor; border-radius: 11px; transform: rotate(-45deg); }
+.link-info-icon::before { left: 0; top: 8px; }
+.link-info-icon::after { right: 0; bottom: 8px; }
 .follower-info-icon { position: relative; height: 30px; }
 .follower-info-icon::before { content: "+"; position: absolute; left: -3px; top: 0; font-size: 22px; font-weight: 700; line-height: 1; }
 .follower-person { position: relative; display: block; width: 21px; height: 27px; margin-left: 7px; }
