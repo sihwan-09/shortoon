@@ -14,7 +14,7 @@ export function ChannelIntroPage({ intro, link, postCount, onBack }: ChannelIntr
       <div className="channel-intro-info" aria-label="채널 정보">
         {link && <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">↗</span><span>{link.url}</span></div>}
         <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">ⓘ</span><span>가입일: -</span></div>
-        <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">♙</span><span>팔로워 0명</span></div>
+        <div className="channel-intro-info-row"><span className="channel-info-icon follower-info-icon" aria-hidden="true"><span className="follower-person" /></span><span>팔로워 0명</span></div>
         <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">▣</span><span>작품 {postCount}개</span></div>
         <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">⌁</span><span>조회수 0회</span></div>
       </div>
