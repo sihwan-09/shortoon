@@ -6,8 +6,11 @@ type ChannelIntroPageProps = { intro: string; link: ChannelLink | null; onBack: 
 export function ChannelIntroPage({ intro, link, onBack }: ChannelIntroPageProps) {
   return (
     <section className="channel-intro-page" aria-label="채널 소개">
+      <h2 className="channel-intro-subtitle">소개</h2>
       <div className="channel-intro-full"><p>{intro}</p></div>
+      <h2 className="channel-intro-subtitle">링크</h2>
       {link && <a className="channel-intro-link" href={link.url} target="_blank" rel="noreferrer"><strong>{link.title}</strong><span>{link.url}</span></a>}
+      <h2 className="channel-intro-subtitle">정보</h2>
     </section>
   );
 }
