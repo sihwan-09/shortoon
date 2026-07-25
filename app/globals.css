@@ -188,7 +188,7 @@ a { color: inherit; text-decoration: none; }
 .info-sheet-body { overflow-y: auto; padding: 22px 0 8px; }
 .info-sheet-body h2 { margin: 0 0 24px; padding-bottom: 22px; border-bottom: 1px solid var(--divider); color: var(--text); font-size: 20px; line-height: 1.35; }
 .info-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.info-stats > div { display: grid; min-height: 104px; align-content: center; gap: 7px; padding: 12px 8px; color: #f1d8d5; background: #35120f; border-radius: 15px; text-align: center; }
+.info-stats > div { display: grid; min-height: 104px; align-content: center; gap: 7px; padding: 12px 8px; color: #111111; background: #98E67E; border-radius: 15px; text-align: center; }
 .info-stats strong { font-size: 23px; line-height: 1.1; overflow-wrap: anywhere; }
 .info-stats span { font-size: 13px; font-weight: 700; }
 .info-description { margin: 24px 0 0; padding: 20px 22px; color: var(--text); background: #3a3a3c; border-radius: 20px; font-size: 16px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
