@@ -126,7 +126,7 @@ a { color: inherit; text-decoration: none; }
 .panel-copy > span { display: inline-flex; margin-bottom: 12px; padding: 6px 9px; color: #111; background: var(--primary); font-size: 10px; font-weight: 900; letter-spacing: .12em; }
 .panel-copy h2 { margin: 0; font-size: clamp(30px, 9vw, 42px); line-height: 1.06; letter-spacing: -.055em; }
 .post-author { display: flex; align-items: center; gap: 7px; margin-bottom: 12px; color: var(--text); font-size: 13px; font-weight: 800; }
-.post-author-avatar { width: 25px; height: 25px; flex: 0 0 25px; background: linear-gradient(145deg, var(--primary), #607d19); border: 2px solid rgba(255,255,255,.82); border-radius: 50%; }
+.post-author-avatar { width: 25px; height: 25px; flex: 0 0 25px; background: linear-gradient(145deg, var(--primary), #607d19); background-position: center; background-repeat: no-repeat; background-size: cover; border: 2px solid rgba(255,255,255,.82); border-radius: 50%; }
 .post-author small { color: var(--text-muted); font-size: 11px; font-weight: 600; }
 .post-genre { display: block; margin-top: 12px; color: var(--text-muted); font-size: 12px; font-style: normal; font-weight: 700; }
 .comic-author { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
