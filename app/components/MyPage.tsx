@@ -22,7 +22,7 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl 
     return () => window.removeEventListener("shorttoon-liked-posts", sync);
   }, []);
   return <section className="my-page" aria-label="MY 페이지">
-    <button className="my-profile" type="button" onClick={onOpenChannel} aria-label="내 채널 보기">
+    <button className="my-profile" type="button" onClick={() => { window.sessionStorage.setItem("shorttoon-open-channel-top", "1"); onOpenChannel(); }} aria-label="내 채널 보기">
       <div className="profile-avatar" aria-label="프로필 이미지" role="img">{storedProfileImageUrl ? <img src={storedProfileImageUrl} alt="프로필" /> : <span />}</div>
       <h1>{channelName}</h1><span className="my-profile-channel-id">@{channelId}</span>
     </button>

@@ -47,8 +47,17 @@ export default function Home() {
   }, []);
 
   const afterChannelRender = (action: () => void) => window.requestAnimationFrame(() => window.requestAnimationFrame(action));
-  const restoreChannelScroll = () => afterChannelRender(() => document.querySelector<HTMLElement>(".channel-page")?.scrollTo({ top: channelScrollTop, behavior: "auto" }));
-  const scrollToChannelIndex = (index: number) => afterChannelRender(() => document.querySelector<HTMLElement>(`.channel-thumbnail-tile[data-post-index="${index}"]`)?.scrollIntoView({ block: "center", behavior: "auto" }));
+  const restoreChannelScroll = () => afterChannelRender(() => {
+    const page = document.querySelector<HTMLElement>(".channel-page");
+    if (!page) return;
+    if (window.sessionStorage.getItem("shorttoon-open-channel-top") === "1") { window.sessionStorage.removeItem("shorttoon-open-channel-top"); page.scrollTo({ top: 0, behavior: "auto" }); return; }
+    page.scrollTo({ top: channelScrollTop, behavior: "auto" });
+  });
+  const scrollToChannelIndex = (index: number) => afterChannelRender(() => {
+    const page = document.querySelector<HTMLElement>(".channel-page");
+    if (window.sessionStorage.getItem("shorttoon-open-channel-top") === "1") { window.sessionStorage.removeItem("shorttoon-open-channel-top"); page?.scrollTo({ top: 0, behavior: "auto" }); return; }
+    document.querySelector<HTMLElement>(`.channel-thumbnail-tile[data-post-index="${index}"]`)?.scrollIntoView({ block: "center", behavior: "auto" });
+  });
   const leaveUpload = () => { setUploadLink(null); setActiveTab(uploadOrigin); if (uploadOrigin === "channel") restoreChannelScroll(); };
   const exitUploadTo = (destination: "home" | "my") => { setUploadLink(null); setActiveTab(destination); };
   const handleProfileImageChange = async (file: File) => {
