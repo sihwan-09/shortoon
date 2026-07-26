@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPostComment, loadPostComments } from "../../lib/comments";
+import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
 type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
@@ -57,6 +58,12 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); setLikedPostIds(Array.isArray(value) ? value : []); } catch { setLikedPostIds([]); }
     };
     syncLikes();
+    void loadUserLikedPostIds().then((ids) => {
+      if (!ids.length) return;
+      setLikedPostIds((current) => Array.from(new Set([...current, ...ids])));
+      window.localStorage.setItem("shorttoon-liked-posts", JSON.stringify(Array.from(new Set([...likedPostIds, ...ids]))));
+      window.dispatchEvent(new Event("shorttoon-liked-posts"));
+    }).catch(() => undefined);
     window.addEventListener("shorttoon-liked-posts", syncLikes);
     return () => window.removeEventListener("shorttoon-liked-posts", syncLikes);
   }, []);
@@ -125,6 +132,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       const next = current.includes(post.id) ? current.filter((id) => id !== post.id) : Array.from(new Set([...current, post.id]));
       window.localStorage.setItem("shorttoon-liked-posts", JSON.stringify(next));
       window.dispatchEvent(new Event("shorttoon-liked-posts"));
+      void syncPostLike(identity, next.includes(identity)).catch(() => undefined);
     };
     document.addEventListener("click", handleLikeClick, true);
     return () => document.removeEventListener("click", handleLikeClick, true);
