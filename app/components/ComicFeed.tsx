@@ -29,6 +29,7 @@ const fallbackComics: Comic[] = [
 export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, channelName, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; channelName?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
   const [comics, setComics] = useState(fallbackComics);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
+  const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
@@ -50,6 +51,15 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     window.addEventListener("shorttoon-profile-image", sync);
     return () => window.removeEventListener("shorttoon-profile-image", sync);
   }, [profileImageUrl]);
+
+  useEffect(() => {
+    const syncLikes = () => {
+      try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); setLikedPostIds(Array.isArray(value) ? value : []); } catch { setLikedPostIds([]); }
+    };
+    syncLikes();
+    window.addEventListener("shorttoon-liked-posts", syncLikes);
+    return () => window.removeEventListener("shorttoon-liked-posts", syncLikes);
+  }, []);
 
   useEffect(() => {
     fetch("/api/comics").then((response) => response.ok ? response.json() : Promise.reject())
@@ -101,6 +111,24 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
   const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
+
+  useEffect(() => {
+    const handleLikeClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      const button = target?.closest<HTMLButtonElement>(".like-action");
+      if (!button) return;
+      const article = button.closest<HTMLElement>(".comic-column");
+      const index = article ? Array.from(article.parentElement?.children ?? []).indexOf(article) : -1;
+      const post = selectedCollection[index];
+      if (!post?.id) return;
+      const current = (() => { try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); return Array.isArray(value) ? value as string[] : []; } catch { return []; } })();
+      const next = current.includes(post.id) ? current.filter((id) => id !== post.id) : Array.from(new Set([...current, post.id]));
+      window.localStorage.setItem("shorttoon-liked-posts", JSON.stringify(next));
+      window.dispatchEvent(new Event("shorttoon-liked-posts"));
+    };
+    document.addEventListener("click", handleLikeClick, true);
+    return () => document.removeEventListener("click", handleLikeClick, true);
+  }, [selectedCollection]);
 
   useEffect(() => {
     if (!selectedPosts?.length || !feedRef.current) return;
