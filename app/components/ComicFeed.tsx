@@ -145,7 +145,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
-      {selectedPost && onExitPost && <button className="post-view-back" type="button" onClick={onExitPost} aria-label="내 채널로 돌아가기">←</button>}
+      {selectedPost && onExitPost && <button className="post-view-back" type="button" onClick={() => { onExitPost(); window.dispatchEvent(new Event("shorttoon-post-back")); }} aria-label="이전 페이지로 돌아가기">←</button>}
       <div ref={feedRef} className="comic-feed" onScroll={(event) => {
         if (!selectedPosts?.length || !onSelectedPostChange) return;
         const width = event.currentTarget.clientWidth;

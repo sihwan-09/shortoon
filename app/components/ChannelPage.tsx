@@ -43,7 +43,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
         <button type="button" role="tab" aria-selected="false">작품 목록</button>
       </div>
       <div className="channel-thumbnail-grid" aria-label="숏툰 썸네일 목록">
-        {posts.map((post, index) => <button className={`channel-thumbnail-tile has-post ${post.isTest ? "is-test" : ""}`} data-post-index={index} key={`${post.title}-${post.coverUrl}-${index}`} type="button" onClick={(event) => onOpenPost(post, index, event.currentTarget.closest<HTMLElement>(".channel-page")?.scrollTop ?? 0)} aria-label={`${post.title} 게시물 보기`}>{post.isTest ? <strong>TEST</strong> : <img src={post.coverUrl} alt="" />}<span>{post.title}</span></button>)}
+        {posts.map((post, index) => <button className={`channel-thumbnail-tile has-post ${post.isTest ? "is-test" : ""}`} data-post-index={index} key={`${post.title}-${post.coverUrl}-${index}`} type="button" onClick={(event) => { window.localStorage.setItem("shorttoon-post-return", "channel"); onOpenPost(post, index, event.currentTarget.closest<HTMLElement>(".channel-page")?.scrollTop ?? 0); }} aria-label={`${post.title} 게시물 보기`}>{post.isTest ? <strong>TEST</strong> : <img src={post.coverUrl} alt="" />}<span>{post.title}</span></button>)}
       </div>
     </section>
   );
