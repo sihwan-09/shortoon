@@ -287,6 +287,7 @@ a { color: inherit; text-decoration: none; }
 .edit-links { padding: 22px 0 36px; }
 .upload-page-hidden { display: none !important; }
 .edit-links button { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 14px; font-weight: 800; }
+.edit-links > button:disabled { color: var(--text-muted); opacity: .55; cursor: not-allowed; }
 .edit-links span { color: var(--primary); font-size: 24px; font-weight: 400; }
 .edit-links .existing-link { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 100%; margin-top: 18px; padding: 13px 0; color: inherit; background: transparent; border: 0; border-top: 1px solid var(--divider); text-align: left; cursor: pointer; }
 .edit-links .existing-link strong { font-size: 13px; }
