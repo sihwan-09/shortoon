@@ -132,11 +132,22 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       const next = current.includes(post.id) ? current.filter((id) => id !== post.id) : Array.from(new Set([...current, post.id]));
       window.localStorage.setItem("shorttoon-liked-posts", JSON.stringify(next));
       window.dispatchEvent(new Event("shorttoon-liked-posts"));
-      void syncPostLike(identity, next.includes(identity)).catch(() => undefined);
+      void syncPostLike(post.id, next.includes(post.id)).catch(() => undefined);
     };
     document.addEventListener("click", handleLikeClick, true);
     return () => document.removeEventListener("click", handleLikeClick, true);
   }, [selectedCollection]);
+
+  useEffect(() => {
+    const buttons = document.querySelectorAll<HTMLButtonElement>(".comic-column .like-action");
+    buttons.forEach((button, index) => {
+      const post = selectedCollection[index];
+      const comic = visibleComics[index];
+      const liked = post?.id ? likedPostIds.includes(post.id) : Boolean(comic && likedComics[comic.id]);
+      button.classList.toggle("liked", liked);
+      button.setAttribute("aria-pressed", String(liked));
+    });
+  }, [likedPostIds, likedComics, selectedCollection, visibleComics]);
 
   useEffect(() => {
     if (!selectedPosts?.length || !feedRef.current) return;
