@@ -300,6 +300,7 @@ a { color: inherit; text-decoration: none; }
 .upload-link-fields { display: grid; gap: 10px; margin-top: 12px; }
 .save-channel-button { width: 100%; height: 48px; color: #111; background: var(--primary); border: 0; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 900; cursor: pointer; }
 .save-channel-button:disabled { opacity: .45; cursor: not-allowed; }
+.field-warning { display: block; margin-top: 6px; color: var(--warning); font-size: 11px; line-height: 1.45; font-weight: 500; }
 .link-edit-page { min-height: calc(100dvh - 129px - env(safe-area-inset-top)); padding: 24px 20px 112px; }
 .link-edit-form { display: grid; gap: 22px; padding: 8px 0 34px; }
 .link-edit-form label { display: block; font-size: 13px; font-weight: 800; }
