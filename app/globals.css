@@ -412,6 +412,6 @@ a { color: inherit; text-decoration: none; }
   .app-shell { max-width: 480px; margin: 0 auto; border-inline: 1px solid var(--divider); }
 }
  .liked-posts-page { position: fixed; inset: 0; left: 50%; z-index: 20; width: 100%; max-width: 480px; overflow-y: auto; background: var(--bg, #111111); padding-bottom: 92px; transform: translateX(-50%); }
- .liked-posts-header { display: flex; height: 58px; align-items: center; gap: 4px; margin: 0 -2px 0; border-bottom: 1px solid var(--divider); }
- .liked-posts-heading { margin: 0; font-size: 17px; font-weight: 800; }
+ .liked-posts-header { position: relative; display: flex; height: 58px; align-items: center; margin: 0 -2px 0; border-bottom: 1px solid var(--divider); }
+ .liked-posts-heading { position: absolute; left: 50%; margin: 0; font-size: 17px; font-weight: 800; transform: translateX(-50%); white-space: nowrap; }
  .liked-posts-empty { padding: 40px 24px; color: #a7a7a7; }
