@@ -14,6 +14,7 @@ export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile,
   const [channelId, setChannelId] = useState(profile.channelId);
   const [intro, setIntro] = useState(profile.intro);
   const [saving, setSaving] = useState(false);
+  const [pendingProfileImageFile, setPendingProfileImageFile] = useState<File | null>(null);
   const [profileImagePreview, setProfileImagePreview] = useState(profile.profileImageUrl ?? null);
   useEffect(() => {
     setProfileImagePreview(profile.profileImageUrl ?? window.localStorage.getItem("shorttoon-profile-image"));
@@ -21,16 +22,7 @@ export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile,
   const handleProfileImageChange = async (file: File) => {
     const localUrl = URL.createObjectURL(file);
     setProfileImagePreview(localUrl);
-    window.localStorage.setItem("shorttoon-profile-image", localUrl);
-    window.dispatchEvent(new Event("shorttoon-profile-image"));
-    try {
-      const uploadedUrl = await uploadChannelProfileImage(file);
-      setProfileImagePreview(uploadedUrl);
-      window.localStorage.setItem("shorttoon-profile-image", uploadedUrl);
-      window.dispatchEvent(new Event("shorttoon-profile-image"));
-    } catch (error) {
-      console.error("프로필 이미지 업로드 실패", error);
-    }
+    setPendingProfileImageFile(file);
   };
   const introCharacterCount = intro.replace(/\r?\n/g, "").length;
   const updateDraft = (next: Partial<ChannelProfile>) => {
@@ -50,7 +42,7 @@ export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile,
         <label>소개<textarea value={intro} onChange={(event) => { const value = limitIntroLines(event.target.value); setIntro(value); updateDraft({ intro: value }); }} maxLength={150} /><small>{introCharacterCount}/150</small></label>
       </div>
       <div className="edit-links"><button type="button" onClick={onAddLink} disabled={links.length >= 5}>링크 추가 <span aria-hidden="true">＋</span></button>{links.map((link, index) => <button className="existing-link" type="button" key={`${link.url}-${index}`} onClick={() => onEditLink(index)}><strong>{link.title}</strong><span>{link.url}</span></button>)}</div>
-      <button className="save-channel-button" type="button" disabled={saving} onClick={async () => { setSaving(true); try { await onSave({ name: channelName.trim() || profile.name, channelId: channelId.trim() || profile.channelId, intro: intro.trim(), links, profileImageUrl: profile.profileImageUrl }); onBack(); } catch { window.alert("채널 정보 저장에 실패했습니다. Supabase의 channel_profiles 테이블과 정책을 확인해주세요."); } finally { setSaving(false); } }}>{saving ? "저장 중..." : "변경사항 저장"}</button>
+      <button className="save-channel-button" type="button" disabled={saving} onClick={async () => { setSaving(true); try { const profileImageUrl = pendingProfileImageFile ? await uploadChannelProfileImage(pendingProfileImageFile) : (profile.profileImageUrl ?? profileImagePreview); if (profileImageUrl) { window.localStorage.setItem("shorttoon-profile-image", profileImageUrl); window.dispatchEvent(new Event("shorttoon-profile-image")); } await onSave({ name: channelName.trim() || profile.name, channelId: channelId.trim() || profile.channelId, intro: intro.trim(), links, profileImageUrl }); setPendingProfileImageFile(null); onBack(); } catch { window.alert("채널 정보 저장에 실패했습니다. Supabase Storage와 channel_profiles 정책을 확인해주세요."); } finally { setSaving(false); } }}>{saving ? "저장 중..." : "변경사항 저장"}</button>
     </section>
   );
 }
