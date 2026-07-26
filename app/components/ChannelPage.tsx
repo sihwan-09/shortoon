@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 type ChannelPageProps = { onBack: () => void; onEdit: () => void };
-type ChannelProfile = { name: string; channelId: string; intro: string };
+type ChannelProfile = { name: string; channelId: string; intro: string; profileImageUrl?: string | null };
 
 type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string; isTest?: boolean };
 
@@ -17,7 +17,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
     <section className="channel-page" aria-label="My channel">
       <button className="channel-back" type="button" onClick={onBack} aria-label="Back to my page">←</button>
       <div className="channel-profile">
-        <div className="profile-avatar" aria-label="Profile image" role="img"><span /></div>
+        <div className="profile-avatar" aria-label="Profile image" role="img">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="프로필 이미지" /> : <span />}</div>
         <div className="channel-identity">
           <h1>{profile.name}</h1>
           <span className="channel-id">@{profile.channelId}</span>

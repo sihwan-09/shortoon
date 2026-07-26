@@ -206,6 +206,7 @@ a { color: inherit; text-decoration: none; }
 .profile-avatar { position: relative; display: grid; width: 92px; height: 92px; place-items: end center; overflow: hidden; background: linear-gradient(145deg, #c7ff3d, #607d19); border: 3px solid rgba(255,255,255,.86); border-radius: 50%; box-shadow: 0 14px 34px rgba(199,255,61,.16); }
 .profile-avatar::before { content: ""; position: absolute; top: 19px; width: 26px; height: 26px; background: #111; border-radius: 50%; }
 .profile-avatar span { display: block; width: 54px; height: 34px; margin-bottom: -2px; background: #111; border-radius: 32px 32px 0 0; }
+.profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .my-profile h1 { margin: 0; font-size: 20px; letter-spacing: -.04em; }
 .my-profile-channel-id { margin-top: -8px; color: var(--text-muted); font-size: 14px; }
 .my-stats { border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider); }

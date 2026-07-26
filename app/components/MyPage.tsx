@@ -1,12 +1,21 @@
 "use client";
 
-type MyPageProps = { onOpenChannel: () => void; channelName: string; channelId: string };
+import { useEffect, useState } from "react";
 
-export function MyPage({ onOpenChannel, channelName, channelId }: MyPageProps) {
+type MyPageProps = { onOpenChannel: () => void; channelName: string; channelId: string; profileImageUrl?: string | null };
+
+export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl }: MyPageProps) {
+  const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profileImageUrl ?? null);
+  useEffect(() => {
+    const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
+    sync();
+    window.addEventListener("shorttoon-profile-image", sync);
+    return () => window.removeEventListener("shorttoon-profile-image", sync);
+  }, [profileImageUrl]);
   return (
     <section className="my-page" aria-label="My page">
       <button className="my-profile" type="button" onClick={onOpenChannel} aria-label="View my channel">
-        <div className="profile-avatar" aria-label="Profile image" role="img"><span /></div>
+        <div className="profile-avatar" aria-label="Profile image" role="img">{storedProfileImageUrl ? <img src={storedProfileImageUrl} alt="프로필 이미지" /> : <span />}</div>
         <h1>{channelName}</h1>
         <span className="my-profile-channel-id">@{channelId}</span>
       </button>

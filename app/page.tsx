@@ -10,14 +10,14 @@ import { LinkEditPage } from "./components/LinkEditPage";
 import { MyPage } from "./components/MyPage";
 import { PublishedShorttoon, UploadPage } from "./components/UploadPage";
 import { loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
-import { loadChannelProfile, saveChannelProfile } from "../lib/channel";
+import { loadChannelProfile, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"home" | "my" | "channel" | "channel-intro" | "edit" | "link-edit" | "upload" | "upload-link" | "post">("home");
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
   const [channelLinks, setChannelLinks] = useState<{ title: string; url: string }[]>([]);
-  const [channelProfile, setChannelProfile] = useState<ChannelProfile>({ name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [] });
+  const [channelProfile, setChannelProfile] = useState<ChannelProfile>({ name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null });
   const [channelEditDraft, setChannelEditDraft] = useState<ChannelProfile>(channelProfile);
   const [legacyChannelNames, setLegacyChannelNames] = useState<string[]>([channelProfile.name]);
   const [channelProfileLoaded, setChannelProfileLoaded] = useState(false);
@@ -34,13 +34,25 @@ export default function Home() {
   const scrollToChannelIndex = (index: number) => afterChannelRender(() => document.querySelector<HTMLElement>(`.channel-thumbnail-tile[data-post-index="${index}"]`)?.scrollIntoView({ block: "center", behavior: "auto" }));
   const leaveUpload = () => { setUploadLink(null); setActiveTab(uploadOrigin); if (uploadOrigin === "channel") restoreChannelScroll(); };
   const exitUploadTo = (destination: "home" | "my") => { setUploadLink(null); setActiveTab(destination); };
+  const handleProfileImageChange = async (file: File) => {
+    try {
+      const profileImageUrl = await uploadChannelProfileImage(file);
+      window.localStorage.setItem("shorttoon-profile-image", profileImageUrl);
+      window.dispatchEvent(new Event("shorttoon-profile-image"));
+      setChannelProfile((current) => ({ ...current, profileImageUrl }));
+      setChannelEditDraft((current) => ({ ...current, profileImageUrl }));
+    } catch (error) {
+      console.error("프로필 이미지 저장 실패", error);
+      window.alert("프로필 이미지 저장에 실패했습니다. Supabase Storage 정책을 확인해주세요.");
+    }
+  };
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ error }) => {
       if (error) console.error("Supabase 연결 확인 실패", error);
     });
     void loadPostsFromSupabase().then((posts) => setChannelPosts(posts)).catch(() => undefined);
-    void loadChannelProfile().then((profile) => { if (profile) { setChannelProfile(profile); setChannelEditDraft(profile); setChannelLinks(profile.links); setLegacyChannelNames((names) => names.includes(profile.name) ? names : [...names, profile.name]); } setChannelProfileLoaded(true); }).catch((error) => { console.error("채널 프로필 불러오기 실패", error); setChannelProfileLoaded(true); });
+    void loadChannelProfile().then((profile) => { if (profile) { if (profile.profileImageUrl) window.localStorage.setItem("shorttoon-profile-image", profile.profileImageUrl); setChannelProfile(profile); setChannelEditDraft(profile); setChannelLinks(profile.links); setLegacyChannelNames((names) => names.includes(profile.name) ? names : [...names, profile.name]); } setChannelProfileLoaded(true); }).catch((error) => { console.error("채널 프로필 불러오기 실패", error); setChannelProfileLoaded(true); });
   }, []);
 
   useEffect(() => {

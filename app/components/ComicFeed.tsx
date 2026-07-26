@@ -26,7 +26,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, channelName, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; channelName?: string; legacyChannelNames?: string[] }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, channelName, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; channelName?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
   const [comics, setComics] = useState(fallbackComics);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
@@ -40,8 +40,16 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [body, setBody] = useState("");
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profileImageUrl ?? null);
   const lastScrollTop = useRef<Record<number, number>>({});
   const feedRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
+    sync();
+    window.addEventListener("shorttoon-profile-image", sync);
+    return () => window.removeEventListener("shorttoon-profile-image", sync);
+  }, [profileImageUrl]);
 
   useEffect(() => {
     fetch("/api/comics").then((response) => response.ok ? response.json() : Promise.reject())
@@ -139,7 +147,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
-              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
+              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={storedProfileImageUrl ? { backgroundImage: `url(${storedProfileImageUrl})` } : undefined} /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
             </footer>
           </article>
         ))}
