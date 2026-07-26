@@ -35,6 +35,11 @@ export default function Home() {
   const leaveUpload = () => { setUploadLink(null); setActiveTab(uploadOrigin); if (uploadOrigin === "channel") restoreChannelScroll(); };
   const exitUploadTo = (destination: "home" | "my") => { setUploadLink(null); setActiveTab(destination); };
   const handleProfileImageChange = async (file: File) => {
+    const localPreviewUrl = URL.createObjectURL(file);
+    window.localStorage.setItem("shorttoon-profile-image", localPreviewUrl);
+    window.dispatchEvent(new Event("shorttoon-profile-image"));
+    setChannelProfile((current) => ({ ...current, profileImageUrl: localPreviewUrl }));
+    setChannelEditDraft((current) => ({ ...current, profileImageUrl: localPreviewUrl }));
     try {
       const profileImageUrl = await uploadChannelProfileImage(file);
       window.localStorage.setItem("shorttoon-profile-image", profileImageUrl);
@@ -43,7 +48,7 @@ export default function Home() {
       setChannelEditDraft((current) => ({ ...current, profileImageUrl }));
     } catch (error) {
       console.error("프로필 이미지 저장 실패", error);
-      window.alert("프로필 이미지 저장에 실패했습니다. Supabase Storage 정책을 확인해주세요.");
+      window.alert("이미지는 적용했지만 서버 저장에 실패했습니다. Supabase Storage 정책을 확인해주세요.");
     }
   };
 
