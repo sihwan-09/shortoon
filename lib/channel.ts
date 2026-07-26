@@ -32,5 +32,8 @@ export async function uploadChannelProfileImage(file: File): Promise<string> {
   const path = `profiles/default/avatar-${Date.now()}.${extension}`;
   const { error } = await supabase.storage.from("shorttoon-posts").upload(path, file, { upsert: true, contentType: file.type });
   if (error) throw error;
-  return supabase.storage.from("shorttoon-posts").getPublicUrl(path).data.publicUrl;
+  const publicUrl = supabase.storage.from("shorttoon-posts").getPublicUrl(path).data.publicUrl;
+  const { error: profileError } = await supabase.from("channel_profiles").update({ profile_image_url: publicUrl, updated_at: new Date().toISOString() }).eq("id", PROFILE_ID);
+  if (profileError) throw profileError;
+  return publicUrl;
 }

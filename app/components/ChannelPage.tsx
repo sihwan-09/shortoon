@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type ChannelPageProps = { onBack: () => void; onEdit: () => void };
 type ChannelProfile = { name: string; channelId: string; intro: string; profileImageUrl?: string | null };
@@ -9,6 +9,13 @@ type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre
 
 export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, profile }: ChannelPageProps & { posts: ChannelPost[]; onOpenIntro: () => void; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
+  const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profile.profileImageUrl ?? null);
+  useEffect(() => {
+    const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
+    sync();
+    window.addEventListener("shorttoon-profile-image", sync);
+    return () => window.removeEventListener("shorttoon-profile-image", sync);
+  }, [profile.profileImageUrl]);
   const firstIntroLine = profile.intro.split(/\r?\n/)[0] ?? "";
   const introHasOverflow = profile.intro.length > firstIntroLine.length;
   const displayedIntro = introHasOverflow ? `${firstIntroLine.trimEnd()}…` : firstIntroLine;
@@ -17,7 +24,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
     <section className="channel-page" aria-label="My channel">
       <button className="channel-back" type="button" onClick={onBack} aria-label="Back to my page">←</button>
       <div className="channel-profile">
-        <div className="profile-avatar" aria-label="Profile image" role="img">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="프로필 이미지" /> : <span />}</div>
+        <div className="profile-avatar" aria-label="Profile image" role="img">{storedProfileImageUrl ? <img src={storedProfileImageUrl} alt="프로필 이미지" /> : <span />}</div>
         <div className="channel-identity">
           <h1>{profile.name}</h1>
           <span className="channel-id">@{profile.channelId}</span>

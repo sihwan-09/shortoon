@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { uploadChannelProfileImage } from "../../lib/channel";
 
 export type ChannelLink = { title: string; url: string };
 export type ChannelProfile = { name: string; channelId: string; intro: string; links: ChannelLink[]; profileImageUrl?: string | null };
@@ -13,6 +14,21 @@ export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile,
   const [channelId, setChannelId] = useState(profile.channelId);
   const [intro, setIntro] = useState(profile.intro);
   const [saving, setSaving] = useState(false);
+  const [profileImagePreview, setProfileImagePreview] = useState(profile.profileImageUrl ?? null);
+  const handleProfileImageChange = async (file: File) => {
+    const localUrl = URL.createObjectURL(file);
+    setProfileImagePreview(localUrl);
+    window.localStorage.setItem("shorttoon-profile-image", localUrl);
+    window.dispatchEvent(new Event("shorttoon-profile-image"));
+    try {
+      const uploadedUrl = await uploadChannelProfileImage(file);
+      setProfileImagePreview(uploadedUrl);
+      window.localStorage.setItem("shorttoon-profile-image", uploadedUrl);
+      window.dispatchEvent(new Event("shorttoon-profile-image"));
+    } catch (error) {
+      console.error("프로필 이미지 업로드 실패", error);
+    }
+  };
   const introCharacterCount = intro.replace(/\r?\n/g, "").length;
   const updateDraft = (next: Partial<ChannelProfile>) => {
     const draft = { name: next.name ?? channelName, channelId: next.channelId ?? channelId, intro: next.intro ?? intro, links: profile.links, profileImageUrl: profile.profileImageUrl };
@@ -23,7 +39,7 @@ export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile,
     <section className="channel-edit-page" aria-label="Edit channel">
       <div className="edit-section edit-profile-section">
         <h2>프로필 이미지</h2>
-        <div className="edit-avatar-wrap"><div className="profile-avatar" aria-label="Profile image" role="img">{profile.profileImageUrl ? <img src={profile.profileImageUrl} alt="프로필 이미지" /> : <span />}</div><label className="profile-image-change-button">이미지 변경<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0]; event.currentTarget.value = ""; if (file) void onProfileImageChange?.(file); }} /></label></div>
+        <div className="edit-avatar-wrap"><div className="profile-avatar" aria-label="Profile image" role="img">{profileImagePreview ? <img src={profileImagePreview} alt="프로필 이미지" /> : <span />}</div><label className="profile-image-change-button">이미지 변경<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0]; event.currentTarget.value = ""; if (file) void handleProfileImageChange(file); }} /></label></div>
       </div>
       <div className="edit-form">
         <label>채널명<input value={channelName} onChange={(event) => { const value = event.target.value; setChannelName(value); updateDraft({ name: value }); }} maxLength={20} /><small>{channelName.length}/20</small></label>
