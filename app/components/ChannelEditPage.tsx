@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { uploadChannelProfileImage } from "../../lib/channel";
 
 export type ChannelLink = { title: string; url: string };
@@ -15,6 +15,9 @@ export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile,
   const [intro, setIntro] = useState(profile.intro);
   const [saving, setSaving] = useState(false);
   const [profileImagePreview, setProfileImagePreview] = useState(profile.profileImageUrl ?? null);
+  useEffect(() => {
+    setProfileImagePreview(profile.profileImageUrl ?? window.localStorage.getItem("shorttoon-profile-image"));
+  }, [profile.profileImageUrl]);
   const handleProfileImageChange = async (file: File) => {
     const localUrl = URL.createObjectURL(file);
     setProfileImagePreview(localUrl);
