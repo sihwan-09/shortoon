@@ -186,7 +186,7 @@ a { color: inherit; text-decoration: none; }
 .info-sheet > header { min-height: 54px; }
 .info-sheet > header strong { font-size: 22px; }
 .info-sheet-body { overflow-y: auto; padding: 22px 0 8px; }
-.info-sheet-body h2 { margin: 0 0 24px; padding-bottom: 22px; border-bottom: 1px solid var(--divider); color: var(--text); font-size: 20px; line-height: 1.35; }
+.info-sheet-body h2 { margin: 0 0 24px; padding-bottom: 22px; border-bottom: 1px solid var(--divider); color: var(--text); font-size: 16px; line-height: 1.55; }
 .info-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .info-stats > div { display: grid; min-height: 104px; align-content: center; gap: 7px; padding: 12px 8px; color: #111111; background: #98E67E; border-radius: 15px; text-align: center; }
 .info-stats strong { font-size: 23px; line-height: 1.1; overflow-wrap: anywhere; }
