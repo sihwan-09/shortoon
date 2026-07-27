@@ -54,6 +54,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const lastScrollTop = useRef<Record<number, number>>({});
   const feedRef = useRef<HTMLDivElement>(null);
   const horizontalGestureStartX = useRef<number | null>(null);
+  const horizontalGestureStartY = useRef<number | null>(null);
   const horizontalGestureStartIndex = useRef(0);
 
   useEffect(() => {
@@ -174,6 +175,22 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     feedRef.current.scrollTo({ left: selectedPostIndex * feedRef.current.clientWidth, behavior: "auto" });
   }, [selectedPosts, selectedPostIndex]);
 
+  useEffect(() => {
+    const feed = feedRef.current;
+    if (!feed) return;
+    const preventNativeHorizontalScroll = (event: TouchEvent) => {
+      const startX = horizontalGestureStartX.current;
+      const startY = horizontalGestureStartY.current;
+      const touch = event.touches[0];
+      if (startX === null || startY === null || !touch) return;
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 4) event.preventDefault();
+    };
+    feed.addEventListener("touchmove", preventNativeHorizontalScroll, { passive: false });
+    return () => feed.removeEventListener("touchmove", preventNativeHorizontalScroll);
+  }, []);
+
   const moveOnePost = (direction: 1 | -1) => {
     const feed = feedRef.current;
     if (!feed || visibleComics.length < 2) return;
@@ -194,10 +211,12 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         moveOnePost(event.deltaX >= 0 || event.deltaY >= 0 ? 1 : -1);
       }} onTouchStart={(event) => {
         horizontalGestureStartX.current = event.touches[0]?.clientX ?? null;
+        horizontalGestureStartY.current = event.touches[0]?.clientY ?? null;
         horizontalGestureStartIndex.current = feedRef.current ? Math.round(feedRef.current.scrollLeft / feedRef.current.clientWidth) : 0;
       }} onTouchEnd={(event) => {
         const startX = horizontalGestureStartX.current;
         horizontalGestureStartX.current = null;
+        horizontalGestureStartY.current = null;
         if (startX === null) return;
         const endX = event.changedTouches[0]?.clientX ?? startX;
         const delta = endX - startX;
