@@ -172,7 +172,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   useEffect(() => {
     if (!selectedPosts?.length || !feedRef.current) return;
-    feedRef.current.scrollTo({ left: 0, behavior: "auto" });
+    feedRef.current.scrollTo({ left: selectedPostIndex * feedRef.current.clientWidth, behavior: "auto" });
   }, [selectedPosts, selectedPostIndex]);
 
   useEffect(() => {
@@ -194,11 +194,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const moveOnePost = (direction: 1 | -1) => {
     const feed = feedRef.current;
     if (!feed || visibleComics.length < 2) return;
-    if (selectedPosts?.length && onSelectedPostChange) {
-      const targetIndex = Math.max(0, Math.min(visibleComics.length - 1, selectedPostIndex + direction));
-      if (targetIndex !== selectedPostIndex) onSelectedPostChange(targetIndex);
-      return;
-    }
     const currentIndex = Math.max(0, Math.min(visibleComics.length - 1, Math.round(feed.scrollLeft / feed.clientWidth)));
     const targetIndex = Math.max(0, Math.min(visibleComics.length - 1, currentIndex + direction));
     feed.scrollTo({ left: targetIndex * feed.clientWidth, behavior: "smooth" });
@@ -218,7 +213,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         if (event.pointerType === "mouse" && event.button !== 0) return;
         horizontalGestureStartX.current = event.clientX;
         horizontalGestureStartY.current = event.clientY;
-        horizontalGestureStartIndex.current = selectedPosts?.length ? selectedPostIndex : (feedRef.current ? Math.round(feedRef.current.scrollLeft / feedRef.current.clientWidth) : 0);
+        horizontalGestureStartIndex.current = feedRef.current ? Math.round(feedRef.current.scrollLeft / feedRef.current.clientWidth) : 0;
         event.currentTarget.setPointerCapture?.(event.pointerId);
       }} onPointerUp={(event) => {
         const startX = horizontalGestureStartX.current;
@@ -233,10 +228,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
           return;
         }
         const targetIndex = Math.max(0, Math.min(visibleComics.length - 1, horizontalGestureStartIndex.current + (delta < 0 ? 1 : -1)));
-        if (selectedPosts?.length && onSelectedPostChange) {
-          if (targetIndex !== selectedPostIndex) onSelectedPostChange(targetIndex);
-          return;
-        }
         feed.scrollTo({ left: targetIndex * feed.clientWidth, behavior: "smooth" });
       }} onPointerCancel={() => {
         horizontalGestureStartX.current = null;
@@ -249,7 +240,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         if (selectedPosts?.length && onSelectedPostChange && nextIndex !== selectedPostIndex) onSelectedPostChange(nextIndex);
         if (isHomeFeed && feedHasMore && !feedLoadingMore && nextIndex >= visibleComics.length - 3) void loadFeedPage(feedPage + 1, true);
       }}>
-        {(selectedPosts?.length ? [visibleComics[selectedPostIndex]].filter(Boolean) : visibleComics).map((comic, comicIndex) => (
+        {visibleComics.map((comic, comicIndex) => (
           <article className={`comic-column ${comic.commentPostId ? "uploaded-comic" : ""} ${isHomeFeed ? "home-comic" : ""}`} key={comic.id} aria-label={comic.title}>
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
