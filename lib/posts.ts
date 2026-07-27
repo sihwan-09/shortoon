@@ -9,7 +9,7 @@ const isPublishedAtMissing = (error: { code?: string; message?: string } | null)
 async function uploadPostFiles(draft: PostDraft, postId: string) {
   const uploadFile = async (file: File, name: string) => {
     const path = `${postId}/${name}`;
-    const { error } = await supabase.storage.from("shorttoon-posts").upload(path, file, { upsert: true, contentType: file.type });
+    const { error } = await supabase.storage.from("shorttoon-posts").upload(path, file, { contentType: file.type });
     if (error) throw error;
     return supabase.storage.from("shorttoon-posts").getPublicUrl(path).data.publicUrl;
   };
