@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPostComment, loadPostComments } from "../../lib/comments";
 import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
+import { loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
 type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
@@ -28,7 +29,14 @@ const fallbackComics: Comic[] = [
 ];
 
 export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, channelName, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; channelName?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
-  const [comics, setComics] = useState(fallbackComics);
+  const [comics, setComics] = useState<Comic[]>([]);
+  const [feedPage, setFeedPage] = useState(0);
+  const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
+  const [feedLoading, setFeedLoading] = useState(false);
+  const [feedLoadingMore, setFeedLoadingMore] = useState(false);
+  const [feedHasMore, setFeedHasMore] = useState(true);
+  const [feedError, setFeedError] = useState(false);
+  const feedRequestRef = useRef(false);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
   const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
@@ -68,10 +76,20 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     return () => window.removeEventListener("shorttoon-liked-posts", syncLikes);
   }, []);
 
-  useEffect(() => {
-    fetch("/api/comics").then((response) => response.ok ? response.json() : Promise.reject())
-      .then((data) => data.comics?.length && setComics(data.comics)).catch(() => undefined);
-  }, []);
+  const isHomeFeed = !selectedPost && !selectedPosts;
+  const toComic = (post: PublishedPost, index: number): Comic => ({ id: Number.parseInt(post.id.replace(/-/g, "").slice(0, 8), 16) || index + 1, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, imageIndex) => ({ id: index * 100 + imageIndex, position: imageIndex + 1, eyebrow: `${imageIndex + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) });
+  const loadFeedPage = async (page: number, append: boolean) => {
+    if (!isHomeFeed || feedRequestRef.current || (!append && page !== 0)) return;
+    feedRequestRef.current = true;
+    if (append) setFeedLoadingMore(true); else { setFeedLoading(true); setFeedError(false); }
+    try {
+      const result = await loadPublishedPostsPage(page, 10);
+      setComics((current) => { const merged = append ? [...current, ...result.posts.map(toComic)] : result.posts.map(toComic); return Array.from(new Map(merged.map((comic) => [comic.commentPostId ?? String(comic.id), comic])).values()); });
+      setFeedPage(page); setFeedHasMore(result.hasMore);
+    } catch (error) { console.error("Supabase 홈 피드 조회 실패", error); if (!append) setFeedError(true); }
+    finally { feedRequestRef.current = false; if (append) setFeedLoadingMore(false); else setFeedLoading(false); }
+  };
+  useEffect(() => { if (isHomeFeed) void loadFeedPage(0, false); }, [isHomeFeed]);
 
   const openComments = async (comic: Comic) => {
     setCommentComic(comic);
@@ -156,13 +174,17 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
+      {isHomeFeed && feedLoading && <div className="feed-state" role="status">숏툰을 불러오는 중...</div>}
+      {isHomeFeed && feedError && <div className="feed-state feed-error" role="alert"><p>숏툰을 불러오지 못했습니다.</p><button type="button" onClick={() => void loadFeedPage(0, false)}>다시 시도</button></div>}
+      {isHomeFeed && !feedLoading && !feedError && visibleComics.length === 0 && <div className="feed-state" role="status">아직 게시된 숏툰이 없습니다.</div>}
       {selectedPost && onExitPost && <button className="post-view-back" type="button" onClick={() => { onExitPost(); window.dispatchEvent(new Event("shorttoon-post-back")); }} aria-label="이전 페이지로 돌아가기">←</button>}
-      <div ref={feedRef} className="comic-feed" onScroll={(event) => {
-        if (!selectedPosts?.length || !onSelectedPostChange) return;
+      <div ref={feedRef} className={`comic-feed ${isHomeFeed && (feedLoading || feedError || visibleComics.length === 0) ? "feed-content-hidden" : ""}`} onScroll={(event) => {
         const width = event.currentTarget.clientWidth;
         if (!width) return;
-        const nextIndex = Math.max(0, Math.min(selectedPosts.length - 1, Math.round(event.currentTarget.scrollLeft / width)));
-        if (nextIndex !== selectedPostIndex) onSelectedPostChange(nextIndex);
+        const nextIndex = Math.max(0, Math.min(visibleComics.length - 1, Math.round(event.currentTarget.scrollLeft / width)));
+        if (isHomeFeed) setFeedCurrentIndex(nextIndex);
+        if (selectedPosts?.length && onSelectedPostChange && nextIndex !== selectedPostIndex) onSelectedPostChange(nextIndex);
+        if (isHomeFeed && feedHasMore && !feedLoadingMore && nextIndex >= visibleComics.length - 3) void loadFeedPage(feedPage + 1, true);
       }}>
         {visibleComics.map((comic, comicIndex) => (
           <article className={`comic-column ${selectedPost ? "uploaded-comic" : ""}`} key={comic.id} aria-label={comic.title}>
@@ -177,7 +199,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             }}>
               {comic.panels.map((panel, panelIndex) => (
                 <section className={`comic-panel tone-${panel.tone} ${selectedPost ? "uploaded-panel" : ""}`} key={panel.id}>
-                  <div className="panel-art" aria-hidden="true">{panel.imageUrl ? <img className="panel-art-image" src={panel.imageUrl} alt="" /> : <><i /><b /><em /></>}</div>
+                  <div className="panel-art" aria-hidden="true">{panel.imageUrl ? <img className="panel-art-image" src={panel.imageUrl} alt="" loading={selectedPost ? "eager" : "lazy"} /> : <><i /><b /><em /></>}</div>
                   <div className="panel-copy">
                     <span>{panel.eyebrow}</span>
                     <h2>{panel.line}</h2>
@@ -199,6 +221,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
           </article>
         ))}
       </div>
+      {isHomeFeed && feedLoadingMore && <div className="feed-loading-more" role="status">숏툰을 더 불러오는 중...</div>}
       {commentComic && <div className="sheet-backdrop" role="presentation" onClick={() => setCommentComic(null)}>
         <aside className="comment-sheet" role="dialog" aria-modal="true" aria-label={`${commentComic.title} 댓글`} onClick={(event) => event.stopPropagation()}>
           <div className="sheet-handle" />

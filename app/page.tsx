@@ -82,13 +82,17 @@ export default function Home() {
     void supabase.auth.getSession().then(({ error }) => {
       if (error) console.error("Supabase 연결 확인 실패", error);
     });
-    void loadPostsFromSupabase().then((posts) => setChannelPosts(posts)).catch(() => undefined);
     void loadChannelProfile().then((profile) => { if (profile) { if (profile.profileImageUrl) window.localStorage.setItem("shorttoon-profile-image", profile.profileImageUrl); setChannelProfile(profile); setChannelEditDraft(profile); setChannelLinks(profile.links); setLegacyChannelNames((names) => names.includes(profile.name) ? names : [...names, profile.name]); } setChannelProfileLoaded(true); }).catch((error) => { console.error("채널 프로필 불러오기 실패", error); setChannelProfileLoaded(true); });
   }, []);
 
   useEffect(() => {
     if (channelProfileLoaded) void saveChannelProfile(channelProfile, channelLinks).catch((error) => console.error("채널 프로필 저장 실패", error));
   }, [channelProfile, channelLinks, channelProfileLoaded]);
+
+  useEffect(() => {
+    if (activeTab !== "channel" && activeTab !== "liked") return;
+    void loadPostsFromSupabase().then((posts) => setChannelPosts(posts)).catch((error) => console.error("채널 게시물 조회 실패", error));
+  }, [activeTab]);
 
   const publishPost = async (post: PublishedShorttoon) => {
     try {
