@@ -28,7 +28,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, channelId, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
   const [comics, setComics] = useState<Comic[]>([]);
   const [feedPage, setFeedPage] = useState(0);
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
@@ -288,7 +288,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             </div>
             <button className="profile-hit-area" type="button" aria-label={`${comic.creator} 채널 보기`} onClick={() => onOpenChannel ? onOpenChannel(comic) : window.dispatchEvent(new CustomEvent("shorttoon-open-channel"))} />
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
-              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={storedProfileImageUrl ? { backgroundImage: `url(${storedProfileImageUrl})` } : undefined} /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
+              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={storedProfileImageUrl ? { backgroundImage: `url(${storedProfileImageUrl})` } : undefined} /><small>@{channelId || comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
             </footer>
           </article>
         ))}
