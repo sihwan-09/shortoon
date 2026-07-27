@@ -28,7 +28,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, channelName, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; channelName?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
   const [comics, setComics] = useState<Comic[]>([]);
   const [feedPage, setFeedPage] = useState(0);
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
@@ -159,6 +159,22 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     document.addEventListener("click", handleLikeClick, true);
     return () => document.removeEventListener("click", handleLikeClick, true);
   }, [selectedCollection]);
+
+  useEffect(() => {
+    const handleAuthorClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest(".comic-author")) return;
+      const article = target.closest<HTMLElement>(".comic-column");
+      const index = article ? Array.from(article.parentElement?.children ?? []).indexOf(article) : -1;
+      const comic = visibleComics[index];
+      if (comic) {
+        if (onOpenChannel) onOpenChannel(comic);
+        else window.dispatchEvent(new CustomEvent("shorttoon-open-channel"));
+      }
+    };
+    document.addEventListener("click", handleAuthorClick);
+    return () => document.removeEventListener("click", handleAuthorClick);
+  }, [onOpenChannel, visibleComics]);
 
   useEffect(() => {
     const buttons = document.querySelectorAll<HTMLButtonElement>(".comic-column .like-action");

@@ -110,6 +110,12 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    const openChannel = () => { setActiveTab("channel"); setChannelTargetIndex(null); };
+    window.addEventListener("shorttoon-open-channel", openChannel);
+    return () => window.removeEventListener("shorttoon-open-channel", openChannel);
+  }, []);
+
   return (
     <main className="app-shell">
       <header className="app-header" aria-label="Shorttoon header">
