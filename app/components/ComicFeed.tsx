@@ -187,7 +187,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         if (isHomeFeed && feedHasMore && !feedLoadingMore && nextIndex >= visibleComics.length - 3) void loadFeedPage(feedPage + 1, true);
       }}>
         {visibleComics.map((comic, comicIndex) => (
-          <article className={`comic-column ${selectedPost ? "uploaded-comic" : ""}`} key={comic.id} aria-label={comic.title}>
+          <article className={`comic-column ${comic.commentPostId ? "uploaded-comic" : ""} ${isHomeFeed ? "home-comic" : ""}`} key={comic.id} aria-label={comic.title}>
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
               const previousTop = lastScrollTop.current[comic.id] ?? 0;
@@ -198,8 +198,8 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
               }
             }}>
               {comic.panels.map((panel, panelIndex) => (
-                <section className={`comic-panel tone-${panel.tone} ${selectedPost ? "uploaded-panel" : ""}`} key={panel.id}>
-                  <div className="panel-art" aria-hidden="true">{panel.imageUrl ? <img className="panel-art-image" src={panel.imageUrl} alt="" loading={selectedPost ? "eager" : "lazy"} /> : <><i /><b /><em /></>}</div>
+                <section className={`comic-panel tone-${panel.tone} ${comic.commentPostId ? "uploaded-panel" : ""}`} key={panel.id}>
+                  <div className="panel-art" aria-hidden="true">{panel.imageUrl ? <img className="panel-art-image" src={panel.imageUrl} alt="" loading={comic.commentPostId ? "eager" : "lazy"} /> : <><i /><b /><em /></>}</div>
                   <div className="panel-copy">
                     <span>{panel.eyebrow}</span>
                     <h2>{panel.line}</h2>
