@@ -51,7 +51,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profileImageUrl ?? null);
-  const [storedChannelId, setStoredChannelId] = useState(() => typeof window === "undefined" ? "shorttoon_creator" : window.localStorage.getItem("shorttoon-channel-id") || "shorttoon_creator");
+  const [storedChannelId, setStoredChannelId] = useState("shorttoon_creator");
   const lastScrollTop = useRef<Record<number, number>>({});
   const feedRef = useRef<HTMLDivElement>(null);
   const horizontalGestureStartX = useRef<number | null>(null);
@@ -299,7 +299,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             </div>
             <button className="profile-hit-area" type="button" aria-label={`${comic.creator} 채널 보기`} onClick={() => onOpenChannel ? onOpenChannel(comic) : window.dispatchEvent(new CustomEvent("shorttoon-open-channel"))} />
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
-              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={storedProfileImageUrl ? { backgroundImage: `url(${storedProfileImageUrl})` } : undefined} /><small>@{channelId || storedChannelId}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
+              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={storedProfileImageUrl ? { backgroundImage: `url(${storedProfileImageUrl})` } : undefined} /><small>@{storedChannelId}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
             </footer>
           </article>
         ))}
