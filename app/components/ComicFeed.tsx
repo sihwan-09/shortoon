@@ -205,7 +205,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       {isHomeFeed && feedError && <div className="feed-state feed-error" role="alert"><p>숏툰을 불러오지 못했습니다.</p><button type="button" onClick={() => void loadFeedPage(0, false)}>다시 시도</button></div>}
       {isHomeFeed && !feedLoading && !feedError && visibleComics.length === 0 && <div className="feed-state" role="status">아직 게시된 숏툰이 없습니다.</div>}
       {selectedPost && onExitPost && <button className="post-view-back" type="button" onClick={() => { onExitPost(); window.dispatchEvent(new Event("shorttoon-post-back")); }} aria-label="이전 페이지로 돌아가기">←</button>}
-      <div ref={feedRef} className={`comic-feed ${isHomeFeed && (feedLoading || feedError || visibleComics.length === 0) ? "feed-content-hidden" : ""}`} onWheel={(event) => {
+      <div ref={feedRef} className={`comic-feed ${selectedPosts?.length ? "channel-feed" : ""} ${isHomeFeed && (feedLoading || feedError || visibleComics.length === 0) ? "feed-content-hidden" : ""}`} onWheel={(event) => {
         if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) && !event.shiftKey) return;
         event.preventDefault();
         moveOnePost(event.deltaX >= 0 || event.deltaY >= 0 ? 1 : -1);
