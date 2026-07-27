@@ -53,6 +53,8 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profileImageUrl ?? null);
   const lastScrollTop = useRef<Record<number, number>>({});
   const feedRef = useRef<HTMLDivElement>(null);
+  const horizontalGestureStartX = useRef<number | null>(null);
+  const horizontalGestureStartIndex = useRef(0);
 
   useEffect(() => {
     const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
@@ -172,13 +174,41 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     feedRef.current.scrollTo({ left: selectedPostIndex * feedRef.current.clientWidth, behavior: "auto" });
   }, [selectedPosts, selectedPostIndex]);
 
+  const moveOnePost = (direction: 1 | -1) => {
+    const feed = feedRef.current;
+    if (!feed || visibleComics.length < 2) return;
+    const currentIndex = Math.max(0, Math.min(visibleComics.length - 1, Math.round(feed.scrollLeft / feed.clientWidth)));
+    const targetIndex = Math.max(0, Math.min(visibleComics.length - 1, currentIndex + direction));
+    feed.scrollTo({ left: targetIndex * feed.clientWidth, behavior: "smooth" });
+  };
+
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
       {isHomeFeed && feedLoading && <div className="feed-state" role="status">숏툰을 불러오는 중...</div>}
       {isHomeFeed && feedError && <div className="feed-state feed-error" role="alert"><p>숏툰을 불러오지 못했습니다.</p><button type="button" onClick={() => void loadFeedPage(0, false)}>다시 시도</button></div>}
       {isHomeFeed && !feedLoading && !feedError && visibleComics.length === 0 && <div className="feed-state" role="status">아직 게시된 숏툰이 없습니다.</div>}
       {selectedPost && onExitPost && <button className="post-view-back" type="button" onClick={() => { onExitPost(); window.dispatchEvent(new Event("shorttoon-post-back")); }} aria-label="이전 페이지로 돌아가기">←</button>}
-      <div ref={feedRef} className={`comic-feed ${isHomeFeed && (feedLoading || feedError || visibleComics.length === 0) ? "feed-content-hidden" : ""}`} onScroll={(event) => {
+      <div ref={feedRef} className={`comic-feed ${isHomeFeed && (feedLoading || feedError || visibleComics.length === 0) ? "feed-content-hidden" : ""}`} onWheel={(event) => {
+        if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) && !event.shiftKey) return;
+        event.preventDefault();
+        moveOnePost(event.deltaX >= 0 || event.deltaY >= 0 ? 1 : -1);
+      }} onTouchStart={(event) => {
+        horizontalGestureStartX.current = event.touches[0]?.clientX ?? null;
+        horizontalGestureStartIndex.current = feedRef.current ? Math.round(feedRef.current.scrollLeft / feedRef.current.clientWidth) : 0;
+      }} onTouchEnd={(event) => {
+        const startX = horizontalGestureStartX.current;
+        horizontalGestureStartX.current = null;
+        if (startX === null) return;
+        const endX = event.changedTouches[0]?.clientX ?? startX;
+        const delta = endX - startX;
+        const feed = feedRef.current;
+        if (!feed || Math.abs(delta) < 30) {
+          if (feed) feed.scrollTo({ left: horizontalGestureStartIndex.current * feed.clientWidth, behavior: "smooth" });
+          return;
+        }
+        const targetIndex = Math.max(0, Math.min(visibleComics.length - 1, horizontalGestureStartIndex.current + (delta < 0 ? 1 : -1)));
+        feed.scrollTo({ left: targetIndex * feed.clientWidth, behavior: "smooth" });
+      }} onScroll={(event) => {
         const width = event.currentTarget.clientWidth;
         if (!width) return;
         const nextIndex = Math.max(0, Math.min(visibleComics.length - 1, Math.round(event.currentTarget.scrollLeft / width)));
