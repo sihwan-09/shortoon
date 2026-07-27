@@ -138,6 +138,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   };
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
+  const selectedPostSetKey = selectedPosts?.map((post) => post.id ?? post.title).join("|") ?? "";
   const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
 
   useEffect(() => {
@@ -173,7 +174,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   useEffect(() => {
     if (!selectedPosts?.length || !feedRef.current) return;
     feedRef.current.scrollTo({ left: selectedPostIndex * feedRef.current.clientWidth, behavior: "auto" });
-  }, [selectedPosts, selectedPostIndex]);
+  }, [selectedPostSetKey]);
 
   useEffect(() => {
     const feed = feedRef.current;
