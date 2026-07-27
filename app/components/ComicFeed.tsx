@@ -214,16 +214,18 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) && !event.shiftKey) return;
         event.preventDefault();
         moveOnePost(event.deltaX >= 0 || event.deltaY >= 0 ? 1 : -1);
-      }} onTouchStart={(event) => {
-        horizontalGestureStartX.current = event.touches[0]?.clientX ?? null;
-        horizontalGestureStartY.current = event.touches[0]?.clientY ?? null;
+      }} onPointerDown={(event) => {
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        horizontalGestureStartX.current = event.clientX;
+        horizontalGestureStartY.current = event.clientY;
         horizontalGestureStartIndex.current = selectedPosts?.length ? selectedPostIndex : (feedRef.current ? Math.round(feedRef.current.scrollLeft / feedRef.current.clientWidth) : 0);
-      }} onTouchEnd={(event) => {
+        event.currentTarget.setPointerCapture?.(event.pointerId);
+      }} onPointerUp={(event) => {
         const startX = horizontalGestureStartX.current;
         horizontalGestureStartX.current = null;
         horizontalGestureStartY.current = null;
         if (startX === null) return;
-        const endX = event.changedTouches[0]?.clientX ?? startX;
+        const endX = event.clientX;
         const delta = endX - startX;
         const feed = feedRef.current;
         if (!feed || Math.abs(delta) < 30) {
@@ -236,6 +238,9 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
           return;
         }
         feed.scrollTo({ left: targetIndex * feed.clientWidth, behavior: "smooth" });
+      }} onPointerCancel={() => {
+        horizontalGestureStartX.current = null;
+        horizontalGestureStartY.current = null;
       }} onScroll={(event) => {
         const width = event.currentTarget.clientWidth;
         if (!width) return;
