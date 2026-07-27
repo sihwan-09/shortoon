@@ -141,6 +141,7 @@ a { color: inherit; text-decoration: none; }
 .swipe-tip { position: absolute; right: 18px; bottom: 108px; color: rgba(255,255,255,.7); font-size: 10px; letter-spacing: .08em; writing-mode: vertical-rl; animation: float 1.6s ease-in-out infinite; }
 .swipe-tip::after { content: "↑"; margin-top: 8px; color: var(--primary); }
 .comic-meta { position: absolute; z-index: 8; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-between; min-height: 82px; padding: 14px 20px; background: transparent; border-top: 0; text-shadow: 0 2px 16px rgba(0,0,0,.95); transition: transform .32s cubic-bezier(.22,.61,.36,1), opacity .24s ease; }
+.profile-hit-area { position: absolute; z-index: 10; left: 16px; bottom: 8px; width: 150px; height: 58px; padding: 0; background: transparent; border: 0; cursor: pointer; }
 .comic-meta.meta-hidden { opacity: 0; pointer-events: none; transform: translateY(calc(100% + 14px)); }
 .comic-meta div:first-child { display: flex; flex-direction: column; gap: 5px; }
 .comic-tag-cluster { display: flex !important; width: fit-content; max-width: min(100%, 320px); flex-wrap: nowrap; align-items: center; gap: 6px; overflow: hidden; }
