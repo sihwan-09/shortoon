@@ -111,6 +111,11 @@ export default function Home() {
   };
 
   useEffect(() => {
+    window.localStorage.setItem("shorttoon-channel-id", channelProfile.channelId);
+    window.dispatchEvent(new Event("shorttoon-channel-id"));
+  }, [channelProfile.channelId]);
+
+  useEffect(() => {
     const openChannel = () => { setActiveTab("channel"); setChannelTargetIndex(null); };
     window.addEventListener("shorttoon-open-channel", openChannel);
     return () => window.removeEventListener("shorttoon-open-channel", openChannel);

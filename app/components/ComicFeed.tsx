@@ -51,6 +51,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profileImageUrl ?? null);
+  const [storedChannelId, setStoredChannelId] = useState("shorttoon_creator");
   const lastScrollTop = useRef<Record<number, number>>({});
   const feedRef = useRef<HTMLDivElement>(null);
   const horizontalGestureStartX = useRef<number | null>(null);
@@ -63,6 +64,13 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     window.addEventListener("shorttoon-profile-image", sync);
     return () => window.removeEventListener("shorttoon-profile-image", sync);
   }, [profileImageUrl]);
+
+  useEffect(() => {
+    const sync = () => setStoredChannelId(window.localStorage.getItem("shorttoon-channel-id") || "shorttoon_creator");
+    sync();
+    window.addEventListener("shorttoon-channel-id", sync);
+    return () => window.removeEventListener("shorttoon-channel-id", sync);
+  }, []);
 
   useEffect(() => {
     const syncLikes = () => {
@@ -139,6 +147,9 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
   const selectedPostSetKey = selectedPosts?.map((post) => post.id ?? post.title).join("|") ?? "";
+  useEffect(() => {
+    document.querySelectorAll<HTMLElement>(".comic-author small").forEach((element) => { element.textContent = `@${storedChannelId}`; });
+  }, [storedChannelId, selectedPostSetKey]);
   const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
 
   useEffect(() => {
