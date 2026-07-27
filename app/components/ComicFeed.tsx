@@ -28,7 +28,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, channelId, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
   const [comics, setComics] = useState<Comic[]>([]);
   const [feedPage, setFeedPage] = useState(0);
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
@@ -51,7 +51,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profileImageUrl ?? null);
-  const [storedChannelId, setStoredChannelId] = useState("shorttoon_creator");
   const lastScrollTop = useRef<Record<number, number>>({});
   const feedRef = useRef<HTMLDivElement>(null);
   const horizontalGestureStartX = useRef<number | null>(null);
@@ -64,13 +63,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     window.addEventListener("shorttoon-profile-image", sync);
     return () => window.removeEventListener("shorttoon-profile-image", sync);
   }, [profileImageUrl]);
-
-  useEffect(() => {
-    const sync = () => setStoredChannelId(window.localStorage.getItem("shorttoon-channel-id") || "shorttoon_creator");
-    sync();
-    window.addEventListener("shorttoon-channel-id", sync);
-    return () => window.removeEventListener("shorttoon-channel-id", sync);
-  }, []);
 
   useEffect(() => {
     const syncLikes = () => {
@@ -147,9 +139,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
   const selectedPostSetKey = selectedPosts?.map((post) => post.id ?? post.title).join("|") ?? "";
-  useEffect(() => {
-    document.querySelectorAll<HTMLElement>(".comic-author small").forEach((element) => { element.textContent = `@${storedChannelId}`; });
-  }, [storedChannelId, selectedPostSetKey]);
   const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
 
   useEffect(() => {
@@ -299,7 +288,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             </div>
             <button className="profile-hit-area" type="button" aria-label={`${comic.creator} 채널 보기`} onClick={() => onOpenChannel ? onOpenChannel(comic) : window.dispatchEvent(new CustomEvent("shorttoon-open-channel"))} />
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
-              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={storedProfileImageUrl ? { backgroundImage: `url(${storedProfileImageUrl})` } : undefined} /><small>@{storedChannelId}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
+              <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={storedProfileImageUrl ? { backgroundImage: `url(${storedProfileImageUrl})` } : undefined} /><small>@{comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
             </footer>
           </article>
         ))}
