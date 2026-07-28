@@ -16,8 +16,10 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
   const [message, setMessage] = useState<string | null>(null);
 
   const requiredTermsAccepted = terms.age && terms.service && terms.privacy;
+  const validSignupEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const validSignupPassword = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*\-_+])[A-Za-z\d!@#$%^&*\-_+]{8,}$/.test(password);
   const canSubmit = isSignup
-    ? email.trim().length > 0 && password.length >= 8 && password === confirmPassword && requiredTermsAccepted
+    ? validSignupEmail && validSignupPassword && password === confirmPassword && requiredTermsAccepted
     : email.trim().length > 0 && password.length > 0;
   const allTermsChecked = requiredTermsAccepted && terms.marketing;
   const setAllTerms = (checked: boolean) => setTerms({ age: checked, service: checked, privacy: checked, marketing: checked });
@@ -56,7 +58,7 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
       <div className="auth-divider"><span>또는</span></div>
       <form className="auth-form" onSubmit={(event) => { event.preventDefault(); if (canSubmit && !busy) void submit(); }}>
         <label>이메일<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="example@email.com" autoComplete="email" /></label>
-        <label>비밀번호<div className="auth-password"><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={isSignup ? "8자 이상 입력" : "비밀번호 입력"} autoComplete={isSignup ? "new-password" : "current-password"} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label="비밀번호 표시">{showPassword ? "◉" : "◌"}</button></div></label>
+        <label>비밀번호<div className="auth-password"><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder={isSignup ? "영문 대소문자 + 숫자 + !, @, #, $, %, ^, &, *, -, _, + 로 8자 이상 입력" : "비밀번호 입력"} autoComplete={isSignup ? "new-password" : "current-password"} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label="비밀번호 표시">{showPassword ? "◉" : "◌"}</button></div></label>
         {isSignup && <label>비밀번호 확인<div className="auth-password"><input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="비밀번호 다시 입력" autoComplete="new-password" /><button type="button" onClick={() => setShowConfirmPassword((value) => !value)} aria-label="비밀번호 확인 표시">{showConfirmPassword ? "◉" : "◌"}</button></div></label>}
         {!isSignup && <button type="button" className="auth-forgot">비밀번호 찾기</button>}
         {isSignup && <div className="auth-terms">
