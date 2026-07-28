@@ -17,6 +17,7 @@ import { AuthPage } from "./components/AuthPage";
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"home" | "my" | "channel" | "liked" | "channel-intro" | "edit" | "link-edit" | "upload" | "upload-link" | "post" | "login" | "signup">("home");
   const [authReturnTab, setAuthReturnTab] = useState<"home" | "my" | "channel">("home");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
   const [channelLinks, setChannelLinks] = useState<{ title: string; url: string }[]>([]);
@@ -63,7 +64,7 @@ export default function Home() {
   const leaveUpload = () => { setUploadLink(null); setActiveTab(uploadOrigin); if (uploadOrigin === "channel") restoreChannelScroll(); };
   const exitUploadTo = (destination: "home" | "my") => { setUploadLink(null); setActiveTab(destination); };
   const openLogin = () => { setAuthReturnTab(activeTab === "my" || activeTab === "channel" || activeTab === "post" ? (activeTab === "post" ? "channel" : activeTab) : "home"); setActiveTab("login"); };
-  const completeAuth = () => setActiveTab(authReturnTab);
+  const completeAuth = () => { setIsAuthenticated(true); setActiveTab(authReturnTab); };
   const signInWithEmail = async (email: string, password: string): Promise<string | null> => {
     if (!supabaseConfigured) return "Supabase 인증 환경변수가 설정되지 않았습니다.";
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -118,10 +119,13 @@ export default function Home() {
   };
 
   useEffect(() => {
-    void supabase.auth.getSession().then(({ error }) => {
+    void supabase.auth.getSession().then(({ data, error }) => {
       if (error) console.error("Supabase 연결 확인 실패", error);
+      setIsAuthenticated(Boolean(data.session));
     });
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => setIsAuthenticated(Boolean(session)));
     void loadChannelProfile().then((profile) => { if (profile) { if (profile.profileImageUrl) window.localStorage.setItem("shorttoon-profile-image", profile.profileImageUrl); setChannelProfile(profile); setChannelEditDraft(profile); setChannelLinks(profile.links); setLegacyChannelNames((names) => names.includes(profile.name) ? names : [...names, profile.name]); } setChannelProfileLoaded(true); }).catch((error) => { console.error("채널 프로필 불러오기 실패", error); setChannelProfileLoaded(true); });
+    return () => authListener.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -157,7 +161,7 @@ export default function Home() {
 
   return (
     <main className={`app-shell ${activeTab === "login" || activeTab === "signup" ? "auth-mode" : ""}`}>
-      {(activeTab === "home" || activeTab === "my" || activeTab === "channel" || activeTab === "post") && <button type="button" className="header-login-floating" onClick={openLogin}>로그인</button>}
+      {!isAuthenticated && (activeTab === "home" || activeTab === "my" || activeTab === "channel" || activeTab === "post") && <button type="button" className="header-login-floating" onClick={openLogin}>로그인</button>}
       <header className="app-header" aria-label="Shorttoon header">
         {activeTab === "upload" ? <><button className="edit-header-back upload-close" type="button" onClick={() => uploadStep > 1 ? setUploadStep((uploadStep - 1) as 1 | 2 | 3) : leaveUpload()} aria-label={uploadStep > 1 ? "이전 단계" : "업로드 닫기"}>{uploadStep > 1 ? "←" : "×"}</button><strong className="edit-header-title">숏툰 업로드</strong><span /></> : activeTab === "upload-link" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("upload")} aria-label="Back">←</button><strong className="edit-header-title">{uploadLink ? "링크 수정" : "링크 추가"}</strong><span /></> : activeTab === "channel-intro" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("channel")} aria-label="채널로 돌아가기">←</button><strong className="edit-header-title">{channelProfile.name}</strong><span /></> : activeTab === "edit" || activeTab === "link-edit" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab(activeTab === "link-edit" ? "edit" : "channel")} aria-label="Back">←</button><strong className="edit-header-title">{activeTab === "link-edit" ? (editingLink ? "링크 수정" : "링크 추가") : "채널 수정"}</strong><span /></> : <><a className="brand" href="/" aria-label="Shorttoon home"><span className="brand-logo" role="img" aria-label="Shorttoon" /></a><div className="header-tools"><button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>{activeTab === "channel" && <button className="more-button" type="button" aria-label="More channel options">⋮</button>}</div></>}
       </header>
