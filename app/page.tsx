@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "../lib/supabase";
+import { supabase, supabaseConfigured } from "../lib/supabase";
 import { ComicFeed } from "./components/ComicFeed";
 import { ChannelPage } from "./components/ChannelPage";
 import { ChannelIntroPage } from "./components/ChannelIntroPage";
@@ -63,6 +63,42 @@ export default function Home() {
   const leaveUpload = () => { setUploadLink(null); setActiveTab(uploadOrigin); if (uploadOrigin === "channel") restoreChannelScroll(); };
   const exitUploadTo = (destination: "home" | "my") => { setUploadLink(null); setActiveTab(destination); };
   const openLogin = () => { setAuthReturnTab(activeTab === "my" || activeTab === "channel" || activeTab === "post" ? (activeTab === "post" ? "channel" : activeTab) : "home"); setActiveTab("login"); };
+  const completeAuth = () => setActiveTab(authReturnTab);
+  const signInWithEmail = async (email: string, password: string): Promise<string | null> => {
+    if (!supabaseConfigured) return "Supabase 인증 환경변수가 설정되지 않았습니다.";
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      console.error("이메일 로그인 실패", error);
+      return "이메일 또는 비밀번호를 확인해 주세요.";
+    }
+    completeAuth();
+    return null;
+  };
+  const signUpWithEmail = async (email: string, password: string): Promise<string | null> => {
+    if (!supabaseConfigured) return "Supabase 인증 환경변수가 설정되지 않았습니다.";
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      console.error("이메일 회원가입 실패", error);
+      return "회원가입에 실패했습니다. 입력한 이메일을 확인해 주세요.";
+    }
+    if (data.session) {
+      completeAuth();
+      return null;
+    }
+    return "가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요.";
+  };
+  const signInWithProvider = async (provider: "google" | "kakao"): Promise<string | null> => {
+    if (!supabaseConfigured) return "Supabase 인증 환경변수가 설정되지 않았습니다.";
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) {
+      console.error(`${provider} OAuth 로그인 실패`, error);
+      return `${provider === "google" ? "Google" : "카카오"} 로그인 설정을 확인해 주세요.`;
+    }
+    return null;
+  };
   const handleProfileImageChange = async (file: File) => {
     const localPreviewUrl = URL.createObjectURL(file);
     window.localStorage.setItem("shorttoon-profile-image", localPreviewUrl);
@@ -132,7 +168,7 @@ export default function Home() {
         <button className={`bottom-nav-item upload-nav-item ${activeTab === "upload" ? "is-active" : ""}`} type="button" onClick={() => { if (activeTab === "channel") setChannelScrollTop(document.querySelector<HTMLElement>(".channel-page")?.scrollTop ?? 0); setUploadOrigin(activeTab === "channel" ? "channel" : "home"); setUploadStep(1); setActiveTab("upload"); }} aria-label="Upload shorttoon"><span className="plus-icon" aria-hidden="true">+</span></button>
         <button className={`bottom-nav-item ${activeTab === "my" || activeTab === "channel" || activeTab === "channel-intro" || activeTab === "edit" || activeTab === "link-edit" || activeTab === "post" ? "is-active" : ""}`} type="button" onClick={() => (activeTab === "upload" || activeTab === "upload-link") ? exitUploadTo("my") : setActiveTab("my")} aria-current={activeTab === "my" || activeTab === "channel" || activeTab === "channel-intro" || activeTab === "edit" || activeTab === "link-edit" || activeTab === "post" ? "page" : undefined} aria-label="My page"><span className="my-icon" aria-hidden="true">MY</span></button>
       </nav>
-      {(activeTab === "login" || activeTab === "signup") && <AuthPage mode={activeTab} onBack={() => setActiveTab(activeTab === "signup" ? "login" : authReturnTab)} onChangeMode={(mode) => setActiveTab(mode)} />}
+      {(activeTab === "login" || activeTab === "signup") && <AuthPage mode={activeTab} onBack={() => setActiveTab(activeTab === "signup" ? "login" : authReturnTab)} onChangeMode={(mode) => setActiveTab(mode)} onEmailLogin={signInWithEmail} onEmailSignup={signUpWithEmail} onOAuth={signInWithProvider} />}
     </main>
   );
 }
