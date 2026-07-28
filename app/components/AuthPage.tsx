@@ -41,6 +41,7 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
 
   return <section className="auth-page" aria-label={isSignup ? "회원가입" : "로그인"}>
     <header className="auth-header">
+      <strong className="auth-header-title">{isSignup ? "회원가입" : "로그인"}</strong>
       <button type="button" className="auth-back" onClick={onBack} aria-label="뒤로 가기">←</button>
       {isSignup && <strong>회원가입</strong>}
     </header>
