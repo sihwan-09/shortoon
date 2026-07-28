@@ -461,6 +461,7 @@ a { color: inherit; text-decoration: none; }
 
 @media (min-width: 600px) {
   .app-shell { max-width: 480px; margin: 0 auto; border-inline: 1px solid var(--divider); }
+  .app-shell.auth-mode .auth-page { left: 50%; width: 100%; max-width: 480px; border-inline: 1px solid var(--divider); transform: translateX(-50%); }
 }
  .liked-posts-page { position: fixed; inset: 0; left: 50%; z-index: 20; width: 100%; max-width: 480px; overflow-y: auto; background: var(--bg, #111111); padding-bottom: 92px; transform: translateX(-50%); }
  .liked-posts-header { position: relative; display: flex; height: 58px; align-items: center; margin: 0 -2px 0; border-bottom: 1px solid var(--divider); }
