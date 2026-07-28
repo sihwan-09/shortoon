@@ -62,7 +62,7 @@ export default function Home() {
   });
   const leaveUpload = () => { setUploadLink(null); setActiveTab(uploadOrigin); if (uploadOrigin === "channel") restoreChannelScroll(); };
   const exitUploadTo = (destination: "home" | "my") => { setUploadLink(null); setActiveTab(destination); };
-  const openLogin = () => { setAuthReturnTab(activeTab === "my" || activeTab === "channel" ? activeTab : "home"); setActiveTab("login"); };
+  const openLogin = () => { setAuthReturnTab(activeTab === "my" || activeTab === "channel" || activeTab === "post" ? (activeTab === "post" ? "channel" : activeTab) : "home"); setActiveTab("login"); };
   const handleProfileImageChange = async (file: File) => {
     const localPreviewUrl = URL.createObjectURL(file);
     window.localStorage.setItem("shorttoon-profile-image", localPreviewUrl);
@@ -121,7 +121,7 @@ export default function Home() {
 
   return (
     <main className={`app-shell ${activeTab === "login" || activeTab === "signup" ? "auth-mode" : ""}`}>
-      {(activeTab === "home" || activeTab === "my" || activeTab === "channel") && <button type="button" className="header-login-floating" onClick={openLogin}>로그인</button>}
+      {(activeTab === "home" || activeTab === "my" || activeTab === "channel" || activeTab === "post") && <button type="button" className="header-login-floating" onClick={openLogin}>로그인</button>}
       <header className="app-header" aria-label="Shorttoon header">
         {activeTab === "upload" ? <><button className="edit-header-back upload-close" type="button" onClick={() => uploadStep > 1 ? setUploadStep((uploadStep - 1) as 1 | 2 | 3) : leaveUpload()} aria-label={uploadStep > 1 ? "이전 단계" : "업로드 닫기"}>{uploadStep > 1 ? "←" : "×"}</button><strong className="edit-header-title">숏툰 업로드</strong><span /></> : activeTab === "upload-link" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("upload")} aria-label="Back">←</button><strong className="edit-header-title">{uploadLink ? "링크 수정" : "링크 추가"}</strong><span /></> : activeTab === "channel-intro" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("channel")} aria-label="채널로 돌아가기">←</button><strong className="edit-header-title">{channelProfile.name}</strong><span /></> : activeTab === "edit" || activeTab === "link-edit" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab(activeTab === "link-edit" ? "edit" : "channel")} aria-label="Back">←</button><strong className="edit-header-title">{activeTab === "link-edit" ? (editingLink ? "링크 수정" : "링크 추가") : "채널 수정"}</strong><span /></> : <><a className="brand" href="/" aria-label="Shorttoon home"><span className="brand-logo" role="img" aria-label="Shorttoon" /></a><div className="header-tools"><button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>{activeTab === "channel" && <button className="more-button" type="button" aria-label="More channel options">⋮</button>}</div></>}
       </header>
