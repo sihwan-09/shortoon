@@ -46,7 +46,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
-  const [author] = useState("익명");
   const [body, setBody] = useState("");
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -97,20 +96,12 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const openComments = async (comic: Comic) => {
     setCommentComic(comic);
     try {
-      if (comic.commentPostId) {
-        const loadedComments = await loadPostComments(comic.commentPostId);
-        // Channel-post comments are authored through the channel identity. Keep
-        // historical comments tied to that identity when the channel name changes.
-        setComments(channelName ? loadedComments.map((comment) => ({ ...comment, author: channelName })) : loadedComments);
-        setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
-      } else {
-        const response = await fetch(`/api/comments?comicId=${comic.id}`);
-        if (response.ok) {
-          const loadedComments = (await response.json()).comments ?? [];
-          setComments(loadedComments);
-          setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
-        }
-      }
+      if (!comic.commentPostId) throw new Error("댓글을 저장할 게시물 ID가 없습니다.");
+      const loadedComments = await loadPostComments(comic.commentPostId);
+      // Channel-post comments are authored through the channel identity. Keep
+      // historical comments tied to that identity when the channel name changes.
+      setComments(channelName ? loadedComments.map((comment) => ({ ...comment, author: channelName })) : loadedComments);
+      setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
     } catch (error) {
       console.error("댓글을 불러오지 못했습니다.", error);
       setComments([]);
@@ -122,15 +113,12 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     if (!commentComic || !body.trim()) return;
     setSubmitting(true);
     try {
-      const comment = commentComic.commentPostId
-        ? await createPostComment(commentComic.commentPostId, commentComic.creator, body.trim(), isSpoiler)
-        : await fetch("/api/comments", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ comicId: commentComic.id, author, body, isSpoiler }) }).then(async (response) => response.ok ? (await response.json()).comment : null);
-      if (comment) {
+      if (!commentComic.commentPostId) throw new Error("댓글을 저장할 게시물 ID가 없습니다.");
+      const comment = await createPostComment(commentComic.commentPostId, commentComic.creator, body.trim(), isSpoiler);
       setComments((current) => [comment, ...current]);
       setCommentCounts((current) => ({ ...current, [commentComic.id]: (current[commentComic.id] ?? 0) + 1 }));
       setBody("");
       setIsSpoiler(false);
-      }
     } catch (error) {
       console.error("댓글을 등록하지 못했습니다.", error);
     }
