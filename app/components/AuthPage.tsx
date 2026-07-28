@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 
-type AuthPageProps = { mode: "login" | "signup"; onBack: () => void; onChangeMode: (mode: "login" | "signup") => void; onEmailLogin: (email: string, password: string) => Promise<string | null>; onEmailSignup: (email: string, password: string) => Promise<string | null>; onOAuth: (provider: "google" | "kakao") => Promise<string | null> };
+type SignupResult = { message: string | null; success: boolean };
+type AuthPageProps = { mode: "login" | "signup"; onBack: () => void; onChangeMode: (mode: "login" | "signup") => void; onEmailLogin: (email: string, password: string) => Promise<string | null>; onEmailSignup: (email: string, password: string) => Promise<SignupResult>; onOAuth: (provider: "google" | "kakao") => Promise<string | null> };
 
 export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSignup, onOAuth }: AuthPageProps) {
   const isSignup = mode === "signup";
@@ -27,8 +28,14 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
     setBusy(true);
     setMessage(null);
     try {
-      const result = isSignup ? await onEmailSignup(email.trim(), password) : await onEmailLogin(email.trim(), password);
-      if (result) setMessage(result);
+      if (isSignup) {
+        const result = await onEmailSignup(email.trim(), password);
+        if (result.success) onChangeMode("login");
+        setMessage(result.message);
+      } else {
+        const result = await onEmailLogin(email.trim(), password);
+        if (result) setMessage(result);
+      }
     } catch { setMessage("요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요."); }
     finally { setBusy(false); }
   };

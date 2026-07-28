@@ -75,18 +75,18 @@ export default function Home() {
     completeAuth();
     return null;
   };
-  const signUpWithEmail = async (email: string, password: string): Promise<string | null> => {
-    if (!supabaseConfigured) return "Supabase 인증 환경변수가 설정되지 않았습니다.";
+  const signUpWithEmail = async (email: string, password: string): Promise<{ message: string | null; success: boolean }> => {
+    if (!supabaseConfigured) return { message: "Supabase 인증 환경변수가 설정되지 않았습니다.", success: false };
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) {
       console.error("이메일 회원가입 실패", error);
-      return "회원가입에 실패했습니다. 입력한 이메일을 확인해 주세요.";
+      return { message: "회원가입에 실패했습니다. 입력한 이메일을 확인해 주세요.", success: false };
     }
     if (data.session) {
       completeAuth();
-      return null;
+      return { message: null, success: true };
     }
-    return "가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요.";
+    return { message: "가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요.", success: true };
   };
   const signInWithProvider = async (provider: "google" | "kakao"): Promise<string | null> => {
     if (!supabaseConfigured) return "Supabase 인증 환경변수가 설정되지 않았습니다.";
