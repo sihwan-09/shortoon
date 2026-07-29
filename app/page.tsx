@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase, supabaseConfigured } from "../lib/supabase";
 import { ComicFeed } from "./components/ComicFeed";
 import { ChannelPage } from "./components/ChannelPage";
@@ -35,6 +35,7 @@ export default function Home() {
   const [channelScrollTop, setChannelScrollTop] = useState(0);
   const [channelTargetIndex, setChannelTargetIndex] = useState<number | null>(null);
   const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
+  const profileSyncRequestRef = useRef(0);
 
   useEffect(() => {
     const syncLikes = () => {
@@ -76,6 +77,13 @@ export default function Home() {
         return;
       }
     }
+    profileSyncRequestRef.current += 1;
+    window.localStorage.removeItem("shorttoon-profile-image");
+    window.dispatchEvent(new Event("shorttoon-profile-image"));
+    setChannelProfile(DEFAULT_CHANNEL_PROFILE);
+    setChannelEditDraft(DEFAULT_CHANNEL_PROFILE);
+    setChannelLinks([]);
+    setChannelProfileLoaded(true);
     setIsAuthenticated(false);
     setActiveTab("home");
   };
@@ -133,8 +141,9 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const syncChannelProfile = async (hasSession: boolean) => {
-      if (!hasSession) {
+    const syncChannelProfile = async (ownerId: string | null) => {
+      const requestId = ++profileSyncRequestRef.current;
+      if (!ownerId) {
         window.localStorage.removeItem("shorttoon-profile-image");
         window.dispatchEvent(new Event("shorttoon-profile-image"));
         setChannelProfile(DEFAULT_CHANNEL_PROFILE);
@@ -145,6 +154,7 @@ export default function Home() {
       }
       try {
         const profile = await loadChannelProfile();
+        if (requestId !== profileSyncRequestRef.current) return;
         const nextProfile = profile ?? DEFAULT_CHANNEL_PROFILE;
         if (nextProfile.profileImageUrl) window.localStorage.setItem("shorttoon-profile-image", nextProfile.profileImageUrl);
         else window.localStorage.removeItem("shorttoon-profile-image");
@@ -162,11 +172,11 @@ export default function Home() {
     void supabase.auth.getSession().then(({ data, error }) => {
       if (error) console.error("Supabase 연결 확인 실패", error);
       setIsAuthenticated(Boolean(data.session));
-      void syncChannelProfile(Boolean(data.session));
+      void syncChannelProfile(data.session?.user.id ?? null);
     });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsAuthenticated(Boolean(session));
-      void syncChannelProfile(Boolean(session));
+      void syncChannelProfile(session?.user.id ?? null);
     });
     return () => authListener.subscription.unsubscribe();
   }, []);
