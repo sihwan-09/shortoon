@@ -14,6 +14,8 @@ import { loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
 import { loadChannelProfile, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
 import { AuthPage } from "./components/AuthPage";
 
+const DEFAULT_CHANNEL_PROFILE: ChannelProfile = { name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null };
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"home" | "my" | "channel" | "liked" | "channel-intro" | "edit" | "link-edit" | "upload" | "upload-link" | "post" | "login" | "signup">("home");
   const [authReturnTab, setAuthReturnTab] = useState<"home" | "my" | "channel">("home");
@@ -21,7 +23,7 @@ export default function Home() {
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
   const [channelLinks, setChannelLinks] = useState<{ title: string; url: string }[]>([]);
-  const [channelProfile, setChannelProfile] = useState<ChannelProfile>({ name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null });
+  const [channelProfile, setChannelProfile] = useState<ChannelProfile>(DEFAULT_CHANNEL_PROFILE);
   const [channelEditDraft, setChannelEditDraft] = useState<ChannelProfile>(channelProfile);
   const [legacyChannelNames, setLegacyChannelNames] = useState<string[]>([channelProfile.name]);
   const [channelProfileLoaded, setChannelProfileLoaded] = useState(false);
@@ -131,12 +133,41 @@ export default function Home() {
   };
 
   useEffect(() => {
+    const syncChannelProfile = async (hasSession: boolean) => {
+      if (!hasSession) {
+        window.localStorage.removeItem("shorttoon-profile-image");
+        window.dispatchEvent(new Event("shorttoon-profile-image"));
+        setChannelProfile(DEFAULT_CHANNEL_PROFILE);
+        setChannelEditDraft(DEFAULT_CHANNEL_PROFILE);
+        setChannelLinks([]);
+        setChannelProfileLoaded(true);
+        return;
+      }
+      try {
+        const profile = await loadChannelProfile();
+        const nextProfile = profile ?? DEFAULT_CHANNEL_PROFILE;
+        if (nextProfile.profileImageUrl) window.localStorage.setItem("shorttoon-profile-image", nextProfile.profileImageUrl);
+        else window.localStorage.removeItem("shorttoon-profile-image");
+        window.dispatchEvent(new Event("shorttoon-profile-image"));
+        setChannelProfile(nextProfile);
+        setChannelEditDraft(nextProfile);
+        setChannelLinks(nextProfile.links);
+        setLegacyChannelNames((names) => names.includes(nextProfile.name) ? names : [...names, nextProfile.name]);
+      } catch (error) {
+        console.error("채널 프로필 불러오기 실패", error);
+      } finally {
+        setChannelProfileLoaded(true);
+      }
+    };
     void supabase.auth.getSession().then(({ data, error }) => {
       if (error) console.error("Supabase 연결 확인 실패", error);
       setIsAuthenticated(Boolean(data.session));
+      void syncChannelProfile(Boolean(data.session));
     });
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => setIsAuthenticated(Boolean(session)));
-    void loadChannelProfile().then((profile) => { if (profile) { if (profile.profileImageUrl) window.localStorage.setItem("shorttoon-profile-image", profile.profileImageUrl); setChannelProfile(profile); setChannelEditDraft(profile); setChannelLinks(profile.links); setLegacyChannelNames((names) => names.includes(profile.name) ? names : [...names, profile.name]); } setChannelProfileLoaded(true); }).catch((error) => { console.error("채널 프로필 불러오기 실패", error); setChannelProfileLoaded(true); });
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session));
+      void syncChannelProfile(Boolean(session));
+    });
     return () => authListener.subscription.unsubscribe();
   }, []);
 

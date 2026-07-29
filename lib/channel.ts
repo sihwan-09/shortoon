@@ -1,12 +1,18 @@
 import { supabase } from "./supabase";
 import type { ChannelLink, ChannelProfile } from "../app/components/ChannelEditPage";
 
-const PROFILE_ID = "default";
+async function getCurrentUserId() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) throw error;
+  return data.session?.user.id ?? null;
+}
 
 export async function loadChannelProfile(): Promise<ChannelProfile | null> {
-  let { data, error } = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url,links,profile_image_url").eq("id", PROFILE_ID).maybeSingle();
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
+  let { data, error } = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url,links,profile_image_url").eq("owner_id", ownerId).maybeSingle();
   if (error) {
-    const fallback = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url").eq("id", PROFILE_ID).maybeSingle();
+    const fallback = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url").eq("owner_id", ownerId).maybeSingle();
     data = fallback.data;
     error = fallback.error;
   }
@@ -16,10 +22,12 @@ export async function loadChannelProfile(): Promise<ChannelProfile | null> {
 }
 
 export async function saveChannelProfile(profile: ChannelProfile, links: ChannelLink[]): Promise<ChannelProfile> {
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return profile;
   const nextLinks = links.slice(0, 5);
-  let { data, error } = await supabase.from("channel_profiles").upsert({ id: PROFILE_ID, name: profile.name, channel_id: profile.channelId, intro: profile.intro, links: nextLinks, profile_image_url: profile.profileImageUrl ?? null, link_title: nextLinks[0]?.title ?? null, link_url: nextLinks[0]?.url ?? null, updated_at: new Date().toISOString() }).select("name,channel_id,intro,link_title,link_url,links,profile_image_url").single();
+  let { data, error } = await supabase.from("channel_profiles").upsert({ id: ownerId, owner_id: ownerId, name: profile.name, channel_id: profile.channelId, intro: profile.intro, links: nextLinks, profile_image_url: profile.profileImageUrl ?? null, link_title: nextLinks[0]?.title ?? null, link_url: nextLinks[0]?.url ?? null, updated_at: new Date().toISOString() }).select("name,channel_id,intro,link_title,link_url,links,profile_image_url").single();
   if (error) {
-    const fallback = await supabase.from("channel_profiles").upsert({ id: PROFILE_ID, name: profile.name, channel_id: profile.channelId, intro: profile.intro, link_title: nextLinks[0]?.title ?? null, link_url: nextLinks[0]?.url ?? null, updated_at: new Date().toISOString() }).select("name,channel_id,intro,link_title,link_url").single();
+    const fallback = await supabase.from("channel_profiles").upsert({ id: ownerId, owner_id: ownerId, name: profile.name, channel_id: profile.channelId, intro: profile.intro, link_title: nextLinks[0]?.title ?? null, link_url: nextLinks[0]?.url ?? null, updated_at: new Date().toISOString() }).select("name,channel_id,intro,link_title,link_url").single();
     data = fallback.data;
     error = fallback.error;
   }
@@ -28,12 +36,14 @@ export async function saveChannelProfile(profile: ChannelProfile, links: Channel
 }
 
 export async function uploadChannelProfileImage(file: File): Promise<string> {
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) throw new Error("로그인이 필요합니다.");
   const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const path = `profiles/default/avatar-${Date.now()}.${extension}`;
+  const path = `profiles/${ownerId}/avatar-${Date.now()}.${extension}`;
   const { error } = await supabase.storage.from("shorttoon-posts").upload(path, file, { upsert: true, contentType: file.type });
   if (error) throw error;
   const publicUrl = supabase.storage.from("shorttoon-posts").getPublicUrl(path).data.publicUrl;
-  const { error: profileError } = await supabase.from("channel_profiles").update({ profile_image_url: publicUrl, updated_at: new Date().toISOString() }).eq("id", PROFILE_ID);
+  const { error: profileError } = await supabase.from("channel_profiles").update({ profile_image_url: publicUrl, updated_at: new Date().toISOString() }).eq("owner_id", ownerId);
   if (profileError) throw profileError;
   return publicUrl;
 }

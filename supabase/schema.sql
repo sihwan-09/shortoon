@@ -6,6 +6,7 @@ create table if not exists public.channel_profiles (
   channel_id text not null,
   intro text not null default '',
   profile_image_url text,
+  links jsonb not null default '[]'::jsonb,
   link_title text,
   link_url text,
   updated_at timestamptz not null default now()
@@ -13,14 +14,16 @@ create table if not exists public.channel_profiles (
 
 alter table public.channel_profiles add column if not exists link_title text;
 alter table public.channel_profiles add column if not exists link_url text;
+alter table public.channel_profiles add column if not exists links jsonb not null default '[]'::jsonb;
+create unique index if not exists channel_profiles_owner_id_idx on public.channel_profiles(owner_id) where owner_id is not null;
 
 alter table public.channel_profiles enable row level security;
 drop policy if exists "channel profiles are readable" on public.channel_profiles;
 create policy "channel profiles are readable" on public.channel_profiles for select using (true);
 drop policy if exists "channel profiles can be created" on public.channel_profiles;
-create policy "channel profiles can be created" on public.channel_profiles for insert with check (owner_id = auth.uid() or owner_id is null);
+create policy "channel profiles can be created" on public.channel_profiles for insert with check (owner_id = auth.uid());
 drop policy if exists "channel profiles can be updated" on public.channel_profiles;
-create policy "channel profiles can be updated" on public.channel_profiles for update using (owner_id = auth.uid() or owner_id is null) with check (owner_id = auth.uid() or owner_id is null);
+create policy "channel profiles can be updated" on public.channel_profiles for update using (owner_id = auth.uid()) with check (owner_id = auth.uid());
 
 -- 숏툰 게시물 저장 구조
 create table if not exists public.posts (
