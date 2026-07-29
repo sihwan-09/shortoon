@@ -98,9 +98,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     try {
       if (!comic.commentPostId) throw new Error("댓글을 저장할 게시물 ID가 없습니다.");
       const loadedComments = await loadPostComments(comic.commentPostId);
-      // Channel-post comments are authored through the channel identity. Keep
-      // historical comments tied to that identity when the channel name changes.
-      setComments(channelName ? loadedComments.map((comment) => ({ ...comment, author: channelName })) : loadedComments);
+      setComments(loadedComments);
       setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
     } catch (error) {
       console.error("댓글을 불러오지 못했습니다.", error);
@@ -114,7 +112,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     setSubmitting(true);
     try {
       if (!commentComic.commentPostId) throw new Error("댓글을 저장할 게시물 ID가 없습니다.");
-      const comment = await createPostComment(commentComic.commentPostId, commentComic.creator, body.trim(), isSpoiler);
+      const comment = await createPostComment(commentComic.commentPostId, channelName ?? commentComic.creator, body.trim(), isSpoiler);
       setComments((current) => [comment, ...current]);
       setCommentCounts((current) => ({ ...current, [commentComic.id]: (current[commentComic.id] ?? 0) + 1 }));
       setBody("");

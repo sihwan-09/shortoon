@@ -68,9 +68,12 @@ create table if not exists public.comments (
   deleted_at timestamptz
 );
 
+alter table public.comments add column if not exists author_id uuid references auth.users(id) on delete set null;
+
 create index if not exists posts_created_at_idx on public.posts (created_at desc);
 create index if not exists post_images_post_id_idx on public.post_images (post_id, sort_order);
 create index if not exists comments_post_id_idx on public.comments (post_id, created_at desc);
+create index if not exists comments_author_id_idx on public.comments (author_id);
 
 alter table public.posts enable row level security;
 alter table public.post_images enable row level security;
