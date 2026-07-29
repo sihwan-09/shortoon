@@ -178,7 +178,7 @@ a { color: inherit; text-decoration: none; }
 .comment-card { padding: 13px 2px; border-bottom: 1px solid var(--divider); }
 .comment-card > div { display: flex; align-items: center; gap: 8px; }
 .comment-card strong { font-size: 13px; }
-.comment-card div span { padding: 3px 6px; color: #111; background: var(--warning); border-radius: 4px; font-size: 8px; font-weight: 900; }
+.comment-spoiler-label { padding: 3px 6px; color: #111; background: var(--warning); border-radius: 4px; font-size: 8px; font-weight: 900; }
 .comment-card p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; }
 .comment-card:has(.comment-reply-symbol) { position: relative; }
 .comment-card[data-reply="true"] { margin-left: 18px; padding-left: 12px; border-left: 2px solid var(--divider); }
