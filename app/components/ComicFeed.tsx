@@ -206,6 +206,8 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     feed.scrollTo({ left: targetIndex * feed.clientWidth, behavior: "smooth" });
   };
 
+  const orderedComments = comments.flatMap((comment) => comment.parentId ? [] : [comment, ...comments.filter((reply) => reply.parentId === comment.id)]);
+
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
       {isHomeFeed && feedLoading && <div className="feed-state" role="status">숏툰을 불러오는 중...</div>}
@@ -290,7 +292,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
           <header><div aria-hidden="true" /><button type="button" onClick={() => setCommentComic(null)} aria-label="댓글창 닫기">×</button></header>
           <div className="comment-list">
             {comments.length === 0 && <p className="no-comments">첫 댓글을 남겨보세요.</p>}
-            {comments.map((comment) => {
+            {orderedComments.map((comment) => {
               const hidden = Boolean(comment.isSpoiler) && !revealed.has(comment.id);
               return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} data-reply={comment.parentId ? "true" : undefined} key={comment.id}>
                 <div><strong>{comment.author}</strong>{Boolean(comment.isSpoiler) && <span className="comment-spoiler-label">SPOILER</span>}</div>
@@ -305,7 +307,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
                       setComments((current) => current.map((item) => item.id === comment.id ? { ...item, likedByMe: comment.likedByMe, likeCount: comment.likeCount } : item));
                     }
                   }}><span className="comment-like-symbol" aria-hidden="true">♥</span><small>{comment.likeCount}</small></button>
-                  <button type="button" className="comment-reply-button" onClick={() => { setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{comment.replyCount ? `답글 ${comment.replyCount}` : "답글"}</small></button>
+                  <button type="button" className="comment-reply-button" onClick={() => { setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{comment.replyCount}</small></button>
                 </div>
               </article>;
             })}
