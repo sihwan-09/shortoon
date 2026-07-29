@@ -272,6 +272,14 @@ a { color: inherit; text-decoration: none; }
 .my-links button { min-height: 54px; border-bottom: 1px solid var(--divider); font-size: 14px; font-weight: 600; }
 .my-links button span { color: var(--text-muted); font-size: 24px; font-weight: 400; }
 .my-links .logout-button { margin-top: 18px; color: var(--like); border-bottom: 0; }
+.logout-modal-backdrop { position: fixed; z-index: 80; inset: 0; display: flex; align-items: center; justify-content: center; padding: 22px; background: rgba(0,0,0,.68); }
+.logout-modal { width: min(100%, 360px); padding: 24px 20px 18px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.5); }
+.logout-modal h2 { margin: 0 0 24px; font-size: 17px; font-weight: 800; text-align: center; }
+.logout-modal-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.logout-modal-actions button { height: 44px; border: 0; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.logout-modal-actions button:disabled { opacity: .5; cursor: wait; }
+.logout-cancel { color: var(--text); background: var(--divider); }
+.logout-confirm { color: #111; background: var(--primary); }
 .channel-page { min-height: 100dvh; padding: 18px 22px calc(64px + env(safe-area-inset-bottom)); overflow-y: auto; }
 .channel-back { width: 42px; height: 42px; padding: 0; color: var(--text); background: transparent; border: 0; font-size: 30px; font-weight: 300; line-height: 1; cursor: pointer; }
 .channel-profile { display: flex; align-items: center; gap: 18px; padding: 34px 0 22px; }
