@@ -295,7 +295,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             {orderedComments.map((comment) => {
               const hidden = Boolean(comment.isSpoiler) && !revealed.has(comment.id);
               return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} data-reply={comment.parentId ? "true" : undefined} key={comment.id}>
-                <div className="comment-author-line"><strong>{comment.author}</strong><span className="comment-author-avatar" aria-hidden="true" style={comment.authorImageUrl ? { backgroundImage: `url(${comment.authorImageUrl})` } : undefined} />{Boolean(comment.isSpoiler) && <span className="comment-spoiler-label">SPOILER</span>}</div>
+                <div className="comment-author-line"><span className="comment-author-avatar" aria-hidden="true" style={comment.authorImageUrl ? { backgroundImage: `url(${comment.authorImageUrl})` } : undefined} /><strong>{comment.author}</strong>{Boolean(comment.isSpoiler) && <span className="comment-spoiler-label">SPOILER</span>}</div>
                 <p>{hidden ? "스포일러가 포함된 댓글입니다." : comment.body}</p>
                 {hidden && <button type="button" onClick={() => setRevealed((current) => new Set(current).add(comment.id))}>스포일러 보기</button>}
                 <div className="comment-actions">
