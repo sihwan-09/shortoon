@@ -184,7 +184,7 @@ a { color: inherit; text-decoration: none; }
 .comment-card p { margin: 8px 0 0; font-size: 14px; line-height: 1.5; }
 .comment-card:has(.comment-reply-symbol) { position: relative; }
 .comment-card[data-reply="true"] { margin-left: 18px; padding-left: 27px; border-left: 2px solid var(--divider); }
-.comment-card[data-reply="true"] .comment-author-avatar { top: 0; left: -24px; width: 17px; height: 17px; }
+.comment-card[data-reply="true"] .comment-author-avatar { top: 3px; left: -24px; width: 17px; height: 17px; }
 .comment-card.spoiler-hidden p { color: transparent; text-shadow: 0 0 8px rgba(255,255,255,.65); user-select: none; }
 .comment-card > button { margin-top: 9px; padding: 7px 10px; color: var(--warning); background: rgba(255,159,28,.1); border: 1px solid rgba(255,159,28,.42); border-radius: 7px; font-size: 11px; font-weight: 800; cursor: pointer; }
 .comment-actions { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
