@@ -5,9 +5,11 @@ export async function syncPostLike(postId: string, liked: boolean) {
   const user = data.session?.user;
   if (!user) return;
   if (liked) {
-    await supabase.from("post_likes").upsert({ user_id: user.id, post_id: postId }, { onConflict: "user_id,post_id" });
+    const { error } = await supabase.from("post_likes").upsert({ user_id: user.id, post_id: postId }, { onConflict: "user_id,post_id" });
+    if (error) throw error;
   } else {
-    await supabase.from("post_likes").delete().eq("user_id", user.id).eq("post_id", postId);
+    const { error } = await supabase.from("post_likes").delete().eq("user_id", user.id).eq("post_id", postId);
+    if (error) throw error;
   }
 }
 

@@ -138,17 +138,18 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       if (!button) return;
       const article = button.closest<HTMLElement>(".comic-column");
       const index = article ? Array.from(article.parentElement?.children ?? []).indexOf(article) : -1;
-      const post = selectedCollection[index];
-      if (!post?.id) return;
+      const comic = visibleComics[index];
+      const postId = comic?.commentPostId;
+      if (!postId) return;
       const current = (() => { try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); return Array.isArray(value) ? value as string[] : []; } catch { return []; } })();
-      const next = current.includes(post.id) ? current.filter((id) => id !== post.id) : Array.from(new Set([...current, post.id]));
+      const next = current.includes(postId) ? current.filter((id) => id !== postId) : Array.from(new Set([...current, postId]));
       window.localStorage.setItem("shorttoon-liked-posts", JSON.stringify(next));
       window.dispatchEvent(new Event("shorttoon-liked-posts"));
-      void syncPostLike(post.id, next.includes(post.id)).catch(() => undefined);
+      void syncPostLike(postId, next.includes(postId)).catch((error) => console.error("게시물 좋아요 저장 실패", error));
     };
     document.addEventListener("click", handleLikeClick, true);
     return () => document.removeEventListener("click", handleLikeClick, true);
-  }, [selectedCollection]);
+  }, [visibleComics]);
 
   useEffect(() => {
     const handleAuthorClick = (event: MouseEvent) => {
