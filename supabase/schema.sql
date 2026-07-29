@@ -60,6 +60,7 @@ create table if not exists public.post_images (
 create table if not exists public.comments (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
+  parent_id uuid references public.comments(id) on delete cascade,
   author_id uuid references auth.users(id) on delete set null,
   author_name text not null,
   body text not null,
@@ -69,11 +70,29 @@ create table if not exists public.comments (
 );
 
 alter table public.comments add column if not exists author_id uuid references auth.users(id) on delete set null;
+alter table public.comments add column if not exists parent_id uuid references public.comments(id) on delete cascade;
 
 create index if not exists posts_created_at_idx on public.posts (created_at desc);
 create index if not exists post_images_post_id_idx on public.post_images (post_id, sort_order);
 create index if not exists comments_post_id_idx on public.comments (post_id, created_at desc);
 create index if not exists comments_author_id_idx on public.comments (author_id);
+create index if not exists comments_parent_id_idx on public.comments (parent_id, created_at desc);
+
+create table if not exists public.comment_likes (
+  comment_id uuid not null references public.comments(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (comment_id, user_id)
+);
+
+create index if not exists comment_likes_comment_id_idx on public.comment_likes (comment_id);
+alter table public.comment_likes enable row level security;
+drop policy if exists "comment likes are readable" on public.comment_likes;
+create policy "comment likes are readable" on public.comment_likes for select using (true);
+drop policy if exists "users can like comments" on public.comment_likes;
+create policy "users can like comments" on public.comment_likes for insert with check (user_id = auth.uid());
+drop policy if exists "users can remove comment likes" on public.comment_likes;
+create policy "users can remove comment likes" on public.comment_likes for delete using (user_id = auth.uid());
 
 alter table public.posts enable row level security;
 alter table public.post_images enable row level security;

@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { createPostComment, loadPostComments } from "../../lib/comments";
+import { createPostComment, loadPostComments, toggleCommentLike } from "../../lib/comments";
 import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 import { loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
 type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
 type SelectedPost = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
-type Comment = { id: number | string; comicId: number | string; author: string; body: string; isSpoiler: number | boolean; createdAt: number };
+type Comment = { id: number | string; comicId: number | string; author: string; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
 
 const fallbackComics: Comic[] = [
   { id: 1, title: "Midnight Delivery", creator: "Haru", genre: "Mystery", accent: "#C7FF3D", publisher: "NAVER", fullUrl: "https://comic.naver.com", panels: [
@@ -49,6 +49,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [body, setBody] = useState("");
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profileImageUrl ?? null);
   const lastScrollTop = useRef<Record<number, number>>({});
   const feedRef = useRef<HTMLDivElement>(null);
@@ -100,6 +101,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       const loadedComments = await loadPostComments(comic.commentPostId);
       setComments(loadedComments);
       setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
+      setReplyingTo(null);
     } catch (error) {
       console.error("댓글을 불러오지 못했습니다.", error);
       setComments([]);
@@ -112,11 +114,13 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     setSubmitting(true);
     try {
       if (!commentComic.commentPostId) throw new Error("댓글을 저장할 게시물 ID가 없습니다.");
-      const comment = await createPostComment(commentComic.commentPostId, channelName ?? commentComic.creator, body.trim(), isSpoiler);
+      const comment = await createPostComment(commentComic.commentPostId, channelName ?? commentComic.creator, body.trim(), isSpoiler, replyingTo?.id ? String(replyingTo.id) : null);
       setComments((current) => [comment, ...current]);
+      if (replyingTo) setComments((current) => current.map((item) => item.id === replyingTo.id ? { ...item, replyCount: item.replyCount + 1 } : item));
       setCommentCounts((current) => ({ ...current, [commentComic.id]: (current[commentComic.id] ?? 0) + 1 }));
       setBody("");
       setIsSpoiler(false);
+      setReplyingTo(null);
     } catch (error) {
       console.error("댓글을 등록하지 못했습니다.", error);
     }
@@ -288,15 +292,27 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             {comments.length === 0 && <p className="no-comments">첫 댓글을 남겨보세요.</p>}
             {comments.map((comment) => {
               const hidden = Boolean(comment.isSpoiler) && !revealed.has(comment.id);
-              return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} key={comment.id}>
+              return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} data-reply={comment.parentId ? "true" : undefined} key={comment.id}>
                 <div><strong>{comment.author}</strong>{Boolean(comment.isSpoiler) && <span>SPOILER</span>}</div>
                 <p>{hidden ? "스포일러가 포함된 댓글입니다." : comment.body}</p>
                 {hidden && <button type="button" onClick={() => setRevealed((current) => new Set(current).add(comment.id))}>스포일러 보기</button>}
+                <div className="comment-actions">
+                  <button type="button" className={`comment-like-button ${comment.likedByMe ? "is-liked" : ""}`} aria-pressed={comment.likedByMe} onClick={async () => {
+                    const nextLiked = !comment.likedByMe;
+                    setComments((current) => current.map((item) => item.id === comment.id ? { ...item, likedByMe: nextLiked, likeCount: Math.max(0, item.likeCount + (nextLiked ? 1 : -1)) } : item));
+                    try { await toggleCommentLike(String(comment.id), nextLiked); } catch (error) {
+                      console.error("댓글 좋아요 저장 실패", error);
+                      setComments((current) => current.map((item) => item.id === comment.id ? { ...item, likedByMe: comment.likedByMe, likeCount: comment.likeCount } : item));
+                    }
+                  }}><span className="comment-like-symbol" aria-hidden="true">♥</span><small>{comment.likeCount}</small></button>
+                  <button type="button" className="comment-reply-button" onClick={() => { setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{comment.replyCount ? `답글 ${comment.replyCount}` : "답글"}</small></button>
+                </div>
               </article>;
             })}
           </div>
           <form className="comment-form" onSubmit={submitComment}>
-            <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder="댓글을 입력하세요" maxLength={500} aria-label="댓글" required />
+            {replyingTo && <div className="replying-to">{replyingTo.author}님에게 답글 <button type="button" onClick={() => setReplyingTo(null)}>취소</button></div>}
+            <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder={replyingTo ? "답글을 입력하세요" : "댓글을 입력하세요"} maxLength={500} aria-label={replyingTo ? "답글" : "댓글"} required />
             <div><label><input type="checkbox" checked={isSpoiler} onChange={(event) => setIsSpoiler(event.target.checked)} /> 스포일러 포함</label><button type="submit" disabled={submitting}>{submitting ? "등록 중..." : "등록"}</button></div>
           </form>
         </aside>
