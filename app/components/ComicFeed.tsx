@@ -6,7 +6,7 @@ import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 import { loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
-type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
+type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
 type SelectedPost = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
 type Comment = { id: number | string; comicId: number | string; author: string; authorChannelId?: string | null; authorImageUrl?: string | null; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
 
@@ -38,6 +38,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [feedError, setFeedError] = useState(false);
   const feedRequestRef = useRef(false);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
+  const [likeCountOverrides, setLikeCountOverrides] = useState<Record<number, number>>({});
   const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
@@ -80,7 +81,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   }, []);
 
   const isHomeFeed = !selectedPost && !selectedPosts;
-  const toComic = (post: PublishedPost, index: number): Comic => ({ id: Number.parseInt(post.id.replace(/-/g, "").slice(0, 8), 16) || index + 1, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, imageIndex) => ({ id: index * 100 + imageIndex, position: imageIndex + 1, eyebrow: `${imageIndex + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) });
+  const toComic = (post: PublishedPost, index: number): Comic => ({ id: Number.parseInt(post.id.replace(/-/g, "").slice(0, 8), 16) || index + 1, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, commentCount: post.commentCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, imageIndex) => ({ id: index * 100 + imageIndex, position: imageIndex + 1, eyebrow: `${imageIndex + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) });
   const loadFeedPage = async (page: number, append: boolean) => {
     if (!isHomeFeed || feedRequestRef.current || (!append && page !== 0)) return;
     feedRequestRef.current = true;
@@ -143,13 +144,15 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       if (!postId) return;
       const current = (() => { try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); return Array.isArray(value) ? value as string[] : []; } catch { return []; } })();
       const next = current.includes(postId) ? current.filter((id) => id !== postId) : Array.from(new Set([...current, postId]));
+      const currentLikeCount = likeCountOverrides[comic.id] ?? comic.likeCount ?? 0;
+      setLikeCountOverrides((counts) => ({ ...counts, [comic.id]: Math.max(0, currentLikeCount + (next.includes(postId) ? 1 : -1)) }));
       window.localStorage.setItem("shorttoon-liked-posts", JSON.stringify(next));
       window.dispatchEvent(new Event("shorttoon-liked-posts"));
       void syncPostLike(postId, next.includes(postId)).catch((error) => console.error("게시물 좋아요 저장 실패", error));
     };
     document.addEventListener("click", handleLikeClick, true);
     return () => document.removeEventListener("click", handleLikeClick, true);
-  }, [visibleComics]);
+  }, [visibleComics, likeCountOverrides]);
 
   useEffect(() => {
     const handleAuthorClick = (event: MouseEvent) => {
@@ -172,7 +175,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     buttons.forEach((button, index) => {
       const post = selectedCollection[index];
       const comic = visibleComics[index];
-      const liked = post?.id ? likedPostIds.includes(post.id) : Boolean(comic && likedComics[comic.id]);
+      const liked = comic?.commentPostId ? likedPostIds.includes(comic.commentPostId) : Boolean(comic && likedComics[comic.id]);
       button.classList.toggle("liked", liked);
       button.setAttribute("aria-pressed", String(liked));
     });
@@ -274,8 +277,8 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
               ))}
             </div>
             <div className="action-rail">
-              <button type="button" className={`like-action ${likedComics[comic.id] ? "liked" : ""}`} onClick={() => setLikedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${likedComics[comic.id] ? "Unlike" : "Like"} ${comic.title}`} aria-pressed={Boolean(likedComics[comic.id])}><span aria-hidden="true">♥</span><small>{likedComics[comic.id] ? 1 : 0}</small></button>
-              <button type="button" onClick={() => openComments(comic)} aria-label={`${comic.title} 댓글 보기`}><span>•••</span><small>{commentCounts[comic.id] ?? 0}</small></button>
+              <button type="button" className={`like-action ${likedComics[comic.id] ? "liked" : ""}`} onClick={() => setLikedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${likedComics[comic.id] ? "Unlike" : "Like"} ${comic.title}`} aria-pressed={Boolean(likedComics[comic.id])}><span aria-hidden="true">♥</span><small>{likeCountOverrides[comic.id] ?? comic.likeCount ?? 0}</small></button>
+              <button type="button" onClick={() => openComments(comic)} aria-label={`${comic.title} 댓글 보기`}><span>•••</span><small>{commentCounts[comic.id] ?? comic.commentCount ?? 0}</small></button>
               <button type="button" className={`save-action ${savedComics[comic.id] ? "saved" : ""}`} onClick={() => setSavedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${savedComics[comic.id] ? "Remove" : "Save"} ${comic.title}`} aria-pressed={Boolean(savedComics[comic.id])}><span className="save-symbol" aria-hidden="true" /><small>저장</small></button>
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
