@@ -57,7 +57,9 @@ export default function Home() {
     const ownerId = comic.authorId ?? null;
     if (typeof comic.postIndex === "number") { setHomeTargetIndex(comic.postIndex); window.sessionStorage.setItem("shorttoon-home-target-index", String(comic.postIndex)); }
     setChannelReturnTab(activeTab === "post" ? "post" : activeTab === "home" ? "home" : "my");
-    if (fromMy || ownerId === currentUserIdRef.current) {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const sessionUserId = sessionData.session?.user.id ?? currentUserIdRef.current;
+    if (fromMy || ownerId === sessionUserId) {
       window.sessionStorage.removeItem("shorttoon-viewed-channel-owner");
       setViewedChannelOwnerId(null); setViewedChannelProfile(null); setActiveTab("channel"); return;
     }
@@ -295,7 +297,7 @@ export default function Home() {
     const openChannel = (event: Event) => {
       const detail = (event as CustomEvent<{ authorId?: string | null; postIndex?: number }>).detail;
       const ownerId = detail?.authorId ?? null;
-      if (ownerId && ownerId !== currentUserIdRef.current) {
+      if (ownerId) {
         void openChannelForComic({ authorId: ownerId, postIndex: detail?.postIndex });
       } else {
         if (typeof detail?.postIndex === "number") { setHomeTargetIndex(detail.postIndex); window.sessionStorage.setItem("shorttoon-home-target-index", String(detail.postIndex)); }
