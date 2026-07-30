@@ -32,11 +32,12 @@ export default function Home() {
   const [uploadLink, setUploadLink] = useState<{ title: string; url: string } | null>(null);
   const [editingLinkIndex, setEditingLinkIndex] = useState<number | null>(null);
   const editingLink = editingLinkIndex !== null;
-  const [channelPosts, setChannelPosts] = useState<PublishedShorttoon[]>([]);
+  const [ownChannelPosts, setOwnChannelPosts] = useState<PublishedShorttoon[]>([]);
   const [selectedPost, setSelectedPost] = useState<PublishedShorttoon | null>(null);
   const [postOrigin, setPostOrigin] = useState<"channel" | "liked">("channel");
   const [channelScrollTop, setChannelScrollTop] = useState(0);
   const [channelTargetIndex, setChannelTargetIndex] = useState<number | null>(null);
+  const [homeTargetIndex, setHomeTargetIndex] = useState(0);
   const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [viewedChannelOwnerId, setViewedChannelOwnerId] = useState<string | null>(null);
@@ -46,13 +47,15 @@ export default function Home() {
   const [followedChannelIds, setFollowedChannelIds] = useState<string[]>([]);
   const profileSyncRequestRef = useRef(0);
   const currentUserIdRef = useRef<string | null>(null);
-  const likedPosts = channelPosts.filter((post) => post.id && likedPostIds.includes(post.id));
+  const channelPosts = viewedChannelOwnerId ? viewedChannelPosts : ownChannelPosts;
+  const likedPosts = ownChannelPosts.filter((post) => post.id && likedPostIds.includes(post.id));
   const displayedChannelProfile = viewedChannelProfile ?? channelProfile;
-  const displayedChannelPosts = viewedChannelOwnerId ? viewedChannelPosts : channelPosts;
+  const displayedChannelPosts = channelPosts;
   const isViewingOwnChannel = !viewedChannelOwnerId || viewedChannelOwnerId === currentUserId;
 
-  const openChannelForComic = async (comic: { authorId?: string | null }, fromMy = false) => {
+  const openChannelForComic = async (comic: { authorId?: string | null; postIndex?: number }, fromMy = false) => {
     const ownerId = comic.authorId ?? null;
+    if (typeof comic.postIndex === "number") { setHomeTargetIndex(comic.postIndex); window.sessionStorage.setItem("shorttoon-home-target-index", String(comic.postIndex)); }
     setChannelReturnTab(activeTab === "post" ? "post" : activeTab === "home" ? "home" : "my");
     if (fromMy || ownerId === currentUserIdRef.current) {
       window.sessionStorage.removeItem("shorttoon-viewed-channel-owner");
@@ -142,7 +145,7 @@ export default function Home() {
     setChannelProfile(DEFAULT_CHANNEL_PROFILE);
     setChannelEditDraft(DEFAULT_CHANNEL_PROFILE);
     setChannelLinks([]);
-    setChannelPosts([]);
+    setOwnChannelPosts([]);
     setViewedChannelOwnerId(null);
     setViewedChannelProfile(null);
     setViewedChannelPosts([]);
@@ -263,8 +266,8 @@ export default function Home() {
   useEffect(() => {
     if (activeTab !== "channel" && activeTab !== "liked") return;
     if (activeTab === "channel" && viewedChannelOwnerId) return;
-    if (!currentUserIdRef.current) { setChannelPosts([]); return; }
-    void loadPostsFromSupabase(currentUserIdRef.current).then((posts) => setChannelPosts(posts)).catch((error) => console.error("채널 게시물 조회 실패", error));
+    if (!currentUserIdRef.current) { setOwnChannelPosts([]); return; }
+    void loadPostsFromSupabase(currentUserIdRef.current).then((posts) => setOwnChannelPosts(posts)).catch((error) => console.error("채널 게시물 조회 실패", error));
   }, [activeTab, viewedChannelOwnerId, isAuthenticated]);
 
   const publishPost = async (post: PublishedShorttoon) => {
@@ -276,8 +279,8 @@ export default function Home() {
     try {
       const saved = await savePostToSupabase({ ...post, authorName: channelProfile.name });
       setUploadLink(null);
-      const newIndex = channelPosts.length;
-      setChannelPosts((current) => [...current, saved]);
+      const newIndex = ownChannelPosts.length;
+      setOwnChannelPosts((current) => [...current, saved]);
       setChannelTargetIndex(newIndex);
       setUploadStep(1);
       setActiveTab("channel");
@@ -290,10 +293,12 @@ export default function Home() {
 
   useEffect(() => {
     const openChannel = (event: Event) => {
-      const ownerId = (event as CustomEvent<{ authorId?: string | null }>).detail?.authorId ?? null;
+      const detail = (event as CustomEvent<{ authorId?: string | null; postIndex?: number }>).detail;
+      const ownerId = detail?.authorId ?? null;
       if (ownerId && ownerId !== currentUserIdRef.current) {
-        void openChannelForComic({ authorId: ownerId });
+        void openChannelForComic({ authorId: ownerId, postIndex: detail?.postIndex });
       } else {
+        if (typeof detail?.postIndex === "number") { setHomeTargetIndex(detail.postIndex); window.sessionStorage.setItem("shorttoon-home-target-index", String(detail.postIndex)); }
         setChannelReturnTab(activeTab === "post" ? "post" : activeTab === "home" ? "home" : "my");
         setViewedChannelOwnerId(null); setViewedChannelProfile(null); setViewedChannelPosts([]); setActiveTab("channel"); if (activeTab !== "post") setChannelTargetIndex(null);
       }

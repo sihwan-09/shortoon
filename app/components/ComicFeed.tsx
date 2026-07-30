@@ -29,7 +29,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, channelId, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, initialHomeIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, channelId, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; initialHomeIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
   const [comics, setComics] = useState<Comic[]>([]);
   const [feedPage, setFeedPage] = useState(0);
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
@@ -100,6 +100,15 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   };
   useEffect(() => { if (isHomeFeed) void loadFeedPage(0, false); }, [isHomeFeed]);
 
+  useEffect(() => {
+    if (!isHomeFeed || !feedRef.current || !comics.length) return;
+    const storedIndex = Number(window.sessionStorage.getItem("shorttoon-home-target-index"));
+    const requestedIndex = Number.isFinite(storedIndex) && storedIndex >= 0 ? storedIndex : initialHomeIndex;
+    const index = Math.max(0, Math.min(requestedIndex, comics.length - 1));
+    if (Number.isFinite(storedIndex)) window.sessionStorage.removeItem("shorttoon-home-target-index");
+    feedRef.current.scrollTo({ left: index * feedRef.current.clientWidth, behavior: "auto" });
+  }, [isHomeFeed, comics.length, initialHomeIndex]);
+
   const openComments = async (comic: Comic) => {
     setCommentComic(comic);
     try {
@@ -168,7 +177,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       const comic = visibleComics[index];
       if (comic) {
         if (onOpenChannel) onOpenChannel(comic);
-        else window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comic.authorId ?? null } }));
+        else window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comic.authorId ?? null, postIndex: index } }));
       }
     };
     document.addEventListener("click", handleAuthorClick);
@@ -287,7 +296,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
               <button type="button" className={`save-action ${savedComics[comic.id] ? "saved" : ""}`} onClick={() => setSavedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${savedComics[comic.id] ? "Remove" : "Save"} ${comic.title}`} aria-pressed={Boolean(savedComics[comic.id])}><span className="save-symbol" aria-hidden="true" /><small>저장</small></button>
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
-            <button className="profile-hit-area" type="button" disabled={Boolean(metaHidden[comic.id])} aria-hidden={metaHidden[comic.id] ? "true" : undefined} aria-label={`${comic.creator} 채널 보기`} onClick={() => onOpenChannel ? onOpenChannel(comic) : window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comic.authorId ?? null } }))} />
+            <button className="profile-hit-area" type="button" disabled={Boolean(metaHidden[comic.id])} aria-hidden={metaHidden[comic.id] ? "true" : undefined} aria-label={`${comic.creator} 채널 보기`} onClick={() => onOpenChannel ? onOpenChannel(comic) : window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comic.authorId ?? null, postIndex: comicIndex } }))} />
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
               <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={(comic.authorImageUrl || (!comic.commentPostId && storedProfileImageUrl)) ? { backgroundImage: `url(${comic.authorImageUrl || storedProfileImageUrl})` } : undefined} /><small>{comic.authorChannelId ? `@${comic.authorChannelId}` : comic.creator}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
             </footer>
