@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 
 const CHANNEL_NAME = "시화 작가";
 export type PostDraft = { title: string; genre: string; description?: string; link?: { title: string; url: string }; coverFile?: File | null; imageFiles?: File[]; coverUrl: string; imageUrls: string[]; authorName?: string };
-export type PublishedPost = { id: string; authorId?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; publishedAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
+export type PublishedPost = { id: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; publishedAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
 
 const isPublishedAtMissing = (error: { code?: string; message?: string } | null) => Boolean(error && (error.code === "PGRST204" || error.message?.toLowerCase().includes("published_at")));
 
@@ -37,6 +37,7 @@ export async function savePostToSupabase(draft: PostDraft) {
 
 type PostRow = { id: string; author_id: string | null; title: string; genre: string; description: string | null; author_name: string | null; link_title: string | null; link_url: string | null; cover_image_url: string; like_count: number | null; comment_count: number | null; created_at: string; published_at?: string | null };
 type ImageRow = { post_id: string; image_url: string; sort_order: number };
+type ChannelProfileRow = { owner_id: string; channel_id: string | null; profile_image_url: string | null };
 
 async function queryPosts(page: number, pageSize: number, withPublishedAt: boolean) {
   const from = page * pageSize;
@@ -54,6 +55,11 @@ export async function loadPublishedPostsPage(page: number, pageSize = 10, author
   if (result.error) throw result.error;
   const rows = (result.data ?? []) as PostRow[];
   const ids = rows.map((post) => post.id);
+  const authorIds = Array.from(new Set(rows.map((post) => post.author_id).filter((id): id is string => Boolean(id))));
+  const { data: authorProfiles, error: authorProfilesError } = authorIds.length ? await supabase.from("channel_profiles").select("owner_id,channel_id,profile_image_url").in("owner_id", authorIds) : { data: [], error: null };
+  if (authorProfilesError) console.error("게시물 작성자 프로필 조회 실패", authorProfilesError);
+  const authorProfileMap = new Map<string, ChannelProfileRow>();
+  for (const profile of (authorProfiles ?? []) as ChannelProfileRow[]) authorProfileMap.set(profile.owner_id, profile);
   const { data: images, error: imagesError } = ids.length ? await supabase.from("post_images").select("post_id,image_url,sort_order").in("post_id", ids).order("sort_order", { ascending: true }) : { data: [], error: null };
   if (imagesError) throw imagesError;
   const imagesByPost = new Map<string, ImageRow[]>();
@@ -68,7 +74,7 @@ export async function loadPublishedPostsPage(page: number, pageSize = 10, author
   for (const row of likeRows ?? []) likeCounts.set(row.post_id, (likeCounts.get(row.post_id) ?? 0) + 1);
   const commentCounts = new Map<string, number>();
   for (const row of commentRows ?? []) commentCounts.set(row.post_id, (commentCounts.get(row.post_id) ?? 0) + 1);
-  const posts = rows.map((post) => ({ id: post.id, authorId: post.author_id, title: post.title, coverUrl: post.cover_image_url, imageUrls: (imagesByPost.get(post.id) ?? []).map((image) => image.image_url), genre: post.genre, authorName: post.author_name ?? CHANNEL_NAME, description: post.description ?? "", createdAt: post.created_at, publishedAt: post.published_at ?? undefined, likeCount: likesError ? post.like_count ?? 0 : likeCounts.get(post.id) ?? 0, commentCount: commentsError ? post.comment_count ?? 0 : commentCounts.get(post.id) ?? 0, viewCount: 0, link: post.link_title && post.link_url ? { title: post.link_title, url: post.link_url } : undefined }));
+  const posts = rows.map((post) => { const authorProfile = post.author_id ? authorProfileMap.get(post.author_id) : undefined; return { id: post.id, authorId: post.author_id, authorChannelId: authorProfile?.channel_id ?? null, authorImageUrl: authorProfile?.profile_image_url ?? null, title: post.title, coverUrl: post.cover_image_url, imageUrls: (imagesByPost.get(post.id) ?? []).map((image) => image.image_url), genre: post.genre, authorName: post.author_name ?? CHANNEL_NAME, description: post.description ?? "", createdAt: post.created_at, publishedAt: post.published_at ?? undefined, likeCount: likesError ? post.like_count ?? 0 : likeCounts.get(post.id) ?? 0, commentCount: commentsError ? post.comment_count ?? 0 : commentCounts.get(post.id) ?? 0, viewCount: 0, link: post.link_title && post.link_url ? { title: post.link_title, url: post.link_url } : undefined }; });
   return { posts, hasMore: posts.length === pageSize };
 }
 
