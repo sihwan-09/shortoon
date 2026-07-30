@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { uploadChannelProfileImage } from "../../lib/channel";
+import { isChannelIdTaken, uploadChannelProfileImage } from "../../lib/channel";
 
 export type ChannelLink = { title: string; url: string };
 export type ChannelProfile = { name: string; channelId: string; intro: string; links: ChannelLink[]; profileImageUrl?: string | null };
@@ -10,13 +10,22 @@ const limitIntroLines = (value: string) => value.split("\n").flatMap((line) => l
 function channelIdError(value: string) { if (value.length < 3 || value.length > 30) return "채널 아이디는 3자 이상 30자 이하로 입력해주세요."; if (!/^[\p{L}\p{N}._]+$/u.test(value)) return "채널 아이디에는 문자, 숫자, 밑줄( _ ), 및 마침표( . )만 사용할 수 있습니다."; if (value.startsWith(".")) return "채널 아이디는 마침표( . )로 시작할 수 없습니다."; if (value.endsWith(".")) return "채널 아이디의 끝에는 마침표( . )를 사용할 수 없습니다."; if (value.includes("..")) return "마침표( . )를 한 줄에 한 개 이상 포함할 수 없습니다."; return ""; }
 
 export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile, onSave, onDraftChange }: Props) {
-  const [channelName, setChannelName] = useState(profile.name); const [channelId, setChannelId] = useState(profile.channelId.toLowerCase()); const [intro, setIntro] = useState(profile.intro); const [saving, setSaving] = useState(false); const [pendingProfileImageFile, setPendingProfileImageFile] = useState<File | null>(null); const [profileImagePreview, setProfileImagePreview] = useState(profile.profileImageUrl ?? null);
+  const [channelName, setChannelName] = useState(profile.name); const [channelId, setChannelId] = useState(profile.channelId.toLowerCase()); const [intro, setIntro] = useState(profile.intro); const [saving, setSaving] = useState(false); const [pendingProfileImageFile, setPendingProfileImageFile] = useState<File | null>(null); const [profileImagePreview, setProfileImagePreview] = useState(profile.profileImageUrl ?? null); const [duplicateId, setDuplicateId] = useState(false); const [hasEditedChannelId, setHasEditedChannelId] = useState(false);
   useEffect(() => setProfileImagePreview(profile.profileImageUrl ?? window.localStorage.getItem("shorttoon-profile-image")), [profile.profileImageUrl]);
+  useEffect(() => {
+    if (!hasEditedChannelId || channelIdError(channelId)) { setDuplicateId(false); return; }
+    let cancelled = false;
+    void isChannelIdTaken(channelId).then((taken) => {
+      if (cancelled) return;
+      setDuplicateId(taken);
+    }).catch((error) => console.error("채널 아이디 중복 확인 실패", error));
+    return () => { cancelled = true; };
+  }, [channelId, hasEditedChannelId]);
   const updateDraft = (next: Partial<ChannelProfile>) => onDraftChange?.({ name: next.name ?? channelName, channelId: next.channelId ?? channelId, intro: next.intro ?? intro, links: profile.links, profileImageUrl: profile.profileImageUrl });
-  const idError = channelIdError(channelId); const canSave = channelName.trim().length > 0 && !idError && !saving; const introCharacterCount = intro.replace(/\r?\n/g, "").length;
+  const idError = channelIdError(channelId); const canSave = channelName.trim().length > 0 && !idError && !duplicateId && !saving; const introCharacterCount = intro.replace(/\r?\n/g, "").length;
   return <section className="channel-edit-page" aria-label="채널 수정">
     <div className="edit-section edit-profile-section"><h2>프로필 이미지</h2><div className="edit-avatar-wrap"><div className="profile-avatar" aria-label="프로필 이미지" role="img">{profileImagePreview ? <img src={profileImagePreview} alt="프로필" /> : <span />}</div><label className="profile-image-change-button">이미지 변경<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ""; if (file) { setProfileImagePreview(URL.createObjectURL(file)); setPendingProfileImageFile(file); } }} /></label></div></div>
-    <div className="edit-form"><label>채널명<input value={channelName} onChange={(event) => { setChannelName(event.target.value); updateDraft({ name: event.target.value }); }} maxLength={20} /><small>{channelName.length}/20</small></label><label>채널 아이디<div className="channel-id-input"><span>@</span><input value={channelId} onChange={(event) => { const value = event.target.value.toLowerCase(); setChannelId(value); updateDraft({ channelId: value }); }} maxLength={30} /></div>{idError && <small className="field-warning">{idError}</small>}</label><label>소개<textarea value={intro} onChange={(event) => { const value = limitIntroLines(event.target.value); setIntro(value); updateDraft({ intro: value }); }} maxLength={150} /><small>{introCharacterCount}/150</small></label></div>
+    <div className="edit-form"><label>채널명<input value={channelName} onChange={(event) => { setChannelName(event.target.value); updateDraft({ name: event.target.value }); }} maxLength={20} /><small>{channelName.length}/20</small></label><label>채널 아이디<div className="channel-id-input"><span>@</span><input value={channelId} onChange={(event) => { const value = event.target.value.toLowerCase(); setHasEditedChannelId(true); setChannelId(value); updateDraft({ channelId: value }); }} maxLength={30} /></div>{idError && <small className="field-warning">{idError}</small>}{!idError && duplicateId && <small className="field-warning">중복된 아이디입니다</small>}</label><label>소개<textarea value={intro} onChange={(event) => { const value = limitIntroLines(event.target.value); setIntro(value); updateDraft({ intro: value }); }} maxLength={150} /><small>{introCharacterCount}/150</small></label></div>
     <div className="edit-links"><button type="button" onClick={onAddLink} disabled={links.length >= 5}>링크 추가 <span aria-hidden="true">＋</span></button>{links.map((link, index) => <button className="existing-link" type="button" key={`${link.url}-${index}`} onClick={() => onEditLink(index)}><strong>{link.title}</strong><span>{link.url}</span></button>)}</div>
     <button className="save-channel-button" type="button" disabled={!canSave} onClick={async () => { setSaving(true); try { const profileImageUrl = pendingProfileImageFile ? await uploadChannelProfileImage(pendingProfileImageFile) : (profile.profileImageUrl ?? profileImagePreview); if (profileImageUrl) { window.localStorage.setItem("shorttoon-profile-image", profileImageUrl); window.dispatchEvent(new Event("shorttoon-profile-image")); } await onSave({ name: channelName.trim(), channelId: channelId.trim(), intro: intro.trim(), links, profileImageUrl }); setPendingProfileImageFile(null); onBack(); } catch { window.alert("채널 정보 저장에 실패했습니다. Supabase 설정을 확인해주세요."); } finally { setSaving(false); } }}>{saving ? "저장 중..." : "변경사항 저장"}</button>
   </section>;

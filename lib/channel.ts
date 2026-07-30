@@ -7,6 +7,17 @@ async function getCurrentUserId() {
   return data.session?.user.id ?? null;
 }
 
+export async function isChannelIdTaken(channelId: string): Promise<boolean> {
+  const value = channelId.trim();
+  if (!value) return false;
+  const ownerId = await getCurrentUserId();
+  let query = supabase.from("channel_profiles").select("owner_id").eq("channel_id", value).limit(1);
+  if (ownerId) query = query.neq("owner_id", ownerId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return Boolean(data?.length);
+}
+
 export async function loadChannelProfileByOwnerId(ownerId: string | null): Promise<ChannelProfile | null> {
   if (!ownerId) return null;
   let { data, error } = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url,links,profile_image_url").eq("owner_id", ownerId).maybeSingle();
