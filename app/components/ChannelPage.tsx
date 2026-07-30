@@ -17,11 +17,11 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
   const [viewFollowing, setViewFollowing] = useState(isFollowing);
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profile.profileImageUrl ?? null);
   useEffect(() => {
-    const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
+    const sync = () => setStoredProfileImageUrl(isOwner ? window.localStorage.getItem("shorttoon-profile-image") : (profile.profileImageUrl ?? null));
     sync();
     window.addEventListener("shorttoon-profile-image", sync);
     return () => window.removeEventListener("shorttoon-profile-image", sync);
-  }, [profile.profileImageUrl]);
+  }, [isOwner, profile.profileImageUrl]);
   useEffect(() => {
     const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner");
     if (!ownerId) { setViewProfile(profile); setViewPosts(posts); setViewIsOwner(true); setStoredProfileImageUrl(profile.profileImageUrl ?? null); return; }
