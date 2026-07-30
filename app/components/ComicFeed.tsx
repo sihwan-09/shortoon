@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../../lib/supabase";
 import { createPostComment, loadPostComments, toggleCommentLike } from "../../lib/comments";
 import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 import { loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
@@ -66,18 +67,22 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   }, [profileImageUrl]);
 
   useEffect(() => {
-    const syncLikes = () => {
-      try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); setLikedPostIds(Array.isArray(value) ? value : []); } catch { setLikedPostIds([]); }
+    let cancelled = false;
+    const syncLikes = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) { if (!cancelled) setLikedPostIds([]); return; }
+        const ids = await loadUserLikedPostIds();
+        if (!cancelled) setLikedPostIds(ids);
+      } catch (error) {
+        console.error("사용자 좋아요 불러오기 실패", error);
+        if (!cancelled) setLikedPostIds([]);
+      }
     };
-    syncLikes();
-    void loadUserLikedPostIds().then((ids) => {
-      if (!ids.length) return;
-      setLikedPostIds((current) => Array.from(new Set([...current, ...ids])));
-      window.localStorage.setItem("shorttoon-liked-posts", JSON.stringify(Array.from(new Set([...likedPostIds, ...ids]))));
-      window.dispatchEvent(new Event("shorttoon-liked-posts"));
-    }).catch(() => undefined);
+    void syncLikes();
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => { void syncLikes(); });
     window.addEventListener("shorttoon-liked-posts", syncLikes);
-    return () => window.removeEventListener("shorttoon-liked-posts", syncLikes);
+    return () => { cancelled = true; authListener.subscription.unsubscribe(); window.removeEventListener("shorttoon-liked-posts", syncLikes); };
   }, []);
 
   const isHomeFeed = !selectedPost && !selectedPosts;
@@ -142,17 +147,17 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       const comic = visibleComics[index];
       const postId = comic?.commentPostId;
       if (!postId) return;
-      const current = (() => { try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); return Array.isArray(value) ? value as string[] : []; } catch { return []; } })();
+      const current = likedPostIds;
       const next = current.includes(postId) ? current.filter((id) => id !== postId) : Array.from(new Set([...current, postId]));
       const currentLikeCount = likeCountOverrides[comic.id] ?? comic.likeCount ?? 0;
       setLikeCountOverrides((counts) => ({ ...counts, [comic.id]: Math.max(0, currentLikeCount + (next.includes(postId) ? 1 : -1)) }));
-      window.localStorage.setItem("shorttoon-liked-posts", JSON.stringify(next));
+      setLikedPostIds(next);
       window.dispatchEvent(new Event("shorttoon-liked-posts"));
       void syncPostLike(postId, next.includes(postId)).catch((error) => console.error("게시물 좋아요 저장 실패", error));
     };
     document.addEventListener("click", handleLikeClick, true);
     return () => document.removeEventListener("click", handleLikeClick, true);
-  }, [visibleComics, likeCountOverrides]);
+  }, [visibleComics, likeCountOverrides, likedPostIds]);
 
   useEffect(() => {
     const handleAuthorClick = (event: MouseEvent) => {

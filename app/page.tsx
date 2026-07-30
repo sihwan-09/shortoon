@@ -11,6 +11,7 @@ import { MyPage } from "./components/MyPage";
 import { LikedPostsPage } from "./components/LikedPostsPage";
 import { PublishedShorttoon, UploadPage } from "./components/UploadPage";
 import { loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
+import { loadUserLikedPostIds } from "../lib/likes";
 import { loadChannelProfile, loadChannelProfileByOwnerId, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
 import { AuthPage } from "./components/AuthPage";
 
@@ -86,18 +87,28 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const syncLikes = () => {
-      try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); setLikedPostIds(Array.isArray(value) ? value : []); } catch { setLikedPostIds([]); }
+    let cancelled = false;
+    const syncLikes = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) { if (!cancelled) setLikedPostIds([]); return; }
+        const ids = await loadUserLikedPostIds();
+        if (!cancelled) setLikedPostIds(ids);
+      } catch (error) {
+        console.error("사용자 좋아요 불러오기 실패", error);
+        if (!cancelled) setLikedPostIds([]);
+      }
     };
-    syncLikes();
+    void syncLikes();
     const openLiked = () => setActiveTab("liked");
     const returnFromPost = () => {
       if (window.localStorage.getItem("shorttoon-post-return") === "liked") setActiveTab("liked");
     };
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => { void syncLikes(); });
     window.addEventListener("shorttoon-liked-posts", syncLikes);
     window.addEventListener("open-liked-posts", openLiked);
     window.addEventListener("shorttoon-post-back", returnFromPost);
-    return () => { window.removeEventListener("shorttoon-liked-posts", syncLikes); window.removeEventListener("open-liked-posts", openLiked); window.removeEventListener("shorttoon-post-back", returnFromPost); };
+    return () => { cancelled = true; authListener.subscription.unsubscribe(); window.removeEventListener("shorttoon-liked-posts", syncLikes); window.removeEventListener("open-liked-posts", openLiked); window.removeEventListener("shorttoon-post-back", returnFromPost); };
   }, []);
 
   const afterChannelRender = (action: () => void) => window.requestAnimationFrame(() => window.requestAnimationFrame(action));
