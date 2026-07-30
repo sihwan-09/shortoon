@@ -6,8 +6,8 @@ import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 import { loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
-type Comic = { id: number; title: string; creator: string; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
-type SelectedPost = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
+type Comic = { id: number; title: string; creator: string; authorId?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
+type SelectedPost = { id?: string; authorId?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
 type Comment = { id: number | string; comicId: number | string; author: string; authorChannelId?: string | null; authorImageUrl?: string | null; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
 
 const fallbackComics: Comic[] = [
@@ -81,7 +81,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   }, []);
 
   const isHomeFeed = !selectedPost && !selectedPosts;
-  const toComic = (post: PublishedPost, index: number): Comic => ({ id: Number.parseInt(post.id.replace(/-/g, "").slice(0, 8), 16) || index + 1, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, commentCount: post.commentCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, imageIndex) => ({ id: index * 100 + imageIndex, position: imageIndex + 1, eyebrow: `${imageIndex + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) });
+  const toComic = (post: PublishedPost, index: number): Comic => ({ id: Number.parseInt(post.id.replace(/-/g, "").slice(0, 8), 16) || index + 1, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, commentCount: post.commentCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, imageIndex) => ({ id: index * 100 + imageIndex, position: imageIndex + 1, eyebrow: `${imageIndex + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) });
   const loadFeedPage = async (page: number, append: boolean) => {
     if (!isHomeFeed || feedRequestRef.current || (!append && page !== 0)) return;
     feedRequestRef.current = true;
@@ -130,7 +130,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
   const selectedPostSetKey = selectedPosts?.map((post) => post.id ?? post.title).join("|") ?? "";
-  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
+  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
 
   useEffect(() => {
     const handleLikeClick = (event: MouseEvent) => {
@@ -163,7 +163,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       const comic = visibleComics[index];
       if (comic) {
         if (onOpenChannel) onOpenChannel(comic);
-        else window.dispatchEvent(new CustomEvent("shorttoon-open-channel"));
+        else window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comic.authorId ?? null } }));
       }
     };
     document.addEventListener("click", handleAuthorClick);
@@ -282,7 +282,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
               <button type="button" className={`save-action ${savedComics[comic.id] ? "saved" : ""}`} onClick={() => setSavedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${savedComics[comic.id] ? "Remove" : "Save"} ${comic.title}`} aria-pressed={Boolean(savedComics[comic.id])}><span className="save-symbol" aria-hidden="true" /><small>저장</small></button>
               <a href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
-            <button className="profile-hit-area" type="button" disabled={Boolean(metaHidden[comic.id])} aria-hidden={metaHidden[comic.id] ? "true" : undefined} aria-label={`${comic.creator} 채널 보기`} onClick={() => onOpenChannel ? onOpenChannel(comic) : window.dispatchEvent(new CustomEvent("shorttoon-open-channel"))} />
+            <button className="profile-hit-area" type="button" disabled={Boolean(metaHidden[comic.id])} aria-hidden={metaHidden[comic.id] ? "true" : undefined} aria-label={`${comic.creator} 채널 보기`} onClick={() => onOpenChannel ? onOpenChannel(comic) : window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comic.authorId ?? null } }))} />
             <footer className={`comic-meta ${metaHidden[comic.id] ? "meta-hidden" : ""}`}>
               <div><div className="comic-author"><span className="post-author-avatar" aria-hidden="true" style={storedProfileImageUrl ? { backgroundImage: `url(${storedProfileImageUrl})` } : undefined} /><small>@{channelId || comic.creator.toLowerCase().replace(/\s+/g, "")}</small></div><button className="comic-title-button" type="button" onClick={() => setInfoComic(comic)}>{comic.title}</button><div className="comic-tag-cluster">{comic.link && <a className="comic-tag-pill" href={comic.link.url} target="_blank" rel="noreferrer">{comic.link.title}</a>}{comic.genre.split(" · ").filter(Boolean).map((genre) => <span className="comic-tag-pill" key={genre}>{genre}</span>)}</div></div>
             </footer>

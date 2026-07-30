@@ -7,8 +7,7 @@ async function getCurrentUserId() {
   return data.session?.user.id ?? null;
 }
 
-export async function loadChannelProfile(): Promise<ChannelProfile | null> {
-  const ownerId = await getCurrentUserId();
+export async function loadChannelProfileByOwnerId(ownerId: string | null): Promise<ChannelProfile | null> {
   if (!ownerId) return null;
   let { data, error } = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url,links,profile_image_url").eq("owner_id", ownerId).maybeSingle();
   if (error) {
@@ -19,6 +18,10 @@ export async function loadChannelProfile(): Promise<ChannelProfile | null> {
   if (error) throw error;
   const links = Array.isArray(data?.links) ? data.links.filter((link: unknown): link is ChannelLink => Boolean(link && typeof link === "object" && "title" in link && "url" in link)).slice(0, 5) : data?.link_title && data?.link_url ? [{ title: data.link_title, url: data.link_url }] : [];
   return data ? { name: data.name, channelId: data.channel_id, intro: data.intro, links, profileImageUrl: data.profile_image_url ?? null } : null;
+}
+
+export async function loadChannelProfile(): Promise<ChannelProfile | null> {
+  return loadChannelProfileByOwnerId(await getCurrentUserId());
 }
 
 export async function saveChannelProfile(profile: ChannelProfile, links: ChannelLink[]): Promise<ChannelProfile> {

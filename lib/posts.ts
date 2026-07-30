@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 
 const CHANNEL_NAME = "시화 작가";
 export type PostDraft = { title: string; genre: string; description?: string; link?: { title: string; url: string }; coverFile?: File | null; imageFiles?: File[]; coverUrl: string; imageUrls: string[]; authorName?: string };
-export type PublishedPost = { id: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; publishedAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
+export type PublishedPost = { id: string; authorId?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; publishedAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
 
 const isPublishedAtMissing = (error: { code?: string; message?: string } | null) => Boolean(error && (error.code === "PGRST204" || error.message?.toLowerCase().includes("published_at")));
 
@@ -35,20 +35,21 @@ export async function savePostToSupabase(draft: PostDraft) {
   return { id: postId, title: draft.title, coverUrl, imageUrls, genre: draft.genre, description: draft.description, createdAt: publishedAt, publishedAt, likeCount: 0, viewCount: 0, link: draft.link, authorName: draft.authorName ?? CHANNEL_NAME };
 }
 
-type PostRow = { id: string; title: string; genre: string; description: string | null; author_name: string | null; link_title: string | null; link_url: string | null; cover_image_url: string; like_count: number | null; comment_count: number | null; created_at: string; published_at?: string | null };
+type PostRow = { id: string; author_id: string | null; title: string; genre: string; description: string | null; author_name: string | null; link_title: string | null; link_url: string | null; cover_image_url: string; like_count: number | null; comment_count: number | null; created_at: string; published_at?: string | null };
 type ImageRow = { post_id: string; image_url: string; sort_order: number };
 
 async function queryPosts(page: number, pageSize: number, withPublishedAt: boolean) {
   const from = page * pageSize;
   const to = from + pageSize - 1;
-  const select = withPublishedAt ? "id,title,genre,description,author_name,link_title,link_url,cover_image_url,like_count,comment_count,created_at,published_at" : "id,title,genre,description,author_name,link_title,link_url,cover_image_url,like_count,comment_count,created_at";
+  const select = withPublishedAt ? "id,author_id,title,genre,description,author_name,link_title,link_url,cover_image_url,like_count,comment_count,created_at,published_at" : "id,author_id,title,genre,description,author_name,link_title,link_url,cover_image_url,like_count,comment_count,created_at";
   let query = supabase.from("posts").select(select).eq("status", "published");
   query = withPublishedAt ? query.order("published_at", { ascending: false, nullsFirst: false }).order("id", { ascending: false }) : query.order("created_at", { ascending: false }).order("id", { ascending: false });
   return query.range(from, to);
 }
 
-export async function loadPublishedPostsPage(page: number, pageSize = 10): Promise<{ posts: PublishedPost[]; hasMore: boolean }> {
+export async function loadPublishedPostsPage(page: number, pageSize = 10, authorId?: string | null): Promise<{ posts: PublishedPost[]; hasMore: boolean }> {
   let result = await queryPosts(page, pageSize, true);
+  if (authorId) result = { ...result, data: result.data?.filter((row) => row.author_id === authorId) ?? null };
   if (result.error && isPublishedAtMissing(result.error)) result = await queryPosts(page, pageSize, false);
   if (result.error) throw result.error;
   const rows = (result.data ?? []) as PostRow[];
@@ -67,11 +68,11 @@ export async function loadPublishedPostsPage(page: number, pageSize = 10): Promi
   for (const row of likeRows ?? []) likeCounts.set(row.post_id, (likeCounts.get(row.post_id) ?? 0) + 1);
   const commentCounts = new Map<string, number>();
   for (const row of commentRows ?? []) commentCounts.set(row.post_id, (commentCounts.get(row.post_id) ?? 0) + 1);
-  const posts = rows.map((post) => ({ id: post.id, title: post.title, coverUrl: post.cover_image_url, imageUrls: (imagesByPost.get(post.id) ?? []).map((image) => image.image_url), genre: post.genre, authorName: post.author_name ?? CHANNEL_NAME, description: post.description ?? "", createdAt: post.created_at, publishedAt: post.published_at ?? undefined, likeCount: likesError ? post.like_count ?? 0 : likeCounts.get(post.id) ?? 0, commentCount: commentsError ? post.comment_count ?? 0 : commentCounts.get(post.id) ?? 0, viewCount: 0, link: post.link_title && post.link_url ? { title: post.link_title, url: post.link_url } : undefined }));
+  const posts = rows.map((post) => ({ id: post.id, authorId: post.author_id, title: post.title, coverUrl: post.cover_image_url, imageUrls: (imagesByPost.get(post.id) ?? []).map((image) => image.image_url), genre: post.genre, authorName: post.author_name ?? CHANNEL_NAME, description: post.description ?? "", createdAt: post.created_at, publishedAt: post.published_at ?? undefined, likeCount: likesError ? post.like_count ?? 0 : likeCounts.get(post.id) ?? 0, commentCount: commentsError ? post.comment_count ?? 0 : commentCounts.get(post.id) ?? 0, viewCount: 0, link: post.link_title && post.link_url ? { title: post.link_title, url: post.link_url } : undefined }));
   return { posts, hasMore: posts.length === pageSize };
 }
 
-export async function loadPostsFromSupabase() {
-  const pages = await loadPublishedPostsPage(0, 1000);
+export async function loadPostsFromSupabase(authorId?: string | null) {
+  const pages = await loadPublishedPostsPage(0, 1000, authorId);
   return pages.posts;
 }

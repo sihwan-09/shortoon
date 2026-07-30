@@ -1,15 +1,25 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { loadChannelProfileByOwnerId } from "../../lib/channel";
+
 type ChannelLink = { title: string; url: string };
 type ChannelIntroPageProps = { intro: string; links: ChannelLink[]; postCount: number; onBack: () => void };
 
 export function ChannelIntroPage({ intro, links, postCount, onBack }: ChannelIntroPageProps) {
+  const [viewIntro, setViewIntro] = useState(intro);
+  const [viewLinks, setViewLinks] = useState(links);
+  useEffect(() => {
+    const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner");
+    if (!ownerId) { setViewIntro(intro); setViewLinks(links); return; }
+    void loadChannelProfileByOwnerId(ownerId).then((profile) => { if (profile) { setViewIntro(profile.intro); setViewLinks(profile.links); } }).catch((error) => console.error("채널 소개 불러오기 실패", error));
+  }, [intro, links]);
   return (
     <section className="channel-intro-page" aria-label="채널 소개">
       <h2 className="channel-intro-subtitle">소개</h2>
-      <div className="channel-intro-full"><p>{intro}</p></div>
+      <div className="channel-intro-full"><p>{viewIntro}</p></div>
       <h2 className="channel-intro-subtitle">링크</h2>
-      {links.slice(0, 5).map((link, index) => <a className="channel-intro-link" href={link.url} target="_blank" rel="noreferrer" key={`${link.url}-${index}`}><strong>{link.title}</strong><span>{link.url}</span></a>)}
+      {viewLinks.slice(0, 5).map((link, index) => <a className="channel-intro-link" href={link.url} target="_blank" rel="noreferrer" key={`${link.url}-${index}`}><strong>{link.title}</strong><span>{link.url}</span></a>)}
       <h2 className="channel-intro-subtitle">정보</h2>
       <div className="channel-intro-info" aria-label="채널 정보">
         {links.slice(0, 5).map((link, index) => <div className="channel-intro-info-row" key={`info-${link.url}-${index}`}><span className="channel-info-icon link-info-icon" aria-hidden="true">🔗</span><span>{link.url}</span></div>)}

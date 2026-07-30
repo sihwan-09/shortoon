@@ -11,7 +11,7 @@ import { MyPage } from "./components/MyPage";
 import { LikedPostsPage } from "./components/LikedPostsPage";
 import { PublishedShorttoon, UploadPage } from "./components/UploadPage";
 import { loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
-import { loadChannelProfile, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
+import { loadChannelProfile, loadChannelProfileByOwnerId, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
 import { AuthPage } from "./components/AuthPage";
 
 const DEFAULT_CHANNEL_PROFILE: ChannelProfile = { name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null };
@@ -36,8 +36,45 @@ export default function Home() {
   const [channelScrollTop, setChannelScrollTop] = useState(0);
   const [channelTargetIndex, setChannelTargetIndex] = useState<number | null>(null);
   const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [viewedChannelOwnerId, setViewedChannelOwnerId] = useState<string | null>(null);
+  const [viewedChannelProfile, setViewedChannelProfile] = useState<ChannelProfile | null>(null);
+  const [viewedChannelPosts, setViewedChannelPosts] = useState<PublishedShorttoon[]>([]);
+  const [channelReturnTab, setChannelReturnTab] = useState<"home" | "my">("my");
+  const [followedChannelIds, setFollowedChannelIds] = useState<string[]>([]);
   const profileSyncRequestRef = useRef(0);
+  const currentUserIdRef = useRef<string | null>(null);
   const likedPosts = channelPosts.filter((post) => post.id && likedPostIds.includes(post.id));
+  const displayedChannelProfile = viewedChannelProfile ?? channelProfile;
+  const displayedChannelPosts = viewedChannelOwnerId ? viewedChannelPosts : channelPosts;
+  const isViewingOwnChannel = !viewedChannelOwnerId || viewedChannelOwnerId === currentUserId;
+
+  const openChannelForComic = async (comic: { authorId?: string | null }) => {
+    const ownerId = comic.authorId ?? null;
+    setChannelReturnTab(activeTab === "home" ? "home" : "my");
+    if (!ownerId || ownerId === currentUserIdRef.current) {
+      window.sessionStorage.removeItem("shorttoon-viewed-channel-owner");
+      setViewedChannelOwnerId(null); setViewedChannelProfile(null); setActiveTab("channel"); return;
+    }
+    window.sessionStorage.setItem("shorttoon-viewed-channel-owner", ownerId);
+    try {
+      const [profile, posts] = await Promise.all([loadChannelProfileByOwnerId(ownerId), loadPostsFromSupabase(ownerId)]);
+      setViewedChannelOwnerId(ownerId);
+      setViewedChannelProfile(profile ?? DEFAULT_CHANNEL_PROFILE);
+      setViewedChannelPosts(posts);
+      setActiveTab("channel");
+    } catch (error) {
+      console.error("채널 조회 실패", error);
+      setViewedChannelOwnerId(ownerId); setViewedChannelProfile(DEFAULT_CHANNEL_PROFILE); setViewedChannelPosts([]); setActiveTab("channel");
+    }
+  };
+
+  useEffect(() => {
+    try {
+      const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
+      setFollowedChannelIds(Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []);
+    } catch { setFollowedChannelIds([]); }
+  }, []);
 
   useEffect(() => {
     const syncLikes = () => {
@@ -173,10 +210,14 @@ export default function Home() {
     };
     void supabase.auth.getSession().then(({ data, error }) => {
       if (error) console.error("Supabase 연결 확인 실패", error);
+      currentUserIdRef.current = data.session?.user.id ?? null;
+      setCurrentUserId(data.session?.user.id ?? null);
       setIsAuthenticated(Boolean(data.session));
       void syncChannelProfile(data.session?.user.id ?? null);
     });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      currentUserIdRef.current = session?.user.id ?? null;
+      setCurrentUserId(session?.user.id ?? null);
       setIsAuthenticated(Boolean(session));
       void syncChannelProfile(session?.user.id ?? null);
     });
@@ -189,8 +230,9 @@ export default function Home() {
 
   useEffect(() => {
     if (activeTab !== "channel" && activeTab !== "liked") return;
+    if (activeTab === "channel" && viewedChannelOwnerId) return;
     void loadPostsFromSupabase().then((posts) => setChannelPosts(posts)).catch((error) => console.error("채널 게시물 조회 실패", error));
-  }, [activeTab]);
+  }, [activeTab, viewedChannelOwnerId]);
 
   const publishPost = async (post: PublishedShorttoon) => {
     try {
@@ -209,7 +251,14 @@ export default function Home() {
   };
 
   useEffect(() => {
-    const openChannel = () => { setActiveTab("channel"); setChannelTargetIndex(null); };
+    const openChannel = (event: Event) => {
+      const ownerId = (event as CustomEvent<{ authorId?: string | null }>).detail?.authorId ?? null;
+      if (ownerId && ownerId !== currentUserIdRef.current) {
+        void openChannelForComic({ authorId: ownerId });
+      } else {
+        setViewedChannelOwnerId(null); setViewedChannelProfile(null); setViewedChannelPosts([]); setActiveTab("channel"); setChannelTargetIndex(null);
+      }
+    };
     window.addEventListener("shorttoon-open-channel", openChannel);
     return () => window.removeEventListener("shorttoon-open-channel", openChannel);
   }, []);

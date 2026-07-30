@@ -305,6 +305,8 @@ a { color: inherit; text-decoration: none; }
 .channel-actions { display: flex; width: 100%; gap: 10px; margin: 18px 0 4px; }
 .channel-actions button { flex: 1; min-width: 0; height: 46px; padding: 0 12px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 9px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
 .channel-actions button.is-active { color: #111; background: var(--primary); border-color: var(--primary); }
+.channel-actions .channel-follow-button { color: #111; background: var(--primary); border-color: var(--primary); }
+.channel-actions .channel-follow-button.is-following { color: var(--text); background: var(--card); border-color: var(--divider); }
 .channel-intro { display: block; width: 100%; padding: 0 0 22px; border: 0; border-bottom: 1px solid var(--divider); background: transparent; color: inherit; text-align: left; cursor: pointer; }
 .channel-intro p { margin: 0; min-width: 0; color: var(--text-muted); font-size: 13px; line-height: 1.6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .channel-intro-page { position: relative; min-height: 100%; overflow-y: auto; padding: 32px 20px 120px; }
