@@ -12,6 +12,7 @@ export function ChannelIntroPage({ intro, links, postCount, onBack }: ChannelInt
   useEffect(() => {
     const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner");
     if (!ownerId) { setViewIntro(intro); setViewLinks(links); return; }
+    if (ownerId === "anonymous-external") { setViewIntro(""); setViewLinks([]); return; }
     void loadChannelProfileByOwnerId(ownerId).then((profile) => { if (profile) { setViewIntro(profile.intro); setViewLinks(profile.links); } }).catch((error) => console.error("채널 소개 불러오기 실패", error));
   }, [intro, links]);
   return (

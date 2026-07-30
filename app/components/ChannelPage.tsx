@@ -31,6 +31,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
       const ids = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
       setViewFollowing(Array.isArray(ids) && ids.includes(ownerId));
     } catch { setViewFollowing(false); }
+    if (ownerId === "anonymous-external") { setViewProfile({ name: "채널명", channelId: "채널 아이디", intro: "", links: [], profileImageUrl: null }); setViewPosts([]); setStoredProfileImageUrl(null); return () => { cancelled = true; }; }
     void Promise.all([loadChannelProfileByOwnerId(ownerId), loadPostsFromSupabase(ownerId)]).then(([nextProfile, nextPosts]) => {
       if (cancelled) return;
       if (nextProfile) { setViewProfile(nextProfile); setStoredProfileImageUrl(nextProfile.profileImageUrl ?? null); }

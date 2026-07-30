@@ -14,7 +14,7 @@ import { loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
 import { loadChannelProfile, loadChannelProfileByOwnerId, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
 import { AuthPage } from "./components/AuthPage";
 
-const DEFAULT_CHANNEL_PROFILE: ChannelProfile = { name: "시화 작가", channelId: "shorttoon_creator", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null };
+const DEFAULT_CHANNEL_PROFILE: ChannelProfile = { name: "채널명", channelId: "채널 아이디", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null };
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"home" | "my" | "channel" | "liked" | "channel-intro" | "edit" | "link-edit" | "upload" | "upload-link" | "post" | "login" | "signup">("home");
@@ -27,6 +27,7 @@ export default function Home() {
   const [channelEditDraft, setChannelEditDraft] = useState<ChannelProfile>(channelProfile);
   const [legacyChannelNames, setLegacyChannelNames] = useState<string[]>([channelProfile.name]);
   const [channelProfileLoaded, setChannelProfileLoaded] = useState(false);
+  const [channelProfileDirty, setChannelProfileDirty] = useState(false);
   const [uploadLink, setUploadLink] = useState<{ title: string; url: string } | null>(null);
   const [editingLinkIndex, setEditingLinkIndex] = useState<number | null>(null);
   const editingLink = editingLinkIndex !== null;
@@ -49,14 +50,22 @@ export default function Home() {
   const displayedChannelPosts = viewedChannelOwnerId ? viewedChannelPosts : channelPosts;
   const isViewingOwnChannel = !viewedChannelOwnerId || viewedChannelOwnerId === currentUserId;
 
-  const openChannelForComic = async (comic: { authorId?: string | null }) => {
+  const openChannelForComic = async (comic: { authorId?: string | null }, fromMy = false) => {
     const ownerId = comic.authorId ?? null;
     setChannelReturnTab(activeTab === "home" ? "home" : "my");
-    if (!ownerId || ownerId === currentUserIdRef.current) {
+    if (fromMy || ownerId === currentUserIdRef.current) {
       window.sessionStorage.removeItem("shorttoon-viewed-channel-owner");
       setViewedChannelOwnerId(null); setViewedChannelProfile(null); setActiveTab("channel"); return;
     }
-    window.sessionStorage.setItem("shorttoon-viewed-channel-owner", ownerId);
+    const viewedOwnerKey = ownerId ?? "anonymous-external";
+    window.sessionStorage.setItem("shorttoon-viewed-channel-owner", viewedOwnerKey);
+    if (!ownerId) {
+      setViewedChannelOwnerId(viewedOwnerKey);
+      setViewedChannelProfile(DEFAULT_CHANNEL_PROFILE);
+      setViewedChannelPosts([]);
+      setActiveTab("channel");
+      return;
+    }
     try {
       const [profile, posts] = await Promise.all([loadChannelProfileByOwnerId(ownerId), loadPostsFromSupabase(ownerId)]);
       setViewedChannelOwnerId(ownerId);
@@ -122,6 +131,11 @@ export default function Home() {
     setChannelProfile(DEFAULT_CHANNEL_PROFILE);
     setChannelEditDraft(DEFAULT_CHANNEL_PROFILE);
     setChannelLinks([]);
+    setChannelPosts([]);
+    setViewedChannelOwnerId(null);
+    setViewedChannelProfile(null);
+    setViewedChannelPosts([]);
+    window.sessionStorage.removeItem("shorttoon-viewed-channel-owner");
     setChannelProfileLoaded(true);
     setIsAuthenticated(false);
     setActiveTab("home");
@@ -188,6 +202,7 @@ export default function Home() {
         setChannelProfile(DEFAULT_CHANNEL_PROFILE);
         setChannelEditDraft(DEFAULT_CHANNEL_PROFILE);
         setChannelLinks([]);
+        setChannelProfileDirty(false);
         setChannelProfileLoaded(true);
         return;
       }
@@ -201,6 +216,7 @@ export default function Home() {
         setChannelProfile(nextProfile);
         setChannelEditDraft(nextProfile);
         setChannelLinks(nextProfile.links);
+        setChannelProfileDirty(false);
         setLegacyChannelNames((names) => names.includes(nextProfile.name) ? names : [...names, nextProfile.name]);
       } catch (error) {
         console.error("채널 프로필 불러오기 실패", error);
@@ -225,16 +241,27 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (channelProfileLoaded) void saveChannelProfile(channelProfile, channelLinks).catch((error) => console.error("채널 프로필 저장 실패", error));
-  }, [channelProfile, channelLinks, channelProfileLoaded]);
+    if (channelProfileLoaded && channelProfileDirty && currentUserIdRef.current) void saveChannelProfile(channelProfile, channelLinks).then(() => setChannelProfileDirty(false)).catch((error) => console.error("채널 프로필 저장 실패", error));
+  }, [channelProfile, channelLinks, channelProfileLoaded, channelProfileDirty]);
+
+  useEffect(() => {
+    if (!channelProfileLoaded) return;
+    if (JSON.stringify(channelEditDraft) !== JSON.stringify(channelProfile)) setChannelProfileDirty(true);
+  }, [channelEditDraft, channelProfile, channelProfileLoaded]);
 
   useEffect(() => {
     if (activeTab !== "channel" && activeTab !== "liked") return;
     if (activeTab === "channel" && viewedChannelOwnerId) return;
-    void loadPostsFromSupabase().then((posts) => setChannelPosts(posts)).catch((error) => console.error("채널 게시물 조회 실패", error));
-  }, [activeTab, viewedChannelOwnerId]);
+    if (!currentUserIdRef.current) { setChannelPosts([]); return; }
+    void loadPostsFromSupabase(currentUserIdRef.current).then((posts) => setChannelPosts(posts)).catch((error) => console.error("채널 게시물 조회 실패", error));
+  }, [activeTab, viewedChannelOwnerId, isAuthenticated]);
 
   const publishPost = async (post: PublishedShorttoon) => {
+    if (!currentUserIdRef.current) {
+      window.alert("게시하려면 먼저 로그인해 주세요.");
+      setActiveTab("login");
+      return;
+    }
     try {
       const saved = await savePostToSupabase({ ...post, authorName: channelProfile.name });
       setUploadLink(null);
