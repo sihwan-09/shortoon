@@ -11,6 +11,13 @@ function channelIdError(value: string) { if (value.length < 3 || value.length > 
 
 export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile, onSave, onDraftChange }: Props) {
   const [channelName, setChannelName] = useState(profile.name); const [channelId, setChannelId] = useState(profile.channelId.toLowerCase()); const [intro, setIntro] = useState(profile.intro); const [saving, setSaving] = useState(false); const [pendingProfileImageFile, setPendingProfileImageFile] = useState<File | null>(null); const [profileImagePreview, setProfileImagePreview] = useState(profile.profileImageUrl ?? null); const [duplicateId, setDuplicateId] = useState(false); const [hasEditedChannelId, setHasEditedChannelId] = useState(false);
+  useEffect(() => {
+    setChannelName(profile.name);
+    setChannelId(profile.channelId.toLowerCase());
+    setIntro(profile.intro);
+    setHasEditedChannelId(false);
+    setDuplicateId(false);
+  }, [profile.name, profile.channelId, profile.intro]);
   useEffect(() => setProfileImagePreview(profile.profileImageUrl ?? window.localStorage.getItem("shorttoon-profile-image")), [profile.profileImageUrl]);
   useEffect(() => {
     if (!hasEditedChannelId || channelIdError(channelId)) { setDuplicateId(false); return; }
