@@ -17,7 +17,8 @@ export async function loadUserLikedPostIds() {
   const { data } = await supabase.auth.getSession();
   const user = data.session?.user;
   if (!user) return [];
-  const { data: rows, error } = await supabase.from("post_likes").select("post_id").eq("user_id", user.id);
+  let { data: rows, error } = await supabase.from("post_likes").select("post_id,created_at").eq("user_id", user.id).order("created_at", { ascending: false });
+  if (error) ({ data: rows, error } = await supabase.from("post_likes").select("post_id").eq("user_id", user.id));
   if (error) return [];
   return (rows ?? []).map((row) => row.post_id as string);
 }
