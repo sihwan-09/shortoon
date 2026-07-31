@@ -88,16 +88,20 @@ create index if not exists comments_parent_id_idx on public.comments (parent_id,
 create index if not exists post_reports_post_id_idx on public.post_reports (post_id, created_at desc);
 create index if not exists post_reports_reporter_id_idx on public.post_reports (reporter_id, created_at desc);
 
-create or replace view public.post_report_summary as
+drop view if exists public.post_report_summary;
+
+create view public.post_report_summary as
 select
   pr.post_id,
+  p.title as post_title,
+  coalesce(cp.channel_id, '(채널 아이디 없음)') as reported_channel_id,
   count(*)::integer as report_count,
-  array_agg(coalesce(cp.channel_id, '(채널 아이디 없음)') order by pr.created_at) as reporter_channel_ids,
   min(pr.created_at) as first_reported_at,
   max(pr.created_at) as last_reported_at
 from public.post_reports pr
-left join public.channel_profiles cp on cp.owner_id = pr.reporter_id
-group by pr.post_id;
+join public.posts p on p.id = pr.post_id
+left join public.channel_profiles cp on cp.owner_id = p.author_id
+group by pr.post_id, p.title, cp.channel_id;
 
 create table if not exists public.comment_likes (
   comment_id uuid not null references public.comments(id) on delete cascade,
