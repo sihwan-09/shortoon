@@ -69,6 +69,14 @@ create table if not exists public.comments (
   deleted_at timestamptz
 );
 
+create table if not exists public.post_reports (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references public.posts(id) on delete cascade,
+  reporter_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  unique (post_id, reporter_id)
+);
+
 alter table public.comments add column if not exists author_id uuid references auth.users(id) on delete set null;
 alter table public.comments add column if not exists parent_id uuid references public.comments(id) on delete cascade;
 
@@ -77,6 +85,8 @@ create index if not exists post_images_post_id_idx on public.post_images (post_i
 create index if not exists comments_post_id_idx on public.comments (post_id, created_at desc);
 create index if not exists comments_author_id_idx on public.comments (author_id);
 create index if not exists comments_parent_id_idx on public.comments (parent_id, created_at desc);
+create index if not exists post_reports_post_id_idx on public.post_reports (post_id, created_at desc);
+create index if not exists post_reports_reporter_id_idx on public.post_reports (reporter_id, created_at desc);
 
 create table if not exists public.comment_likes (
   comment_id uuid not null references public.comments(id) on delete cascade,
@@ -97,6 +107,12 @@ create policy "users can remove comment likes" on public.comment_likes for delet
 alter table public.posts enable row level security;
 alter table public.post_images enable row level security;
 alter table public.comments enable row level security;
+alter table public.post_reports enable row level security;
+
+drop policy if exists "users can report posts" on public.post_reports;
+create policy "users can report posts" on public.post_reports for insert with check (reporter_id = auth.uid());
+drop policy if exists "users can read their reports" on public.post_reports;
+create policy "users can read their reports" on public.post_reports for select using (reporter_id = auth.uid());
 
 drop policy if exists "published posts are readable" on public.posts;
 create policy "published posts are readable" on public.posts for select using (status = 'published' or author_id = auth.uid() or author_id is null);
