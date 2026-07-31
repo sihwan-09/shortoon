@@ -69,7 +69,8 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
         <div className="my-following-avatars">
           {Array.from({ length: 6 }, (_, index) => {
             const author = followingAuthors[followingPage * 6 + index];
-            return <span className={`post-author-avatar my-following-avatar${author?.profileImageUrl ? "" : " is-empty"}`} key={author?.ownerId ?? `${followingPage}-${index}`} aria-label={author?.name ?? author?.channelId ?? "팔로우한 작가"} role="img" style={author?.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} />;
+            const avatar = <span className={`post-author-avatar my-following-avatar${author?.profileImageUrl ? "" : " is-empty"}`} aria-label={author?.name ?? author?.channelId ?? "팔로우한 작가"} role="img" style={author?.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} />;
+            return author ? <button className="my-following-avatar-button" type="button" key={author.ownerId} onClick={() => window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: author.ownerId } }))} aria-label={`${author.name ?? author.channelId ?? "팔로우한 작가"} 채널 보기`}>{avatar}</button> : <span className="my-following-avatar-placeholder" key={`${followingPage}-${index}`} aria-hidden="true" />;
           })}
         </div>
         <button className="my-following-arrow" type="button" aria-label="다음 팔로우 작가" onClick={() => setFollowingPage((page) => Math.min(page + 1, Math.max(0, Math.ceil(followingAuthors.length / 6) - 1)))} disabled={followingPage >= Math.max(0, Math.ceil(followingAuthors.length / 6) - 1)}>&gt;</button>
