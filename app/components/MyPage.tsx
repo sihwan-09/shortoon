@@ -16,6 +16,7 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
   const [likedCount, setLikedCount] = useState(0);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [followingPage, setFollowingPage] = useState(0);
   useEffect(() => {
     const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
     sync();
@@ -40,7 +41,11 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     <section className="my-following" aria-label="팔로우한 작가">
       <h2>팔로우한 작가</h2>
       <div className="my-following-list">
-        {Array.from({ length: 8 }, (_, index) => <span className="post-author-avatar my-following-avatar" key={index} aria-hidden="true" />)}
+        <button className="my-following-arrow" type="button" aria-label="이전 팔로우 작가" onClick={() => setFollowingPage((page) => Math.max(0, page - 1))} disabled={followingPage === 0}>&lt;</button>
+        <div className="my-following-avatars">
+          {Array.from({ length: 6 }, (_, index) => <span className="post-author-avatar my-following-avatar" key={`${followingPage}-${index}`} aria-hidden="true" />)}
+        </div>
+        <button className="my-following-arrow" type="button" aria-label="다음 팔로우 작가" onClick={() => setFollowingPage((page) => page + 1)}>&gt;</button>
       </div>
     </section>
     <div className="my-stats" aria-label="숏툰 활동">
