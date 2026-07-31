@@ -24,7 +24,8 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     const sync = async () => {
       try {
         const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
-        const ids = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+        const ids = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && !/^T\d+$/.test(item)) : [];
+        window.localStorage.setItem("shorttoon-followed-channels", JSON.stringify(ids));
         const profiles = await loadChannelProfilesByOwnerIds(ids);
         if (!cancelled) setFollowingAuthors(profiles);
       } catch (error) {
@@ -32,15 +33,6 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
         if (!cancelled) setFollowingAuthors([]);
       }
     };
-    if (new URLSearchParams(window.location.search).get("test-following") === "1") {
-      const testIds = Array.from({ length: 30 }, (_, index) => `T${index + 1}`);
-      let existingIds: string[] = [];
-      try {
-        const existing = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
-        existingIds = Array.isArray(existing) ? existing.filter((item): item is string => typeof item === "string") : [];
-      } catch { existingIds = []; }
-      window.localStorage.setItem("shorttoon-followed-channels", JSON.stringify(Array.from(new Set([...testIds, ...existingIds]))));
-    }
     void sync();
     window.addEventListener("shorttoon-followed-channels", sync);
     return () => { cancelled = true; window.removeEventListener("shorttoon-followed-channels", sync); };
