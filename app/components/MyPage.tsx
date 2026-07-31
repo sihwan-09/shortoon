@@ -34,7 +34,12 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     };
     if (new URLSearchParams(window.location.search).get("test-following") === "1") {
       const testIds = Array.from({ length: 30 }, (_, index) => `T${index + 1}`);
-      window.localStorage.setItem("shorttoon-followed-channels", JSON.stringify(testIds));
+      let existingIds: string[] = [];
+      try {
+        const existing = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
+        existingIds = Array.isArray(existing) ? existing.filter((item): item is string => typeof item === "string") : [];
+      } catch { existingIds = []; }
+      window.localStorage.setItem("shorttoon-followed-channels", JSON.stringify(Array.from(new Set([...testIds, ...existingIds]))));
     }
     void sync();
     window.addEventListener("shorttoon-followed-channels", sync);
