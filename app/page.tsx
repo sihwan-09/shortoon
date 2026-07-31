@@ -10,7 +10,7 @@ import { LinkEditPage } from "./components/LinkEditPage";
 import { MyPage } from "./components/MyPage";
 import { LikedPostsPage } from "./components/LikedPostsPage";
 import { PublishedShorttoon, UploadPage } from "./components/UploadPage";
-import { loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
+import { loadPostsByIds, loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
 import { loadUserLikedPostIds } from "../lib/likes";
 import { loadChannelProfile, loadChannelProfileByOwnerId, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
 import { AuthPage } from "./components/AuthPage";
@@ -39,6 +39,7 @@ export default function Home() {
   const [channelTargetIndex, setChannelTargetIndex] = useState<number | null>(null);
   const [homeTargetIndex, setHomeTargetIndex] = useState(0);
   const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
+  const [likedPosts, setLikedPosts] = useState<PublishedShorttoon[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [viewedChannelOwnerId, setViewedChannelOwnerId] = useState<string | null>(null);
   const [viewedChannelProfile, setViewedChannelProfile] = useState<ChannelProfile | null>(null);
@@ -48,7 +49,6 @@ export default function Home() {
   const profileSyncRequestRef = useRef(0);
   const currentUserIdRef = useRef<string | null>(null);
   const channelPosts = viewedChannelOwnerId ? viewedChannelPosts : ownChannelPosts;
-  const likedPosts = ownChannelPosts.filter((post) => post.id && likedPostIds.includes(post.id));
   const displayedChannelProfile = viewedChannelProfile ?? channelProfile;
   const displayedChannelPosts = channelPosts;
   const isViewingOwnChannel = !viewedChannelOwnerId || viewedChannelOwnerId === currentUserId;
@@ -96,16 +96,17 @@ export default function Home() {
     const syncLikes = async () => {
       try {
         const { data } = await supabase.auth.getSession();
-        if (!data.session) { if (!cancelled) setLikedPostIds([]); return; }
+        if (!data.session) { if (!cancelled) { setLikedPostIds([]); setLikedPosts([]); } return; }
         const ids = await loadUserLikedPostIds();
-        if (!cancelled) setLikedPostIds(ids);
+        const posts = await loadPostsByIds(ids);
+        if (!cancelled) { setLikedPostIds(ids); setLikedPosts(posts); }
       } catch (error) {
         console.error("사용자 좋아요 불러오기 실패", error);
-        if (!cancelled) setLikedPostIds([]);
+        if (!cancelled) { setLikedPostIds([]); setLikedPosts([]); }
       }
     };
     void syncLikes();
-    const openLiked = () => setActiveTab("liked");
+    const openLiked = () => { void syncLikes(); setActiveTab("liked"); };
     const returnFromPost = () => {
       if (window.localStorage.getItem("shorttoon-post-return") === "liked") setActiveTab("liked");
     };
@@ -148,6 +149,8 @@ export default function Home() {
     setChannelEditDraft(DEFAULT_CHANNEL_PROFILE);
     setChannelLinks([]);
     setOwnChannelPosts([]);
+    setLikedPostIds([]);
+    setLikedPosts([]);
     setViewedChannelOwnerId(null);
     setViewedChannelProfile(null);
     setViewedChannelPosts([]);

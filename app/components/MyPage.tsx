@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { loadUserLikedPostIds } from "../../lib/likes";
 
 type MyPageProps = {
   onOpenChannel: () => void;
@@ -22,12 +23,14 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     return () => window.removeEventListener("shorttoon-profile-image", sync);
   }, [profileImageUrl]);
   useEffect(() => {
-    const sync = () => {
-      try { const value = JSON.parse(window.localStorage.getItem("shorttoon-liked-posts") ?? "[]"); setLikedCount(Array.isArray(value) ? value.length : 0); } catch { setLikedCount(0); }
+    let cancelled = false;
+    const sync = async () => {
+      const ids = await loadUserLikedPostIds();
+      if (!cancelled) setLikedCount(ids.length);
     };
-    sync();
+    void sync();
     window.addEventListener("shorttoon-liked-posts", sync);
-    return () => window.removeEventListener("shorttoon-liked-posts", sync);
+    return () => { cancelled = true; window.removeEventListener("shorttoon-liked-posts", sync); };
   }, []);
   return <section className="my-page" aria-label="MY 페이지">
     <button className="my-profile" type="button" onClick={() => { window.sessionStorage.removeItem("shorttoon-viewed-channel-owner"); window.sessionStorage.setItem("shorttoon-open-channel-top", "1"); onOpenChannel(); }} aria-label="내 채널 보기">

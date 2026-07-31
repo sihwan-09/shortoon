@@ -161,8 +161,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       const currentLikeCount = likeCountOverrides[comic.id] ?? comic.likeCount ?? 0;
       setLikeCountOverrides((counts) => ({ ...counts, [comic.id]: Math.max(0, currentLikeCount + (next.includes(postId) ? 1 : -1)) }));
       setLikedPostIds(next);
-      window.dispatchEvent(new Event("shorttoon-liked-posts"));
-      void syncPostLike(postId, next.includes(postId)).catch((error) => console.error("게시물 좋아요 저장 실패", error));
+      void syncPostLike(postId, next.includes(postId)).then(() => window.dispatchEvent(new Event("shorttoon-liked-posts"))).catch((error) => console.error("게시물 좋아요 저장 실패", error));
     };
     document.addEventListener("click", handleLikeClick, true);
     return () => document.removeEventListener("click", handleLikeClick, true);

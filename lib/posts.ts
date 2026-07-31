@@ -39,19 +39,20 @@ type PostRow = { id: string; author_id: string | null; title: string; genre: str
 type ImageRow = { post_id: string; image_url: string; sort_order: number };
 type ChannelProfileRow = { owner_id: string; channel_id: string | null; profile_image_url: string | null };
 
-async function queryPosts(page: number, pageSize: number, withPublishedAt: boolean) {
+async function queryPosts(page: number, pageSize: number, withPublishedAt: boolean, postIds?: string[]) {
   const from = page * pageSize;
   const to = from + pageSize - 1;
   const select = withPublishedAt ? "id,author_id,title,genre,description,author_name,link_title,link_url,cover_image_url,like_count,comment_count,created_at,published_at" : "id,author_id,title,genre,description,author_name,link_title,link_url,cover_image_url,like_count,comment_count,created_at";
   let query = supabase.from("posts").select(select).eq("status", "published");
+  if (postIds?.length) query = query.in("id", postIds);
   query = withPublishedAt ? query.order("published_at", { ascending: false, nullsFirst: false }).order("id", { ascending: false }) : query.order("created_at", { ascending: false }).order("id", { ascending: false });
   return query.range(from, to);
 }
 
-export async function loadPublishedPostsPage(page: number, pageSize = 10, authorId?: string | null): Promise<{ posts: PublishedPost[]; hasMore: boolean }> {
-  let result = await queryPosts(page, pageSize, true);
+export async function loadPublishedPostsPage(page: number, pageSize = 10, authorId?: string | null, postIds?: string[]): Promise<{ posts: PublishedPost[]; hasMore: boolean }> {
+  let result = await queryPosts(page, pageSize, true, postIds);
   if (authorId) result = { ...result, data: result.data?.filter((row) => row.author_id === authorId) ?? null };
-  if (result.error && isPublishedAtMissing(result.error)) result = await queryPosts(page, pageSize, false);
+  if (result.error && isPublishedAtMissing(result.error)) result = await queryPosts(page, pageSize, false, postIds);
   if (result.error) throw result.error;
   const rows = (result.data ?? []) as PostRow[];
   const ids = rows.map((post) => post.id);
@@ -81,4 +82,12 @@ export async function loadPublishedPostsPage(page: number, pageSize = 10, author
 export async function loadPostsFromSupabase(authorId?: string | null) {
   const pages = await loadPublishedPostsPage(0, 1000, authorId);
   return pages.posts;
+}
+
+export async function loadPostsByIds(postIds: string[]) {
+  const uniqueIds = Array.from(new Set(postIds.filter(Boolean)));
+  if (!uniqueIds.length) return [];
+  const result = await loadPublishedPostsPage(0, uniqueIds.length, undefined, uniqueIds);
+  const postsById = new Map(result.posts.map((post) => [post.id, post]));
+  return uniqueIds.map((id) => postsById.get(id)).filter((post): post is PublishedPost => Boolean(post));
 }
