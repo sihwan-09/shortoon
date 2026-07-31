@@ -13,6 +13,7 @@ import { PublishedShorttoon, UploadPage } from "./components/UploadPage";
 import { loadPostsByIds, loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
 import { loadUserLikedPostIds } from "../lib/likes";
 import { loadChannelProfile, loadChannelProfileByOwnerId, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
+import { setFollowedChannel } from "../lib/follows";
 import { AuthPage } from "./components/AuthPage";
 
 const DEFAULT_CHANNEL_PROFILE: ChannelProfile = { name: "채널명", channelId: "채널 아이디", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null };
@@ -84,6 +85,22 @@ export default function Home() {
     }
   };
 
+  useEffect(() => {
+    const onFollowClick = (event: MouseEvent) => {
+      const target = event.target instanceof Element ? event.target.closest(".channel-follow-button") : null;
+      if (!target) return;
+      const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner");
+      if (!ownerId) return;
+      let following = false;
+      try {
+        const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
+        following = Array.isArray(value) && value.includes(ownerId);
+      } catch { following = false; }
+      void setFollowedChannel(ownerId, following).catch((error) => console.error("팔로우 기록 저장 실패", error));
+    };
+    document.addEventListener("click", onFollowClick);
+    return () => document.removeEventListener("click", onFollowClick);
+  }, []);
   useEffect(() => {
     try {
       const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");

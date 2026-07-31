@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { loadUserLikedPostIds } from "../../lib/likes";
 import { loadChannelProfilesByOwnerIds, type FollowedChannelProfile } from "../../lib/channel";
+import { loadFollowedChannelIds } from "../../lib/follows";
 
 type MyPageProps = {
   onOpenChannel: () => void;
@@ -23,8 +24,14 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     let cancelled = false;
     const sync = async () => {
       try {
-        const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
-        const ids = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && !/^T\d+$/.test(item)) : [];
+        let ids: string[];
+        try {
+          ids = await loadFollowedChannelIds();
+        } catch (error) {
+          console.error("팔로우 기록 조회 실패", error);
+          const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
+          ids = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string" && !/^T\d+$/.test(item)) : [];
+        }
         window.localStorage.setItem("shorttoon-followed-channels", JSON.stringify(ids));
         const profiles = await loadChannelProfilesByOwnerIds(ids);
         if (!cancelled) setFollowingAuthors(profiles);

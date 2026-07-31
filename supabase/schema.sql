@@ -17,6 +17,22 @@ alter table public.channel_profiles add column if not exists link_url text;
 alter table public.channel_profiles add column if not exists links jsonb not null default '[]'::jsonb;
 create unique index if not exists channel_profiles_owner_id_idx on public.channel_profiles(owner_id) where owner_id is not null;
 
+create table if not exists public.channel_follows (
+  follower_id uuid not null references auth.users(id) on delete cascade,
+  following_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  primary key (follower_id, following_id),
+  check (follower_id <> following_id)
+);
+create index if not exists channel_follows_following_id_idx on public.channel_follows(following_id, created_at desc);
+alter table public.channel_follows enable row level security;
+drop policy if exists "users can read their follows" on public.channel_follows;
+create policy "users can read their follows" on public.channel_follows for select using (follower_id = auth.uid());
+drop policy if exists "users can create follows" on public.channel_follows;
+create policy "users can create follows" on public.channel_follows for insert with check (follower_id = auth.uid());
+drop policy if exists "users can remove follows" on public.channel_follows;
+create policy "users can remove follows" on public.channel_follows for delete using (follower_id = auth.uid());
+
 alter table public.channel_profiles enable row level security;
 drop policy if exists "channel profiles are readable" on public.channel_profiles;
 create policy "channel profiles are readable" on public.channel_profiles for select using (true);
