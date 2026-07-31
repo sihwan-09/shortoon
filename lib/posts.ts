@@ -35,6 +35,23 @@ export async function savePostToSupabase(draft: PostDraft) {
   return { id: postId, title: draft.title, coverUrl, imageUrls, genre: draft.genre, description: draft.description, createdAt: publishedAt, publishedAt, likeCount: 0, viewCount: 0, link: draft.link, authorName: draft.authorName ?? CHANNEL_NAME };
 }
 
+export async function deletePostFromSupabase(postId: string) {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id;
+  if (!userId) throw new Error("로그인이 필요합니다.");
+
+  const { data: files, error: listError } = await supabase.storage.from("shorttoon-posts").list(postId);
+  if (listError) console.warn("게시물 이미지 목록을 정리하지 못했습니다", listError);
+
+  if (files?.length) {
+    const { error: storageError } = await supabase.storage.from("shorttoon-posts").remove(files.map((file) => `${postId}/${file.name}`));
+    if (storageError) console.warn("게시물 이미지 파일을 정리하지 못했습니다", storageError);
+  }
+
+  const { error } = await supabase.from("posts").delete().eq("id", postId).eq("author_id", userId);
+  if (error) throw error;
+}
+
 type PostRow = { id: string; author_id: string | null; title: string; genre: string; description: string | null; author_name: string | null; link_title: string | null; link_url: string | null; cover_image_url: string; like_count: number | null; comment_count: number | null; created_at: string; published_at?: string | null };
 type ImageRow = { post_id: string; image_url: string; sort_order: number };
 type ChannelProfileRow = { owner_id: string; channel_id: string | null; profile_image_url: string | null };

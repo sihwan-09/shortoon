@@ -104,11 +104,15 @@ drop policy if exists "users can create posts" on public.posts;
 create policy "users can create posts" on public.posts for insert with check (author_id = auth.uid() or author_id is null);
 drop policy if exists "owners can update posts" on public.posts;
 create policy "owners can update posts" on public.posts for update using (author_id = auth.uid() or author_id is null) with check (author_id = auth.uid() or author_id is null);
+drop policy if exists "owners can delete posts" on public.posts;
+create policy "owners can delete posts" on public.posts for delete using (author_id = auth.uid());
 
 drop policy if exists "post images are readable" on public.post_images;
 create policy "post images are readable" on public.post_images for select using (exists (select 1 from public.posts p where p.id = post_id and (p.status = 'published' or p.author_id = auth.uid() or p.author_id is null)));
 drop policy if exists "post images can be created" on public.post_images;
 create policy "post images can be created" on public.post_images for insert with check (exists (select 1 from public.posts p where p.id = post_id and (p.author_id = auth.uid() or p.author_id is null)));
+drop policy if exists "owners can delete post images" on public.post_images;
+create policy "owners can delete post images" on public.post_images for delete using (exists (select 1 from public.posts p where p.id = post_id and p.author_id = auth.uid()));
 
 drop policy if exists "comments are readable" on public.comments;
 create policy "comments are readable" on public.comments for select using (deleted_at is null);
@@ -121,3 +125,5 @@ drop policy if exists "shorttoon files are public" on storage.objects;
 create policy "shorttoon files are public" on storage.objects for select using (bucket_id = 'shorttoon-posts');
 drop policy if exists "shorttoon files can be uploaded" on storage.objects;
 create policy "shorttoon files can be uploaded" on storage.objects for insert with check (bucket_id = 'shorttoon-posts');
+drop policy if exists "owners can delete shorttoon files" on storage.objects;
+create policy "owners can delete shorttoon files" on storage.objects for delete using (bucket_id = 'shorttoon-posts' and exists (select 1 from public.posts p where p.id::text = (storage.foldername(name))[1] and p.author_id = auth.uid()));

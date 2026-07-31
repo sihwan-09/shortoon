@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { createPostComment, loadPostComments, toggleCommentLike } from "../../lib/comments";
 import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
-import { loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
+import { deletePostFromSupabase, loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
 type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
@@ -134,13 +134,13 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const handlePostMenuAction = async () => {
     if (!menuComic) return;
     if (menuIsOwner && menuComic.commentPostId) {
-      const { error } = await supabase.from("posts").delete().eq("id", menuComic.commentPostId);
-      if (error) {
-        console.error("게시물 삭제에 실패했습니다", error);
-        window.alert("게시물을 삭제하지 못했습니다.");
-      } else {
+      try {
+        await deletePostFromSupabase(menuComic.commentPostId);
         setComics((current) => current.filter((comic) => comic.commentPostId !== menuComic.commentPostId));
         window.dispatchEvent(new Event("shorttoon-post-deleted"));
+      } catch (error) {
+        console.error("게시물 삭제에 실패했습니다", error);
+        window.alert("게시물을 삭제하지 못했습니다.");
       }
     }
     setMenuComic(null);
