@@ -31,6 +31,25 @@ export async function loadChannelProfileByOwnerId(ownerId: string | null): Promi
   return data ? { name: data.name, channelId: data.channel_id, intro: data.intro, links, profileImageUrl: data.profile_image_url ?? null } : null;
 }
 
+export type FollowedChannelProfile = {
+  ownerId: string;
+  profileImageUrl: string | null;
+  name: string | null;
+  channelId: string | null;
+};
+
+export async function loadChannelProfilesByOwnerIds(ownerIds: string[]): Promise<FollowedChannelProfile[]> {
+  const ids = Array.from(new Set(ownerIds.filter(Boolean)));
+  if (!ids.length) return [];
+  const { data, error } = await supabase.from("channel_profiles").select("owner_id,name,channel_id,profile_image_url").in("owner_id", ids);
+  if (error) throw error;
+  const byOwner = new Map((data ?? []).map((row) => [row.owner_id as string, row]));
+  return ids.map((ownerId) => {
+    const row = byOwner.get(ownerId);
+    return { ownerId, profileImageUrl: row?.profile_image_url ?? null, name: row?.name ?? null, channelId: row?.channel_id ?? null };
+  });
+}
+
 export async function loadChannelProfile(): Promise<ChannelProfile | null> {
   return loadChannelProfileByOwnerId(await getCurrentUserId());
 }

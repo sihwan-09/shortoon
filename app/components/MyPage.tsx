@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { loadUserLikedPostIds } from "../../lib/likes";
+import { loadChannelProfilesByOwnerIds, type FollowedChannelProfile } from "../../lib/channel";
 
 type MyPageProps = {
   onOpenChannel: () => void;
@@ -17,6 +18,28 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [followingPage, setFollowingPage] = useState(0);
+  const [followingAuthors, setFollowingAuthors] = useState<FollowedChannelProfile[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    const sync = async () => {
+      try {
+        const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
+        const ids = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+        const profiles = await loadChannelProfilesByOwnerIds(ids);
+        if (!cancelled) setFollowingAuthors(profiles);
+      } catch (error) {
+        console.error("팔로우한 작가 프로필 조회 실패", error);
+        if (!cancelled) setFollowingAuthors([]);
+      }
+    };
+    void sync();
+    window.addEventListener("shorttoon-followed-channels", sync);
+    return () => { cancelled = true; window.removeEventListener("shorttoon-followed-channels", sync); };
+  }, []);
+  useEffect(() => {
+    const maxPage = Math.max(0, Math.ceil(followingAuthors.length / 6) - 1);
+    setFollowingPage((page) => Math.min(page, maxPage));
+  }, [followingAuthors.length]);
   useEffect(() => {
     const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
     sync();
@@ -43,7 +66,10 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
       <div className="my-following-list">
         <button className="my-following-arrow" type="button" aria-label="이전 팔로우 작가" onClick={() => setFollowingPage((page) => Math.max(0, page - 1))} disabled={followingPage === 0}>&lt;</button>
         <div className="my-following-avatars">
-          {Array.from({ length: 6 }, (_, index) => <span className="post-author-avatar my-following-avatar" key={`${followingPage}-${index}`} aria-hidden="true" />)}
+          {Array.from({ length: 6 }, (_, index) => {
+            const author = followingAuthors[followingPage * 6 + index];
+            return <span className="post-author-avatar my-following-avatar" key={author?.ownerId ?? `${followingPage}-${index}`} aria-label={author?.name ?? author?.channelId ?? "팔로우한 작가"} role="img" style={author?.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} />;
+          })}
         </div>
         <button className="my-following-arrow" type="button" aria-label="다음 팔로우 작가" onClick={() => setFollowingPage((page) => page + 1)}>&gt;</button>
       </div>
