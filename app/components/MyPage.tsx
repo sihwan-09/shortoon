@@ -69,7 +69,7 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
         <div className="my-following-avatars">
           {Array.from({ length: 6 }, (_, index) => {
             const author = followingAuthors[followingPage * 6 + index];
-            return <span className="post-author-avatar my-following-avatar" key={author?.ownerId ?? `${followingPage}-${index}`} aria-label={author?.name ?? author?.channelId ?? "팔로우한 작가"} role="img" style={author?.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} />;
+            return <span className={`post-author-avatar my-following-avatar${author?.profileImageUrl ? "" : " is-empty"}`} key={author?.ownerId ?? `${followingPage}-${index}`} aria-label={author?.name ?? author?.channelId ?? "팔로우한 작가"} role="img" style={author?.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} />;
           })}
         </div>
         <button className="my-following-arrow" type="button" aria-label="다음 팔로우 작가" onClick={() => setFollowingPage((page) => page + 1)}>&gt;</button>
