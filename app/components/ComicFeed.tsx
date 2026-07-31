@@ -44,6 +44,8 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
+  const [menuComic, setMenuComic] = useState<Comic | null>(null);
+  const [menuIsOwner, setMenuIsOwner] = useState(false);
   const [infoComic, setInfoComic] = useState<Comic | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
@@ -121,6 +123,27 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       console.error("댓글을 불러오지 못했습니다.", error);
       setComments([]);
     }
+  };
+
+  const openPostMenu = async (comic: Comic) => {
+    const { data } = await supabase.auth.getUser();
+    setMenuIsOwner(Boolean(data.user?.id && comic.authorId && data.user.id === comic.authorId));
+    setMenuComic(comic);
+  };
+
+  const handlePostMenuAction = async () => {
+    if (!menuComic) return;
+    if (menuIsOwner && menuComic.commentPostId) {
+      const { error } = await supabase.from("posts").delete().eq("id", menuComic.commentPostId);
+      if (error) {
+        console.error("게시물 삭제에 실패했습니다", error);
+        window.alert("게시물을 삭제하지 못했습니다.");
+      } else {
+        setComics((current) => current.filter((comic) => comic.commentPostId !== menuComic.commentPostId));
+        window.dispatchEvent(new Event("shorttoon-post-deleted"));
+      }
+    }
+    setMenuComic(null);
   };
 
   const submitComment = async (event: React.FormEvent) => {
@@ -268,7 +291,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       }}>
         {visibleComics.map((comic, comicIndex) => (
           <article className={`comic-column ${comic.commentPostId ? "uploaded-comic" : ""} ${isHomeFeed ? "home-comic" : ""}`} key={comic.id} aria-label={comic.title}>
-            <button className="more-button post-kebab" type="button" aria-label="게시물 메뉴">⋮</button>
+            <button className="more-button post-kebab" type="button" aria-label="게시물 메뉴" onClick={() => void openPostMenu(comic)}>⋮</button>
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
               const previousTop = lastScrollTop.current[comic.id] ?? 0;
@@ -334,6 +357,13 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder={replyingTo ? "답글을 입력하세요" : "댓글을 입력하세요"} maxLength={500} aria-label={replyingTo ? "답글" : "댓글"} required />
             <div><label><input type="checkbox" checked={isSpoiler} onChange={(event) => setIsSpoiler(event.target.checked)} /> 스포일러 포함</label><button type="submit" disabled={submitting}>{submitting ? "등록 중..." : "등록"}</button></div>
           </form>
+        </aside>
+      </div>}
+      {menuComic && <div className="sheet-backdrop" role="presentation" onClick={() => setMenuComic(null)}>
+        <aside className="comment-sheet post-menu-sheet" role="dialog" aria-modal="true" aria-label="게시물 메뉴" onClick={(event) => event.stopPropagation()}>
+          <div className="sheet-handle" />
+          <header><strong>{menuIsOwner ? "게시물 관리" : "게시물 신고"}</strong><button type="button" onClick={() => setMenuComic(null)} aria-label="닫기">×</button></header>
+          <button className={`post-menu-action ${menuIsOwner ? "danger" : ""}`} type="button" onClick={() => void handlePostMenuAction()}>{menuIsOwner ? "게시물 삭제" : "게시물 신고"}</button>
         </aside>
       </div>}
       {infoComic && <div className="sheet-backdrop" role="presentation" onClick={() => setInfoComic(null)}>
