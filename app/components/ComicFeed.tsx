@@ -268,6 +268,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       }}>
         {visibleComics.map((comic, comicIndex) => (
           <article className={`comic-column ${comic.commentPostId ? "uploaded-comic" : ""} ${isHomeFeed ? "home-comic" : ""}`} key={comic.id} aria-label={comic.title}>
+            <button className="more-button post-kebab" type="button" aria-label="게시물 메뉴">⋮</button>
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
               const previousTop = lastScrollTop.current[comic.id] ?? 0;

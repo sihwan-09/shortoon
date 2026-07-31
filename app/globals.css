@@ -67,6 +67,8 @@ a { color: inherit; text-decoration: none; }
 .header-login-floating:hover, .header-login-floating:focus-visible { color: var(--primary); outline: none; }
 .more-button { display: grid; width: 36px; height: 44px; padding: 0; place-items: center; color: var(--text); background: transparent; border: 0; font-size: 28px; line-height: 1; cursor: pointer; }
 .more-button:hover, .more-button:focus-visible { color: var(--primary); outline: none; }
+.post-kebab { position: absolute; z-index: 30; top: 16px; right: 16px; color: var(--muted); }
+.post-kebab:hover, .post-kebab:focus-visible { color: var(--muted); }
 .edit-header-back { width: 42px; height: 44px; padding: 0; color: var(--text); background: transparent; border: 0; font-size: 30px; cursor: pointer; }
 .edit-header-title { position: absolute; left: 50%; transform: translateX(-50%); font-size: 16px; }
 
