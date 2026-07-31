@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { createPostComment, loadPostComments, toggleCommentLike } from "../../lib/comments";
 import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 import { deletePostFromSupabase, loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
-import { reportPost } from "../../lib/reports";
+import { loadPostReports, reportPost, type PostReport } from "../../lib/reports";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
 type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
@@ -47,6 +47,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
   const [menuComic, setMenuComic] = useState<Comic | null>(null);
   const [menuIsOwner, setMenuIsOwner] = useState(false);
+  const [menuReports, setMenuReports] = useState<PostReport[]>([]);
   const [infoComic, setInfoComic] = useState<Comic | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
@@ -128,8 +129,17 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const openPostMenu = async (comic: Comic) => {
     const { data } = await supabase.auth.getUser();
-    setMenuIsOwner(Boolean(data.user?.id && comic.authorId && data.user.id === comic.authorId));
+    const isOwner = Boolean(data.user?.id && comic.authorId && data.user.id === comic.authorId);
+    setMenuIsOwner(isOwner);
+    setMenuReports([]);
     setMenuComic(comic);
+    if (isOwner && comic.commentPostId) {
+      try {
+        setMenuReports(await loadPostReports(comic.commentPostId));
+      } catch (error) {
+        console.error("게시물 신고 내역을 불러오지 못했습니다", error);
+      }
+    }
   };
 
   const handlePostMenuAction = async () => {
@@ -372,6 +382,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         <aside className="comment-sheet post-menu-sheet" role="dialog" aria-modal="true" aria-label="게시물 메뉴" onClick={(event) => event.stopPropagation()}>
           <div className="sheet-handle" />
           <header><strong>{menuIsOwner ? "게시물 관리" : "게시물 신고"}</strong><button type="button" onClick={() => setMenuComic(null)} aria-label="닫기">×</button></header>
+          {menuIsOwner && <div className="post-report-summary"><strong>신고 {menuReports.length}건</strong>{menuReports.length > 0 ? <ul>{menuReports.map((report) => <li key={`${report.reporterId}-${report.createdAt}`}><span>@{report.channelId}</span><time dateTime={report.createdAt}>{new Date(report.createdAt).toLocaleString("ko-KR")}</time></li>)}</ul> : <p>접수된 신고가 없습니다.</p>}</div>}
           <button className={`post-menu-action ${menuIsOwner ? "danger" : ""}`} type="button" onClick={() => void handlePostMenuAction()}>{menuIsOwner ? "게시물 삭제" : "게시물 신고"}</button>
         </aside>
       </div>}

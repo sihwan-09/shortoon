@@ -88,6 +88,17 @@ create index if not exists comments_parent_id_idx on public.comments (parent_id,
 create index if not exists post_reports_post_id_idx on public.post_reports (post_id, created_at desc);
 create index if not exists post_reports_reporter_id_idx on public.post_reports (reporter_id, created_at desc);
 
+create or replace view public.post_report_summary as
+select
+  pr.post_id,
+  count(*)::integer as report_count,
+  array_agg(coalesce(cp.channel_id, '(채널 아이디 없음)') order by pr.created_at) as reporter_channel_ids,
+  min(pr.created_at) as first_reported_at,
+  max(pr.created_at) as last_reported_at
+from public.post_reports pr
+left join public.channel_profiles cp on cp.owner_id = pr.reporter_id
+group by pr.post_id;
+
 create table if not exists public.comment_likes (
   comment_id uuid not null references public.comments(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -113,6 +124,8 @@ drop policy if exists "users can report posts" on public.post_reports;
 create policy "users can report posts" on public.post_reports for insert with check (reporter_id = auth.uid());
 drop policy if exists "users can read their reports" on public.post_reports;
 create policy "users can read their reports" on public.post_reports for select using (reporter_id = auth.uid());
+drop policy if exists "post owners can read reports" on public.post_reports;
+create policy "post owners can read reports" on public.post_reports for select using (exists (select 1 from public.posts p where p.id = post_id and p.author_id = auth.uid()));
 
 drop policy if exists "published posts are readable" on public.posts;
 create policy "published posts are readable" on public.posts for select using (status = 'published' or author_id = auth.uid() or author_id is null);
