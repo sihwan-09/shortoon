@@ -72,7 +72,7 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
             return <span className={`post-author-avatar my-following-avatar${author?.profileImageUrl ? "" : " is-empty"}`} key={author?.ownerId ?? `${followingPage}-${index}`} aria-label={author?.name ?? author?.channelId ?? "팔로우한 작가"} role="img" style={author?.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} />;
           })}
         </div>
-        <button className="my-following-arrow" type="button" aria-label="다음 팔로우 작가" onClick={() => setFollowingPage((page) => page + 1)}>&gt;</button>
+        <button className="my-following-arrow" type="button" aria-label="다음 팔로우 작가" onClick={() => setFollowingPage((page) => Math.min(page + 1, Math.max(0, Math.ceil(followingAuthors.length / 6) - 1)))} disabled={followingPage >= Math.max(0, Math.ceil(followingAuthors.length / 6) - 1)}>&gt;</button>
       </div>
     </section>
     <div className="my-stats" aria-label="숏툰 활동">
