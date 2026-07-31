@@ -16,7 +16,8 @@ export async function loadFollowedChannelIds(): Promise<string[]> {
 
 export async function setFollowedChannel(ownerId: string, following: boolean): Promise<void> {
   const userId = await getCurrentUserId();
-  if (!userId || !ownerId || userId === ownerId) return;
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!userId || !ownerId || userId === ownerId || !uuidPattern.test(ownerId)) return;
   if (following) {
     const { error } = await supabase.from("channel_follows").upsert({ follower_id: userId, following_id: ownerId }, { onConflict: "follower_id,following_id", ignoreDuplicates: true });
     if (error) throw error;
