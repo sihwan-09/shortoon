@@ -32,6 +32,10 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
         if (!cancelled) setFollowingAuthors([]);
       }
     };
+    if (new URLSearchParams(window.location.search).get("test-following") === "1") {
+      const testIds = Array.from({ length: 30 }, (_, index) => `T${index + 1}`);
+      window.localStorage.setItem("shorttoon-followed-channels", JSON.stringify(testIds));
+    }
     void sync();
     window.addEventListener("shorttoon-followed-channels", sync);
     return () => { cancelled = true; window.removeEventListener("shorttoon-followed-channels", sync); };

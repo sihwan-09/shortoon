@@ -41,11 +41,19 @@ export type FollowedChannelProfile = {
 export async function loadChannelProfilesByOwnerIds(ownerIds: string[]): Promise<FollowedChannelProfile[]> {
   const ids = Array.from(new Set(ownerIds.filter(Boolean)));
   if (!ids.length) return [];
-  const { data, error } = await supabase.from("channel_profiles").select("owner_id,name,channel_id,profile_image_url").in("owner_id", ids);
+  const testIds = ids.filter((ownerId) => /^T\d+$/.test(ownerId));
+  const realIds = ids.filter((ownerId) => !/^T\d+$/.test(ownerId));
+  const { data, error } = realIds.length
+    ? await supabase.from("channel_profiles").select("owner_id,name,channel_id,profile_image_url").in("owner_id", realIds)
+    : { data: [], error: null };
   if (error) throw error;
   const byOwner = new Map((data ?? []).map((row) => [row.owner_id as string, row]));
   return ids.map((ownerId) => {
     const row = byOwner.get(ownerId);
+    if (!row && testIds.includes(ownerId)) {
+      const label = encodeURIComponent(ownerId);
+      return { ownerId, profileImageUrl: `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="#c7ff3d"/><text x="48" y="56" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="#111">${label}</text></svg>`)}`, name: ownerId, channelId: ownerId.toLowerCase() };
+    }
     return { ownerId, profileImageUrl: row?.profile_image_url ?? null, name: row?.name ?? null, channelId: row?.channel_id ?? null };
   });
 }
