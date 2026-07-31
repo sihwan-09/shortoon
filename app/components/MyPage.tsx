@@ -37,6 +37,12 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
       <div className="profile-avatar" aria-label="프로필 이미지" role="img">{storedProfileImageUrl ? <img src={storedProfileImageUrl} alt="프로필" /> : <span />}</div>
       <h1>{channelName}</h1><span className="my-profile-channel-id">@{channelId}</span>
     </button>
+    <section className="my-following" aria-label="팔로우한 작가">
+      <h2>팔로우한 작가</h2>
+      <div className="my-following-list">
+        {Array.from({ length: 8 }, (_, index) => <span className="post-author-avatar my-following-avatar" key={index} aria-hidden="true" />)}
+      </div>
+    </section>
     <div className="my-stats" aria-label="숏툰 활동">
       <button type="button" className="my-stat-row" onClick={() => window.dispatchEvent(new Event("open-liked-posts"))}><span>좋아요 표시한 작품</span><strong>{likedCount}<span>/1000</span></strong></button>
       <button type="button" className="my-stat-row"><span>저장한 숏툰</span><strong>36<span>/1000</span></strong></button>

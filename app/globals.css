@@ -304,6 +304,11 @@ a { color: inherit; text-decoration: none; }
 .profile-avatar:has(img)::before, .profile-avatar:has(img) span { display: none; }
 .my-profile h1 { margin: 0; font-size: 20px; letter-spacing: -.04em; }
 .my-profile-channel-id { margin-top: -8px; color: var(--text-muted); font-size: 14px; }
+.my-following { margin: 0 0 22px; }
+.my-following h2 { margin: 0 0 12px; color: var(--text); font-size: 15px; font-weight: 800; }
+.my-following-list { display: flex; align-items: center; justify-content: space-between; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+.my-following-list::-webkit-scrollbar { display: none; }
+.my-following-avatar { width: 48px; height: 48px; flex: 0 0 48px; }
 .my-stats { border-top: 1px solid var(--divider); border-bottom: 1px solid var(--divider); }
 .my-stat-row, .my-links button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 64px; padding: 0; color: var(--text); background: transparent; border: 0; font: inherit; text-align: left; cursor: pointer; }
 .my-stat-row + .my-stat-row { border-top: 1px solid var(--divider); }
