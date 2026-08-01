@@ -164,7 +164,7 @@ a { color: inherit; text-decoration: none; }
 .search-author-results { display: grid; gap: 12px; padding: 8px 20px 24px; }
 .search-author-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 13px; align-items: center; padding: 14px; background: var(--card); border: 1px solid var(--divider); border-radius: 12px; cursor: pointer; }
 .search-author-profile-button { width: 64px; height: 64px; padding: 0; background: transparent; border: 0; border-radius: 50%; cursor: pointer; }
-.search-author-avatar { width: 64px; height: 64px; background: linear-gradient(145deg, var(--primary), #607d19); background-position: center; background-size: cover; border: 2px solid rgba(255,255,255,.8); border-radius: 50%; }
+.search-author-avatar { display: block; width: 64px; height: 64px; flex: 0 0 64px; background: linear-gradient(145deg, var(--primary), #607d19); background-position: center; background-size: cover; border: 2px solid rgba(255,255,255,.8); border-radius: 50%; }
 .search-author-info { display: grid; min-width: 0; gap: 3px; }
 .search-author-info strong { overflow: hidden; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
 .search-author-info span, .search-author-info small { overflow: hidden; color: var(--text-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
