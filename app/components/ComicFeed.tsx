@@ -307,6 +307,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     return result;
   })();
   const collectDescendantIds = (parentId: string): string[] => comments.filter((comment) => String(comment.parentId) === parentId).flatMap((comment) => [String(comment.id), ...collectDescendantIds(String(comment.id))]);
+  const countDescendants = (parentId: string): number => comments.filter((comment) => String(comment.parentId) === parentId).reduce((total, comment) => total + 1 + countDescendants(String(comment.id)), 0);
   const visibleComments = orderedComments.filter((comment) => !comment.parentId || expandedCommentIds.has(String(comment.parentId)));
   const toggleCommentReplies = (comment: Comment) => {
     const id = String(comment.id);
@@ -426,7 +427,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
                       setComments((current) => current.map((item) => item.id === comment.id ? { ...item, likedByMe: comment.likedByMe, likeCount: comment.likeCount } : item));
                     }
                   }}><span className="comment-like-symbol" aria-hidden="true">♥</span><small>{comment.likeCount}</small></button>
-                  <button type="button" className="comment-reply-button" onClick={() => { setExpandedCommentIds((current) => new Set([...current, String(comment.id), ...collectDescendantIds(String(comment.id))])); setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{comment.replyCount}</small></button>
+                  <button type="button" className="comment-reply-button" onClick={() => { setExpandedCommentIds((current) => new Set([...current, String(comment.id), ...collectDescendantIds(String(comment.id))])); setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{countDescendants(String(comment.id))}</small></button>
                 </div>
               </article>;
             })}
