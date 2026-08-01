@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { loadChannelProfileByOwnerId } from "../../lib/channel";
 import { loadPostsFromSupabase } from "../../lib/posts";
-import { loadFollowerCount, setFollowedChannel } from "../../lib/follows";
+import { loadFollowedChannelIds, loadFollowerCount, setFollowedChannel } from "../../lib/follows";
 
 type ChannelPageProps = { onBack: () => void; onEdit: () => void; isOwner?: boolean; isFollowing?: boolean; onFollow?: () => void; channelOwnerId?: string | null };
 type ChannelProfile = { name: string; channelId: string; intro: string; profileImageUrl?: string | null };
@@ -18,6 +18,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
   const [viewFollowing, setViewFollowing] = useState(isFollowing);
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profile.profileImageUrl ?? null);
   const [followerCount, setFollowerCount] = useState(0);
+  useEffect(() => { let cancelled = false; const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId || viewIsOwner) { setViewFollowing(false); return; } void loadFollowedChannelIds().then((ids) => { if (!cancelled) setViewFollowing(ids.includes(ownerId)); }).catch((error) => console.error("팔로우 상태 조회 실패", error)); return () => { cancelled = true; }; }, [channelOwnerId, viewIsOwner]);
   useEffect(() => { let cancelled = false; const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); void loadFollowerCount(ownerId).then((count) => { if (!cancelled) setFollowerCount(count); }).catch((error) => console.error("팔로워 수 조회 실패", error)); return () => { cancelled = true; }; }, [channelOwnerId, isOwner, profile.channelId]);
   useEffect(() => {
     const sync = () => setStoredProfileImageUrl(isOwner ? window.localStorage.getItem("shorttoon-profile-image") : (profile.profileImageUrl ?? null));

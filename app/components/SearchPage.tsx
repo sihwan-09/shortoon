@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { searchAuthors, searchPublishedPosts, type SearchAuthor } from "../../lib/search";
 import type { PublishedPost } from "../../lib/posts";
-import { setFollowedChannel } from "../../lib/follows";
+import { loadFollowedChannelIds, setFollowedChannel } from "../../lib/follows";
 import { supabase } from "../../lib/supabase";
 
 type SearchPageProps = { onBack: () => void; onOpenPost?: (post: PublishedPost, posts: PublishedPost[], index: number) => void; onOpenAuthor?: (authorId: string) => void };
@@ -46,7 +46,7 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
 
   useEffect(() => {
     inputRef.current?.focus();
-    void supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
+    void supabase.auth.getUser().then(({ data }) => { setCurrentUserId(data.user?.id ?? null); return loadFollowedChannelIds(); }).then((ids) => setFollowing(Object.fromEntries(ids.map((id) => [id, true])))).catch((error) => console.error("팔로우 상태 조회 실패", error));
     const restoredQuery = window.sessionStorage.getItem("shorttoon-search-query") ?? "";
     const restoredCategory = window.sessionStorage.getItem("shorttoon-search-category");
     if (restoredQuery) {
