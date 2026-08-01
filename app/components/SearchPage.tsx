@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { searchAuthors, searchPublishedPosts, type SearchAuthor } from "../../lib/search";
 import type { PublishedPost } from "../../lib/posts";
 import { setFollowedChannel } from "../../lib/follows";
+import { supabase } from "../../lib/supabase";
 
 type SearchPageProps = { onBack: () => void };
 
@@ -17,6 +18,7 @@ export function SearchPage({ onBack }: SearchPageProps) {
   const [authorResults, setAuthorResults] = useState<SearchAuthor[]>([]);
   const [loadingResults, setLoadingResults] = useState(false);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const persistRecentSearches = (next: string[]) => {
     setRecentSearches(next);
@@ -42,6 +44,7 @@ export function SearchPage({ onBack }: SearchPageProps) {
 
   useEffect(() => {
     inputRef.current?.focus();
+    void supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id ?? null));
     try {
       const saved = JSON.parse(window.localStorage.getItem("shorttoon-recent-searches") ?? "[]");
       if (Array.isArray(saved)) setRecentSearches(saved.filter((item): item is string => typeof item === "string").slice(0, 30));
@@ -72,7 +75,7 @@ export function SearchPage({ onBack }: SearchPageProps) {
           {authorResults.map((author) => <article className="search-author-card" key={author.ownerId}>
             <span className="search-author-avatar" role="img" aria-label="프로필 이미지" style={author.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} />
             <div className="search-author-info"><strong>{author.name}</strong><span>@{author.channelId}</span><small>팔로워 {author.followerCount}명 · 작품 {author.postCount}개</small></div>
-            <button type="button" className={`search-follow-button${following[author.ownerId] ? " is-following" : ""}`} onClick={async () => { const next = !following[author.ownerId]; setFollowing((current) => ({ ...current, [author.ownerId]: next })); try { await setFollowedChannel(author.ownerId, next); } catch (error) { console.error("팔로우 처리 실패", error); setFollowing((current) => ({ ...current, [author.ownerId]: !next })); } }}>{following[author.ownerId] ? "팔로잉" : "팔로우"}</button>
+            {author.ownerId !== currentUserId && <button type="button" className={`search-follow-button${following[author.ownerId] ? " is-following" : ""}`} onClick={async () => { const next = !following[author.ownerId]; setFollowing((current) => ({ ...current, [author.ownerId]: next })); try { await setFollowedChannel(author.ownerId, next); } catch (error) { console.error("팔로우 처리 실패", error); setFollowing((current) => ({ ...current, [author.ownerId]: !next })); } }}>{following[author.ownerId] ? "팔로잉" : "팔로우"}</button>}
           </article>)}
           {!authorResults.length && <div className="search-results-empty"><span>검색된 작가가 없습니다.</span></div>}
         </div>}
