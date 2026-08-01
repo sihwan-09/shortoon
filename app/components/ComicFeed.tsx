@@ -57,6 +57,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
+  const [expandedCommentIds, setExpandedCommentIds] = useState<Set<string>>(new Set());
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profileImageUrl ?? null);
   const lastScrollTop = useRef<Record<number, number>>({});
   const feedRef = useRef<HTMLDivElement>(null);
@@ -305,6 +306,18 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     });
     return result;
   })();
+  const visibleComments = orderedComments.filter((comment) => !comment.parentId || expandedCommentIds.has(String(comment.parentId)));
+  const toggleCommentReplies = (comment: Comment) => {
+    const id = String(comment.id);
+    setExpandedCommentIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) {
+        next.delete(id);
+        setReplyingTo((replying) => replying?.id === comment.id ? null : replying);
+      } else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
@@ -390,11 +403,11 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
           <header><div aria-hidden="true" /><button type="button" onClick={() => setCommentComic(null)} aria-label="댓글창 닫기">×</button></header>
           <div className="comment-list">
             {comments.length === 0 && <p className="no-comments">첫 댓글을 남겨보세요.</p>}
-            {orderedComments.map((comment) => {
+            {visibleComments.map((comment) => {
               const hidden = Boolean(comment.isSpoiler) && !revealed.has(comment.id);
               const parentComment = comment.parentId ? comments.find((item) => String(item.id) === String(comment.parentId)) : null;
               const parentChannelId = parentComment?.authorChannelId;
-              return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} data-comment-id={String(comment.id)} data-reply={comment.parentId ? "true" : undefined} key={comment.id}>
+              return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} data-comment-id={String(comment.id)} data-reply={comment.parentId ? "true" : undefined} key={comment.id} onClick={(event) => { if ((event.target as HTMLElement).closest("button,a,input,textarea")) return; toggleCommentReplies(comment); }}>
                 <div className="comment-author-line"><button className="comment-author-avatar" type="button" aria-label={`${comment.authorChannelId ? `@${comment.authorChannelId}` : comment.author} 채널 보기`} onClick={() => { if (comment.authorId) window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comment.authorId, commentPostId: commentComic?.commentPostId, commentId: String(comment.id), postIndex: visibleComics.findIndex((item) => item.commentPostId === commentComic?.commentPostId), commentScrollTop: document.querySelector<HTMLElement>(".comment-list")?.scrollTop } })); }} style={comment.authorImageUrl ? { backgroundImage: `url(${comment.authorImageUrl})` } : undefined} /><div className="comment-author-meta"><strong>{comment.authorChannelId ? `@${comment.authorChannelId}` : comment.author}</strong>{parentChannelId && <button className="comment-reply-target" type="button" onClick={() => { if (parentComment?.authorId) window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: parentComment.authorId, commentPostId: commentComic?.commentPostId, commentId: String(parentComment.id), postIndex: visibleComics.findIndex((item) => item.commentPostId === commentComic?.commentPostId), commentScrollTop: document.querySelector<HTMLElement>(".comment-list")?.scrollTop } })); }}><span className="comment-target-arrow" aria-hidden="true">↳</span><span>@{parentChannelId}</span></button>}</div>{Boolean(comment.isSpoiler) && <span className="comment-spoiler-label">SPOILER</span>}</div>
                 <p>{hidden ? "스포일러가 포함된 댓글입니다." : comment.body}</p>
                 {hidden && <button type="button" onClick={() => setRevealed((current) => new Set(current).add(comment.id))}>스포일러 보기</button>}
@@ -407,7 +420,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
                       setComments((current) => current.map((item) => item.id === comment.id ? { ...item, likedByMe: comment.likedByMe, likeCount: comment.likeCount } : item));
                     }
                   }}><span className="comment-like-symbol" aria-hidden="true">♥</span><small>{comment.likeCount}</small></button>
-                  <button type="button" className="comment-reply-button" onClick={() => { setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{comment.replyCount}</small></button>
+                  <button type="button" className="comment-reply-button" onClick={() => { setExpandedCommentIds((current) => new Set(current).add(String(comment.id))); setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{comment.replyCount}</small></button>
                 </div>
               </article>;
             })}
