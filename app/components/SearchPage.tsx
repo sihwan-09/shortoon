@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { searchAuthors, searchPublishedPosts, type SearchAuthor } from "../../lib/search";
+import type { PublishedPost } from "../../lib/posts";
+import { setFollowedChannel } from "../../lib/follows";
 
 type SearchPageProps = { onBack: () => void };
 
@@ -10,6 +13,10 @@ export function SearchPage({ onBack }: SearchPageProps) {
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [submittedQuery, setSubmittedQuery] = useState("");
   const [category, setCategory] = useState<"works" | "authors">("works");
+  const [workResults, setWorkResults] = useState<PublishedPost[]>([]);
+  const [authorResults, setAuthorResults] = useState<SearchAuthor[]>([]);
+  const [loadingResults, setLoadingResults] = useState(false);
+  const [following, setFollowing] = useState<Record<string, boolean>>({});
 
   const persistRecentSearches = (next: string[]) => {
     setRecentSearches(next);
@@ -21,6 +28,8 @@ export function SearchPage({ onBack }: SearchPageProps) {
     if (!value) return;
     setSubmittedQuery(value);
     persistRecentSearches([value, ...recentSearches.filter((item) => item !== value)].slice(0, 30));
+    setLoadingResults(true);
+    void Promise.all([searchPublishedPosts(value), searchAuthors(value)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false));
   };
 
   useEffect(() => {
@@ -47,10 +56,18 @@ export function SearchPage({ onBack }: SearchPageProps) {
           <button type="button" role="tab" aria-selected={category === "works"} className={category === "works" ? "is-active" : ""} onClick={() => setCategory("works")}>작품</button>
           <button type="button" role="tab" aria-selected={category === "authors"} className={category === "authors" ? "is-active" : ""} onClick={() => setCategory("authors")}>작가</button>
         </div>
-        <div className="search-results-empty">
-          <strong>‘{submittedQuery}’ 검색 결과</strong>
-          <span>{category === "works" ? "작품" : "작가"} 검색 결과가 여기에 표시됩니다.</span>
-        </div>
+        <div className="search-results-title">‘{submittedQuery}’ 검색 결과</div>
+        {loadingResults ? <div className="search-results-empty"><span>검색 중입니다.</span></div> : category === "works" ? <div className="search-result-grid">
+          {workResults.map((post) => <button type="button" className="search-result-tile" key={post.id}><img src={post.coverUrl} alt="" /><span>{post.title}</span></button>)}
+          {!workResults.length && <div className="search-results-empty"><span>검색된 작품이 없습니다.</span></div>}
+        </div> : <div className="search-author-results">
+          {authorResults.map((author) => <article className="search-author-card" key={author.ownerId}>
+            <span className="search-author-avatar" role="img" aria-label="프로필 이미지" style={author.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} />
+            <div className="search-author-info"><strong>{author.name}</strong><span>@{author.channelId}</span><small>팔로워 {author.followerCount}명 · 작품 {author.postCount}개</small></div>
+            <button type="button" className={`search-follow-button${following[author.ownerId] ? " is-following" : ""}`} onClick={async () => { const next = !following[author.ownerId]; setFollowing((current) => ({ ...current, [author.ownerId]: next })); try { await setFollowedChannel(author.ownerId, next); } catch (error) { console.error("팔로우 처리 실패", error); setFollowing((current) => ({ ...current, [author.ownerId]: !next })); } }}>{following[author.ownerId] ? "팔로잉" : "팔로우"}</button>
+          </article>)}
+          {!authorResults.length && <div className="search-results-empty"><span>검색된 작가가 없습니다.</span></div>}
+        </div>}
       </section> : <section className="recent-searches" aria-label="최근 검색어">
         <div className="recent-searches-heading">
           <strong>최근 검색어</strong>
@@ -58,7 +75,7 @@ export function SearchPage({ onBack }: SearchPageProps) {
         </div>
         {recentSearches.length > 0 && <ul>
           {recentSearches.map((term) => <li key={term}>
-            <button type="button" className="recent-search-term" onClick={() => { setQuery(term); setSubmittedQuery(term); inputRef.current?.focus(); }}>{term}</button>
+            <button type="button" className="recent-search-term" onClick={() => { setQuery(term); setSubmittedQuery(term); setLoadingResults(true); void Promise.all([searchPublishedPosts(term), searchAuthors(term)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false)); inputRef.current?.focus(); }}>{term}</button>
             <button type="button" className="recent-search-remove" onClick={() => persistRecentSearches(recentSearches.filter((item) => item !== term))} aria-label={`${term} 삭제`}>×</button>
           </li>)}
         </ul>}
