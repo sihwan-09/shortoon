@@ -8,6 +8,8 @@ export function SearchPage({ onBack }: SearchPageProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [submittedQuery, setSubmittedQuery] = useState("");
+  const [category, setCategory] = useState<"works" | "authors">("works");
 
   const persistRecentSearches = (next: string[]) => {
     setRecentSearches(next);
@@ -17,6 +19,7 @@ export function SearchPage({ onBack }: SearchPageProps) {
   const submitSearch = () => {
     const value = query.trim();
     if (!value) return;
+    setSubmittedQuery(value);
     persistRecentSearches([value, ...recentSearches.filter((item) => item !== value)].slice(0, 30));
   };
 
@@ -39,18 +42,27 @@ export function SearchPage({ onBack }: SearchPageProps) {
           {query && <button type="button" className="search-page-clear" onClick={() => setQuery("")} aria-label="검색어 지우기" />}
         </div>
       </div>
-      <section className="recent-searches" aria-label="최근 검색어">
+      {submittedQuery ? <section className="search-results" aria-label="검색 결과">
+        <div className="search-category-tabs" role="tablist" aria-label="검색 결과 종류">
+          <button type="button" role="tab" aria-selected={category === "works"} className={category === "works" ? "is-active" : ""} onClick={() => setCategory("works")}>작품</button>
+          <button type="button" role="tab" aria-selected={category === "authors"} className={category === "authors" ? "is-active" : ""} onClick={() => setCategory("authors")}>작가</button>
+        </div>
+        <div className="search-results-empty">
+          <strong>‘{submittedQuery}’ 검색 결과</strong>
+          <span>{category === "works" ? "작품" : "작가"} 검색 결과가 여기에 표시됩니다.</span>
+        </div>
+      </section> : <section className="recent-searches" aria-label="최근 검색어">
         <div className="recent-searches-heading">
           <strong>최근 검색어</strong>
           {recentSearches.length > 0 && <button type="button" onClick={() => persistRecentSearches([])}>전체삭제</button>}
         </div>
         {recentSearches.length > 0 && <ul>
           {recentSearches.map((term) => <li key={term}>
-            <button type="button" className="recent-search-term" onClick={() => { setQuery(term); inputRef.current?.focus(); }}>{term}</button>
+            <button type="button" className="recent-search-term" onClick={() => { setQuery(term); setSubmittedQuery(term); inputRef.current?.focus(); }}>{term}</button>
             <button type="button" className="recent-search-remove" onClick={() => persistRecentSearches(recentSearches.filter((item) => item !== term))} aria-label={`${term} 삭제`}>×</button>
           </li>)}
         </ul>}
-      </section>
+      </section>}
     </section>
   );
 }
