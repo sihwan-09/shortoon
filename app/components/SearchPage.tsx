@@ -32,6 +32,14 @@ export function SearchPage({ onBack }: SearchPageProps) {
     void Promise.all([searchPublishedPosts(value), searchAuthors(value)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false));
   };
 
+  const openRecentSearch = (term: string) => {
+    setQuery(term);
+    setSubmittedQuery(term);
+    setLoadingResults(true);
+    void Promise.all([searchPublishedPosts(term), searchAuthors(term)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false));
+    inputRef.current?.focus();
+  };
+
   useEffect(() => {
     inputRef.current?.focus();
     try {
@@ -74,9 +82,9 @@ export function SearchPage({ onBack }: SearchPageProps) {
           {recentSearches.length > 0 && <button type="button" onClick={() => persistRecentSearches([])}>전체삭제</button>}
         </div>
         {recentSearches.length > 0 && <ul>
-          {recentSearches.map((term) => <li key={term}>
-            <button type="button" className="recent-search-term" onClick={() => { setQuery(term); setSubmittedQuery(term); setLoadingResults(true); void Promise.all([searchPublishedPosts(term), searchAuthors(term)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false)); inputRef.current?.focus(); }}>{term}</button>
-            <button type="button" className="recent-search-remove" onClick={() => persistRecentSearches(recentSearches.filter((item) => item !== term))} aria-label={`${term} 삭제`}>×</button>
+          {recentSearches.map((term) => <li key={term} onClick={() => openRecentSearch(term)}>
+            <button type="button" className="recent-search-term" onClick={(event) => { event.stopPropagation(); openRecentSearch(term); }}>{term}</button>
+            <button type="button" className="recent-search-remove" onClick={(event) => { event.stopPropagation(); persistRecentSearches(recentSearches.filter((item) => item !== term)); }} aria-label={`${term} 삭제`}>×</button>
           </li>)}
         </ul>}
       </section>}
