@@ -306,15 +306,21 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     });
     return result;
   })();
+  const collectDescendantIds = (parentId: string): string[] => comments.filter((comment) => String(comment.parentId) === parentId).flatMap((comment) => [String(comment.id), ...collectDescendantIds(String(comment.id))]);
   const visibleComments = orderedComments.filter((comment) => !comment.parentId || expandedCommentIds.has(String(comment.parentId)));
   const toggleCommentReplies = (comment: Comment) => {
     const id = String(comment.id);
+    const descendantIds = collectDescendantIds(id);
     setExpandedCommentIds((current) => {
       const next = new Set(current);
       if (next.has(id)) {
         next.delete(id);
+        descendantIds.forEach((descendantId) => next.delete(descendantId));
         setReplyingTo((replying) => replying?.id === comment.id ? null : replying);
-      } else next.add(id);
+      } else {
+        next.add(id);
+        descendantIds.forEach((descendantId) => next.add(descendantId));
+      }
       return next;
     });
   };
@@ -420,7 +426,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
                       setComments((current) => current.map((item) => item.id === comment.id ? { ...item, likedByMe: comment.likedByMe, likeCount: comment.likeCount } : item));
                     }
                   }}><span className="comment-like-symbol" aria-hidden="true">♥</span><small>{comment.likeCount}</small></button>
-                  <button type="button" className="comment-reply-button" onClick={() => { setExpandedCommentIds((current) => new Set(current).add(String(comment.id))); setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{comment.replyCount}</small></button>
+                  <button type="button" className="comment-reply-button" onClick={() => { setExpandedCommentIds((current) => new Set([...current, String(comment.id), ...collectDescendantIds(String(comment.id))])); setReplyingTo(comment); setBody(""); }}><span className="comment-reply-symbol" aria-hidden="true" /><small>{comment.replyCount}</small></button>
                 </div>
               </article>;
             })}
