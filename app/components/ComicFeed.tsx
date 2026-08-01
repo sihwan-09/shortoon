@@ -10,7 +10,7 @@ import { loadPostReports, reportPost, type PostReport } from "../../lib/reports"
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
 type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
 type SelectedPost = { id?: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
-type Comment = { id: number | string; comicId: number | string; author: string; authorChannelId?: string | null; authorImageUrl?: string | null; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
+type Comment = { id: number | string; comicId: number | string; author: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
 
 const fallbackComics: Comic[] = [
   { id: 1, title: "Midnight Delivery", creator: "Haru", genre: "Mystery", accent: "#C7FF3D", publisher: "NAVER", fullUrl: "https://comic.naver.com", panels: [
@@ -353,8 +353,10 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             {comments.length === 0 && <p className="no-comments">첫 댓글을 남겨보세요.</p>}
             {orderedComments.map((comment) => {
               const hidden = Boolean(comment.isSpoiler) && !revealed.has(comment.id);
+              const parentComment = comment.parentId ? comments.find((item) => String(item.id) === String(comment.parentId)) : null;
+              const parentChannelId = parentComment?.authorChannelId;
               return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} data-reply={comment.parentId ? "true" : undefined} key={comment.id}>
-                <div className="comment-author-line"><span className="comment-author-avatar" aria-hidden="true" style={comment.authorImageUrl ? { backgroundImage: `url(${comment.authorImageUrl})` } : undefined} /><strong>{comment.authorChannelId ? `@${comment.authorChannelId}` : comment.author}</strong>{Boolean(comment.isSpoiler) && <span className="comment-spoiler-label">SPOILER</span>}</div>
+                <div className="comment-author-line"><span className="comment-author-avatar" aria-hidden="true" style={comment.authorImageUrl ? { backgroundImage: `url(${comment.authorImageUrl})` } : undefined} /><div className="comment-author-meta"><strong>{comment.authorChannelId ? `@${comment.authorChannelId}` : comment.author}</strong>{parentChannelId && <button className="comment-reply-target" type="button" onClick={() => { if (parentComment?.authorId) window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: parentComment.authorId } })); }}><span className="comment-target-arrow" aria-hidden="true">↳</span><span>@{parentChannelId}</span></button>}</div>{Boolean(comment.isSpoiler) && <span className="comment-spoiler-label">SPOILER</span>}</div>
                 <p>{hidden ? "스포일러가 포함된 댓글입니다." : comment.body}</p>
                 {hidden && <button type="button" onClick={() => setRevealed((current) => new Set(current).add(comment.id))}>스포일러 보기</button>}
                 <div className="comment-actions">
