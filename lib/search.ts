@@ -20,12 +20,16 @@ export async function searchPublishedPosts(query: string): Promise<PublishedPost
   const authorIds = Array.from(new Set(rows.map((row) => typeof row.author_id === "string" ? row.author_id : null).filter((id): id is string => Boolean(id))));
   const { data: profiles } = authorIds.length ? await supabase.from("channel_profiles").select("owner_id,channel_id,profile_image_url").in("owner_id", authorIds) : { data: [] };
   const profileMap = new Map((profiles ?? []).map((row) => [row.owner_id as string, row]));
-  return rows.map((row) => {
+  const posts = rows.map((row) => {
     const id = String(row.id);
     const authorId = typeof row.author_id === "string" ? row.author_id : null;
     const profile = authorId ? profileMap.get(authorId) : undefined;
     return { id, authorId, authorChannelId: profile?.channel_id ?? null, authorImageUrl: profile?.profile_image_url ?? null, title: String(row.title ?? ""), coverUrl: String(row.cover_image_url ?? ""), imageUrls: [], genre: String(row.genre ?? ""), authorName: String(row.author_name ?? "시화 작가"), description: String(row.description ?? ""), createdAt: String(row.created_at ?? ""), publishedAt: typeof row.published_at === "string" ? row.published_at : undefined, likeCount: Number(row.like_count ?? 0), commentCount: Number(row.comment_count ?? 0), viewCount: 0, link: row.link_title && row.link_url ? { title: String(row.link_title), url: String(row.link_url) } : undefined } satisfies PublishedPost;
   });
+  const { data: images } = posts.length ? await supabase.from("post_images").select("post_id,image_url,sort_order").in("post_id", posts.map((post) => post.id)).order("sort_order", { ascending: true }) : { data: [] };
+  const imageMap = new Map<string, string[]>();
+  for (const image of images ?? []) imageMap.set(image.post_id, [...(imageMap.get(image.post_id) ?? []), image.image_url]);
+  return posts.map((post) => ({ ...post, imageUrls: imageMap.get(post.id) ?? [] }));
 }
 
 export async function searchAuthors(query: string): Promise<SearchAuthor[]> {

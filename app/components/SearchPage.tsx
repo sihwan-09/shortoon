@@ -6,9 +6,9 @@ import type { PublishedPost } from "../../lib/posts";
 import { setFollowedChannel } from "../../lib/follows";
 import { supabase } from "../../lib/supabase";
 
-type SearchPageProps = { onBack: () => void };
+type SearchPageProps = { onBack: () => void; onOpenPost?: (post: PublishedPost, posts: PublishedPost[], index: number) => void };
 
-export function SearchPage({ onBack }: SearchPageProps) {
+export function SearchPage({ onBack, onOpenPost }: SearchPageProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -69,7 +69,7 @@ export function SearchPage({ onBack }: SearchPageProps) {
         </div>
         <div className="search-results-title">‘{submittedQuery}’ 검색 결과</div>
         {loadingResults ? <div className="search-results-empty"><span>검색 중입니다.</span></div> : category === "works" ? <div className="search-result-grid">
-          {workResults.map((post) => <button type="button" className="search-result-tile" key={post.id}><img src={post.coverUrl} alt="" /><span>{post.title}</span></button>)}
+          {workResults.map((post, index) => <button type="button" className="search-result-tile" key={post.id} onClick={() => onOpenPost?.(post, workResults, index)}><img src={post.coverUrl} alt="" /><span>{post.title}</span></button>)}
           {!workResults.length && <div className="search-results-empty"><span>검색된 작품이 없습니다.</span></div>}
         </div> : <div className="search-author-results">
           {authorResults.map((author) => <article className="search-author-card" key={author.ownerId}>
