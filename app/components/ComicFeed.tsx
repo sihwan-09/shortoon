@@ -372,7 +372,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             })}
           </div>
           <form className="comment-form" onSubmit={submitComment}>
-            {replyingTo && <div className="replying-to">{replyingTo.author}님에게 답글 <button type="button" onClick={() => setReplyingTo(null)}>취소</button></div>}
+            {replyingTo && <div className="replying-to">{replyingTo.authorChannelId ? `@${replyingTo.authorChannelId}` : replyingTo.author}에게 답글 <button type="button" onClick={() => setReplyingTo(null)}>취소</button></div>}
             <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder={replyingTo ? "답글을 입력하세요" : "댓글을 입력하세요"} maxLength={500} aria-label={replyingTo ? "답글" : "댓글"} required />
             <div><label><input type="checkbox" checked={isSpoiler} onChange={(event) => setIsSpoiler(event.target.checked)} /> 스포일러 포함</label><button type="submit" disabled={submitting}>{submitting ? "등록 중..." : "등록"}</button></div>
           </form>
