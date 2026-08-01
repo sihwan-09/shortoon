@@ -46,6 +46,7 @@ export default function Home() {
   const [viewedChannelProfile, setViewedChannelProfile] = useState<ChannelProfile | null>(null);
   const [viewedChannelPosts, setViewedChannelPosts] = useState<PublishedShorttoon[]>([]);
   const [channelReturnTab, setChannelReturnTab] = useState<"home" | "my" | "post">("my");
+  const [commentReturn, setCommentReturn] = useState<{ tab: "home" | "post"; postId: string; postIndex: number; commentId?: string; scrollTop?: number } | null>(null);
   const [followedChannelIds, setFollowedChannelIds] = useState<string[]>([]);
   const profileSyncRequestRef = useRef(0);
   const currentUserIdRef = useRef<string | null>(null);
@@ -315,8 +316,11 @@ export default function Home() {
 
   useEffect(() => {
     const openChannel = (event: Event) => {
-      const detail = (event as CustomEvent<{ authorId?: string | null; postIndex?: number }>).detail;
+      const detail = (event as CustomEvent<{ authorId?: string | null; postIndex?: number; commentPostId?: string; commentId?: string; commentScrollTop?: number }>).detail;
       const ownerId = detail?.authorId ?? null;
+      if (detail?.commentPostId) {
+        setCommentReturn({ tab: activeTab === "post" ? "post" : "home", postId: detail.commentPostId, postIndex: typeof detail.postIndex === "number" && detail.postIndex >= 0 ? detail.postIndex : 0, commentId: detail.commentId, scrollTop: detail.commentScrollTop });
+      }
       if (ownerId) {
         void openChannelForComic({ authorId: ownerId, postIndex: detail?.postIndex });
       } else {
@@ -328,6 +332,29 @@ export default function Home() {
     window.addEventListener("shorttoon-open-channel", openChannel);
     return () => window.removeEventListener("shorttoon-open-channel", openChannel);
   }, [activeTab]);
+
+  const handleChannelBack = () => {
+    if (commentReturn) {
+      const restore = commentReturn;
+      setCommentReturn(null);
+      window.sessionStorage.setItem("shorttoon-comment-restore", JSON.stringify({ postId: restore.postId, commentId: restore.commentId, scrollTop: restore.scrollTop }));
+      if (restore.tab === "home") {
+        setHomeTargetIndex(restore.postIndex);
+        window.sessionStorage.setItem("shorttoon-home-target-index", String(restore.postIndex));
+        setActiveTab("home");
+      } else {
+        setChannelTargetIndex(restore.postIndex);
+        setActiveTab("post");
+      }
+      return;
+    }
+    setActiveTab(channelReturnTab);
+  };
+
+  useEffect(() => {
+    window.addEventListener("shorttoon-channel-back", handleChannelBack);
+    return () => window.removeEventListener("shorttoon-channel-back", handleChannelBack);
+  }, [commentReturn, channelReturnTab]);
 
   return (
     <main className={`app-shell ${activeTab === "login" || activeTab === "signup" ? "auth-mode" : ""}`}>

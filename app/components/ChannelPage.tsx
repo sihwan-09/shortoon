@@ -45,7 +45,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
 
   return (
     <section className="channel-page" aria-label="My channel">
-      <button className="channel-back" type="button" onClick={onBack} aria-label="Back to my page">←</button>
+      <button className="channel-back" type="button" onClick={() => window.dispatchEvent(new Event("shorttoon-channel-back"))} aria-label="Back to my page">←</button>
       <div className="channel-profile">
         <div className="profile-avatar" aria-label="Profile image" role="img">{storedProfileImageUrl ? <img src={storedProfileImageUrl} alt="프로필 이미지" /> : <span />}</div>
         <div className="channel-identity">

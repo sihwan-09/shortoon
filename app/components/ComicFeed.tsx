@@ -11,6 +11,7 @@ type Panel = { id: number; position: number; eyebrow: string; line: string; tone
 type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
 type SelectedPost = { id?: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
 type Comment = { id: number | string; comicId: number | string; author: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
+type CommentRestore = { postId: string; commentId?: string; scrollTop?: number };
 
 const fallbackComics: Comic[] = [
   { id: 1, title: "Midnight Delivery", creator: "Haru", genre: "Mystery", accent: "#C7FF3D", publisher: "NAVER", fullUrl: "https://comic.naver.com", panels: [
@@ -30,7 +31,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, initialHomeIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, channelId, profileImageUrl, legacyChannelNames = [] }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; initialHomeIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[] }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, initialHomeIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, channelName, channelId, profileImageUrl, legacyChannelNames = [], restoreComment, onCommentRestored }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; initialHomeIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[]; restoreComment?: CommentRestore | null; onCommentRestored?: () => void }) {
   const [comics, setComics] = useState<Comic[]>([]);
   const [feedPage, setFeedPage] = useState(0);
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
@@ -62,6 +63,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const horizontalGestureStartX = useRef<number | null>(null);
   const horizontalGestureStartY = useRef<number | null>(null);
   const horizontalGestureStartIndex = useRef(0);
+  const restoredCommentKey = useRef<string | null>(null);
 
   useEffect(() => {
     const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
@@ -113,7 +115,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     feedRef.current.scrollTo({ left: index * feedRef.current.clientWidth, behavior: "auto" });
   }, [isHomeFeed, comics.length, initialHomeIndex]);
 
-  const openComments = async (comic: Comic) => {
+  const openComments = async (comic: Comic, restore?: CommentRestore) => {
     setCommentComic(comic);
     try {
       if (!comic.commentPostId) throw new Error("댓글을 저장할 게시물 ID가 없습니다.");
@@ -121,6 +123,14 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       setComments(loadedComments);
       setCommentCounts((current) => ({ ...current, [comic.id]: loadedComments.length }));
       setReplyingTo(null);
+      if (restore) {
+        window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+          const list = document.querySelector<HTMLElement>(".comment-list");
+          if (!list) return;
+          if (typeof restore.scrollTop === "number") list.scrollTop = restore.scrollTop;
+          if (restore.commentId) list.querySelector<HTMLElement>(`[data-comment-id="${CSS.escape(restore.commentId)}"]`)?.scrollIntoView({ block: "center", behavior: "auto" });
+        }));
+      }
     } catch (error) {
       console.error("댓글을 불러오지 못했습니다.", error);
       setComments([]);
@@ -187,6 +197,22 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
   const selectedPostSetKey = selectedPosts?.map((post) => post.id ?? post.title).join("|") ?? "";
   const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, authorChannelId: post.authorChannelId, authorImageUrl: post.authorImageUrl, genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
+
+  useEffect(() => {
+    const pendingRestore = restoreComment ?? (() => {
+      try { return JSON.parse(window.sessionStorage.getItem("shorttoon-comment-restore") ?? "null") as CommentRestore | null; } catch { return null; }
+    })();
+    if (!pendingRestore || !visibleComics.length) return;
+    const key = `${pendingRestore.postId}:${pendingRestore.commentId ?? ""}`;
+    if (restoredCommentKey.current === key) return;
+    const comic = visibleComics.find((item) => item.commentPostId === pendingRestore.postId);
+    if (!comic) return;
+    restoredCommentKey.current = key;
+    void openComments(comic, pendingRestore).finally(() => {
+      window.sessionStorage.removeItem("shorttoon-comment-restore");
+      onCommentRestored?.();
+    });
+  }, [restoreComment, visibleComics]);
 
   useEffect(() => {
     const handleLikeClick = (event: MouseEvent) => {
@@ -368,8 +394,8 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
               const hidden = Boolean(comment.isSpoiler) && !revealed.has(comment.id);
               const parentComment = comment.parentId ? comments.find((item) => String(item.id) === String(comment.parentId)) : null;
               const parentChannelId = parentComment?.authorChannelId;
-              return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} data-reply={comment.parentId ? "true" : undefined} key={comment.id}>
-                <div className="comment-author-line"><button className="comment-author-avatar" type="button" aria-label={`${comment.authorChannelId ? `@${comment.authorChannelId}` : comment.author} 채널 보기`} onClick={() => { if (comment.authorId) window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comment.authorId } })); }} style={comment.authorImageUrl ? { backgroundImage: `url(${comment.authorImageUrl})` } : undefined} /><div className="comment-author-meta"><strong>{comment.authorChannelId ? `@${comment.authorChannelId}` : comment.author}</strong>{parentChannelId && <button className="comment-reply-target" type="button" onClick={() => { if (parentComment?.authorId) window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: parentComment.authorId } })); }}><span className="comment-target-arrow" aria-hidden="true">↳</span><span>@{parentChannelId}</span></button>}</div>{Boolean(comment.isSpoiler) && <span className="comment-spoiler-label">SPOILER</span>}</div>
+              return <article className={`comment-card ${hidden ? "spoiler-hidden" : ""}`} data-comment-id={String(comment.id)} data-reply={comment.parentId ? "true" : undefined} key={comment.id}>
+                <div className="comment-author-line"><button className="comment-author-avatar" type="button" aria-label={`${comment.authorChannelId ? `@${comment.authorChannelId}` : comment.author} 채널 보기`} onClick={() => { if (comment.authorId) window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: comment.authorId, commentPostId: commentComic?.commentPostId, commentId: String(comment.id), postIndex: visibleComics.findIndex((item) => item.commentPostId === commentComic?.commentPostId), commentScrollTop: document.querySelector<HTMLElement>(".comment-list")?.scrollTop } })); }} style={comment.authorImageUrl ? { backgroundImage: `url(${comment.authorImageUrl})` } : undefined} /><div className="comment-author-meta"><strong>{comment.authorChannelId ? `@${comment.authorChannelId}` : comment.author}</strong>{parentChannelId && <button className="comment-reply-target" type="button" onClick={() => { if (parentComment?.authorId) window.dispatchEvent(new CustomEvent("shorttoon-open-channel", { detail: { authorId: parentComment.authorId, commentPostId: commentComic?.commentPostId, commentId: String(parentComment.id), postIndex: visibleComics.findIndex((item) => item.commentPostId === commentComic?.commentPostId), commentScrollTop: document.querySelector<HTMLElement>(".comment-list")?.scrollTop } })); }}><span className="comment-target-arrow" aria-hidden="true">↳</span><span>@{parentChannelId}</span></button>}</div>{Boolean(comment.isSpoiler) && <span className="comment-spoiler-label">SPOILER</span>}</div>
                 <p>{hidden ? "스포일러가 포함된 댓글입니다." : comment.body}</p>
                 {hidden && <button type="button" onClick={() => setRevealed((current) => new Set(current).add(comment.id))}>스포일러 보기</button>}
                 <div className="comment-actions">
