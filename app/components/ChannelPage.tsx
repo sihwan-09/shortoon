@@ -51,7 +51,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
         <div className="channel-identity">
           <h1>{viewProfile.name}</h1>
           <span className="channel-id">@{viewProfile.channelId}</span>
-          <span>구독자 0명</span>
+          <span>팔로워 0명</span>
         </div>
       </div>
       <button className="channel-intro" type="button" onClick={onOpenIntro} aria-label="소개 전체 보기">
