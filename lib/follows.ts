@@ -26,3 +26,11 @@ export async function setFollowedChannel(ownerId: string, following: boolean): P
   const { error } = await supabase.from("channel_follows").delete().eq("follower_id", userId).eq("following_id", ownerId);
   if (error) throw error;
 }
+
+export async function loadFollowerCount(ownerId: string | null): Promise<number> {
+  const resolvedOwnerId = ownerId ?? await getCurrentUserId();
+  if (!resolvedOwnerId) return 0;
+  const { count, error } = await supabase.from("channel_follows").select("follower_id", { count: "exact", head: true }).eq("following_id", resolvedOwnerId);
+  if (error) throw error;
+  return count ?? 0;
+}

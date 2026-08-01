@@ -3,19 +3,22 @@
 import { useEffect, useState } from "react";
 import { loadChannelProfileByOwnerId } from "../../lib/channel";
 import { loadPostsFromSupabase } from "../../lib/posts";
+import { loadFollowerCount, setFollowedChannel } from "../../lib/follows";
 
-type ChannelPageProps = { onBack: () => void; onEdit: () => void; isOwner?: boolean; isFollowing?: boolean; onFollow?: () => void };
+type ChannelPageProps = { onBack: () => void; onEdit: () => void; isOwner?: boolean; isFollowing?: boolean; onFollow?: () => void; channelOwnerId?: string | null };
 type ChannelProfile = { name: string; channelId: string; intro: string; profileImageUrl?: string | null };
 
 type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string; isTest?: boolean };
 
-export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, profile, isOwner = true, isFollowing = false, onFollow }: ChannelPageProps & { posts: ChannelPost[]; onOpenIntro: () => void; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
+export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, profile, isOwner = true, isFollowing = false, onFollow, channelOwnerId }: ChannelPageProps & { posts: ChannelPost[]; onOpenIntro: () => void; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
   const [viewProfile, setViewProfile] = useState(profile);
   const [viewPosts, setViewPosts] = useState(posts);
   const [viewIsOwner, setViewIsOwner] = useState(isOwner);
   const [viewFollowing, setViewFollowing] = useState(isFollowing);
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profile.profileImageUrl ?? null);
+  const [followerCount, setFollowerCount] = useState(0);
+  useEffect(() => { let cancelled = false; const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); void loadFollowerCount(ownerId).then((count) => { if (!cancelled) setFollowerCount(count); }).catch((error) => console.error("팔로워 수 조회 실패", error)); return () => { cancelled = true; }; }, [channelOwnerId, isOwner, profile.channelId]);
   useEffect(() => {
     const sync = () => setStoredProfileImageUrl(isOwner ? window.localStorage.getItem("shorttoon-profile-image") : (profile.profileImageUrl ?? null));
     sync();
@@ -51,14 +54,14 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
         <div className="channel-identity">
           <h1>{viewProfile.name}</h1>
           <span className="channel-id">@{viewProfile.channelId}</span>
-          <span>팔로워 0명</span>
+          <span>팔로워 {followerCount}명</span>
         </div>
       </div>
       <button className="channel-intro" type="button" onClick={onOpenIntro} aria-label="소개 전체 보기">
         <p title={viewProfile.intro}>{displayedIntro}</p>
       </button>
       <div className="channel-actions">
-        {viewIsOwner ? <><button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button><button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button></> : <button className={`channel-follow-button ${viewFollowing ? "is-following" : ""}`} type="button" onClick={() => { const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId) return; const next = !viewFollowing; setViewFollowing(next); const ids = (() => { try { const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]"); return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : []; } catch { return []; } })(); const nextIds = next ? Array.from(new Set([...ids, ownerId])) : ids.filter((id) => id !== ownerId); window.localStorage.setItem("shorttoon-followed-channels", JSON.stringify(nextIds)); }} aria-pressed={viewFollowing}>{viewFollowing ? "팔로잉" : "팔로우"}</button>}
+        {viewIsOwner ? <><button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button><button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button></> : <button className={`channel-follow-button ${viewFollowing ? "is-following" : ""}`} type="button" onClick={async () => { const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId) return; const next = !viewFollowing; setViewFollowing(next); try { await setFollowedChannel(ownerId, next); setFollowerCount((count) => Math.max(0, count + (next ? 1 : -1))); } catch (error) { console.error("팔로우 변경 실패", error); setViewFollowing(!next); } }} aria-pressed={viewFollowing}>{viewFollowing ? "팔로잉" : "팔로우"}</button>}
       </div>
       <div className="channel-tabs" role="tablist" aria-label="Channel content">
         <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>{viewPosts.length}</span></button>
