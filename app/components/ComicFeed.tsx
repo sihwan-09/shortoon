@@ -265,7 +265,20 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     feed.scrollTo({ left: targetIndex * feed.clientWidth, behavior: "smooth" });
   };
 
-  const orderedComments = comments.flatMap((comment) => comment.parentId ? [] : [comment, ...comments.filter((reply) => reply.parentId === comment.id)]);
+  const orderedComments = (() => {
+    const result: Comment[] = [];
+    const appendReplies = (parentId: number | string) => {
+      comments.filter((reply) => String(reply.parentId) === String(parentId)).forEach((reply) => {
+        result.push(reply);
+        appendReplies(reply.id);
+      });
+    };
+    comments.filter((comment) => !comment.parentId).forEach((comment) => {
+      result.push(comment);
+      appendReplies(comment.id);
+    });
+    return result;
+  })();
 
   return (
     <section className="feed-wrap" aria-label="Shorttoon comic feed">
