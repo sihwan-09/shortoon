@@ -42,5 +42,9 @@ export async function searchAuthors(query: string): Promise<SearchAuthor[]> {
   const { data: posts } = ids.length ? await supabase.from("posts").select("author_id").eq("status", "published").in("author_id", ids) : { data: [] };
   const counts = new Map<string, number>();
   for (const row of posts ?? []) counts.set(row.author_id, (counts.get(row.author_id) ?? 0) + 1);
-  return rows.map((row) => ({ ownerId: row.owner_id, name: row.name ?? "채널명", channelId: row.channel_id ?? "채널 아이디", profileImageUrl: row.profile_image_url, followerCount: 0, postCount: counts.get(row.owner_id) ?? 0 }));
+  const { data: follows, error: followsError } = ids.length ? await supabase.from("channel_follows").select("following_id").in("following_id", ids) : { data: [], error: null };
+  if (followsError) throw followsError;
+  const followerCounts = new Map<string, number>();
+  for (const row of follows ?? []) followerCounts.set(row.following_id, (followerCounts.get(row.following_id) ?? 0) + 1);
+  return rows.map((row) => ({ ownerId: row.owner_id, name: row.name ?? "채널명", channelId: row.channel_id ?? "채널 아이디", profileImageUrl: row.profile_image_url, followerCount: followerCounts.get(row.owner_id) ?? 0, postCount: counts.get(row.owner_id) ?? 0 }));
 }
