@@ -131,6 +131,7 @@ a { color: inherit; text-decoration: none; }
 .search-page-header input { width: 100%; height: 42px; padding: 0 14px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 10px; font: inherit; font-size: 14px; outline: none; }
 .search-page-header input::placeholder { color: var(--text-muted); }
 .search-page-header input:focus { border-color: var(--primary); }
+.search-page-header input::-webkit-search-cancel-button { opacity: .55; filter: grayscale(1); cursor: pointer; }
 
 .feed-wrap { position: relative; height: calc(100dvh - 129px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); overflow: hidden; }
 .post-view-back { position: absolute; z-index: 30; top: 16px; left: 16px; display: grid; width: 42px; height: 42px; place-items: center; padding: 0; color: var(--text); background: rgba(17,17,17,.72); border: 1px solid rgba(255,255,255,.24); border-radius: 50%; font-size: 28px; font-weight: 300; line-height: 1; cursor: pointer; backdrop-filter: blur(8px); }
