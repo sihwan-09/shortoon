@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import { loadChannelProfileByOwnerId } from "../../lib/channel";
 import { loadPostsFromSupabase } from "../../lib/posts";
 import { loadFollowedChannelIds, loadFollowerCount, setFollowedChannel } from "../../lib/follows";
+import { ViewCountBadge } from "./ViewCountBadge";
 
 type ChannelPageProps = { onBack: () => void; onEdit: () => void; isOwner?: boolean; isFollowing?: boolean; onFollow?: () => void; channelOwnerId?: string | null };
 type ChannelProfile = { name: string; channelId: string; intro: string; profileImageUrl?: string | null };
 
-type ChannelPost = { title: string; coverUrl: string; imageUrls: string[]; genre: string; isTest?: boolean };
+type ChannelPost = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; viewCount?: number; isTest?: boolean };
 
 export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, profile, isOwner = true, isFollowing = false, onFollow, channelOwnerId }: ChannelPageProps & { posts: ChannelPost[]; onOpenIntro: () => void; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
@@ -69,7 +70,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
         <button type="button" role="tab" aria-selected="false">작품 목록</button>
       </div>
       <div className="channel-thumbnail-grid" aria-label="숏툰 썸네일 목록">
-        {viewPosts.map((post, index) => <button className={`channel-thumbnail-tile has-post ${post.isTest ? "is-test" : ""}`} data-post-index={index} key={`${post.title}-${post.coverUrl}-${index}`} type="button" onClick={(event) => { window.localStorage.setItem("shorttoon-post-return", "channel"); onOpenPost(post, index, event.currentTarget.closest<HTMLElement>(".channel-page")?.scrollTop ?? 0); }} aria-label={`${post.title} 게시물 보기`}>{post.isTest ? <strong>TEST</strong> : <img src={post.coverUrl} alt="" />}<span>{post.title}</span></button>)}
+        {viewPosts.map((post, index) => <button className={`channel-thumbnail-tile has-post ${post.isTest ? "is-test" : ""}`} data-post-index={index} key={`${post.title}-${post.coverUrl}-${index}`} type="button" onClick={(event) => { window.localStorage.setItem("shorttoon-post-return", "channel"); onOpenPost(post, index, event.currentTarget.closest<HTMLElement>(".channel-page")?.scrollTop ?? 0); }} aria-label={`${post.title} 게시물 보기`}>{post.isTest ? <strong>TEST</strong> : <img src={post.coverUrl} alt="" />}<ViewCountBadge postId={post.id} fallback={post.viewCount} /><span>{post.title}</span></button>)}
       </div>
     </section>
   );

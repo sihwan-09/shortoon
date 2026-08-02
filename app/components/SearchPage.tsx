@@ -5,6 +5,7 @@ import { searchAuthors, searchPublishedPosts, type SearchAuthor } from "../../li
 import type { PublishedPost } from "../../lib/posts";
 import { loadFollowedChannelIds, setFollowedChannel } from "../../lib/follows";
 import { supabase } from "../../lib/supabase";
+import { ViewCountBadge } from "./ViewCountBadge";
 
 type SearchPageProps = { onBack: () => void; onOpenPost?: (post: PublishedPost, posts: PublishedPost[], index: number) => void; onOpenAuthor?: (authorId: string) => void };
 
@@ -116,7 +117,7 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
         {loadingResults ? <div className="search-results-empty"><span>검색 중입니다.</span></div> : (
           <div key={category} className={category === "works" ? "search-result-panel search-result-panel-works" : "search-result-panel search-result-panel-authors"}>
             {category === "works" ? <div className="search-result-grid">
-              {workResults.map((post, index) => <button type="button" className="search-result-tile" key={post.id} onClick={() => onOpenPost?.(post, workResults, index)}><img src={post.coverUrl} alt="" /><span>{post.title}</span></button>)}
+              {workResults.map((post, index) => <button type="button" className="search-result-tile" key={post.id} onClick={() => onOpenPost?.(post, workResults, index)}><img src={post.coverUrl} alt="" /><ViewCountBadge postId={post.id} fallback={post.viewCount} /><span>{post.title}</span></button>)}
               {!workResults.length && <div className="search-empty-state"><strong>검색 결과 없음</strong><span>‘{submittedQuery}’와 일치하는<br />결과를 찾지 못했어요.</span></div>}
             </div> : <div className="search-author-results">
               {authorResults.map((author) => <article className="search-author-card" key={author.ownerId} onClick={() => author.isFollowable && onOpenAuthor?.(author.ownerId)}>
