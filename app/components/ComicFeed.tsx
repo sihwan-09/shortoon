@@ -64,6 +64,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const horizontalGestureStartX = useRef<number | null>(null);
   const horizontalGestureStartY = useRef<number | null>(null);
   const horizontalGestureStartIndex = useRef(0);
+  const homePositionedRef = useRef(false);
   const restoredCommentKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -108,12 +109,17 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   useEffect(() => { if (isHomeFeed) void loadFeedPage(0, false); }, [isHomeFeed]);
 
   useEffect(() => {
-    if (!isHomeFeed || !feedRef.current || !comics.length) return;
+    if (!isHomeFeed) homePositionedRef.current = false;
+  }, [isHomeFeed]);
+
+  useEffect(() => {
+    if (!isHomeFeed || homePositionedRef.current || !feedRef.current || !comics.length) return;
     const storedIndex = Number(window.sessionStorage.getItem("shorttoon-home-target-index"));
     const requestedIndex = Number.isFinite(storedIndex) && storedIndex >= 0 ? storedIndex : initialHomeIndex;
     const index = Math.max(0, Math.min(requestedIndex, comics.length - 1));
     if (Number.isFinite(storedIndex)) window.sessionStorage.removeItem("shorttoon-home-target-index");
     feedRef.current.scrollTo({ left: index * feedRef.current.clientWidth, behavior: "auto" });
+    homePositionedRef.current = true;
   }, [isHomeFeed, comics.length, initialHomeIndex]);
 
   const openComments = async (comic: Comic, restore?: CommentRestore) => {

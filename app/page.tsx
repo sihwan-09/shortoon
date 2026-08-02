@@ -13,7 +13,6 @@ import { PublishedShorttoon, UploadPage } from "./components/UploadPage";
 import { loadPostsByIds, loadPostsFromSupabase, savePostToSupabase } from "../lib/posts";
 import { loadUserLikedPostIds } from "../lib/likes";
 import { loadChannelProfile, loadChannelProfileByOwnerId, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
-import { setFollowedChannel } from "../lib/follows";
 import { AuthPage } from "./components/AuthPage";
 import { SearchPage } from "./components/SearchPage";
 
@@ -89,22 +88,6 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    const onFollowClick = (event: MouseEvent) => {
-      const target = event.target instanceof Element ? event.target.closest(".channel-follow-button") : null;
-      if (!target) return;
-      const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner");
-      if (!ownerId) return;
-      let following = false;
-      try {
-        const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");
-        following = Array.isArray(value) && value.includes(ownerId);
-      } catch { following = false; }
-      void setFollowedChannel(ownerId, following).catch((error) => console.error("팔로우 기록 저장 실패", error));
-    };
-    document.addEventListener("click", onFollowClick);
-    return () => document.removeEventListener("click", onFollowClick);
-  }, []);
   useEffect(() => {
     try {
       const value = JSON.parse(window.localStorage.getItem("shorttoon-followed-channels") ?? "[]");

@@ -26,10 +26,18 @@ export async function searchPublishedPosts(query: string, offset = 0, limit = 30
     const profile = authorId ? profileMap.get(authorId) : undefined;
     return { id, authorId, authorChannelId: profile?.channel_id ?? null, authorImageUrl: profile?.profile_image_url ?? null, title: String(row.title ?? ""), coverUrl: String(row.cover_image_url ?? ""), imageUrls: [], genre: String(row.genre ?? ""), authorName: String(row.author_name ?? "시화 작가"), description: String(row.description ?? ""), createdAt: String(row.created_at ?? ""), publishedAt: typeof row.published_at === "string" ? row.published_at : undefined, likeCount: Number(row.like_count ?? 0), commentCount: Number(row.comment_count ?? 0), viewCount: 0, link: row.link_title && row.link_url ? { title: String(row.link_title), url: String(row.link_url) } : undefined } satisfies PublishedPost;
   });
-  const { data: images } = posts.length ? await supabase.from("post_images").select("post_id,image_url,sort_order").in("post_id", posts.map((post) => post.id)).order("sort_order", { ascending: true }) : { data: [] };
+  const postIds = posts.map((post) => post.id);
+  const { data: likeRows, error: likesError } = postIds.length
+    ? await supabase.from("post_likes").select("post_id").in("post_id", postIds)
+    : { data: [], error: null };
+  if (likesError) console.error("검색 결과 좋아요 수 집계 실패", likesError);
+  const likeCounts = new Map<string, number>();
+  for (const row of likeRows ?? []) likeCounts.set(row.post_id, (likeCounts.get(row.post_id) ?? 0) + 1);
+  const postsWithLikes = posts.map((post) => ({ ...post, likeCount: likesError ? post.likeCount : likeCounts.get(post.id) ?? 0 }));
+  const { data: images } = postsWithLikes.length ? await supabase.from("post_images").select("post_id,image_url,sort_order").in("post_id", postsWithLikes.map((post) => post.id)).order("sort_order", { ascending: true }) : { data: [] };
   const imageMap = new Map<string, string[]>();
   for (const image of images ?? []) imageMap.set(image.post_id, [...(imageMap.get(image.post_id) ?? []), image.image_url]);
-  return posts.map((post) => ({ ...post, imageUrls: imageMap.get(post.id) ?? [] }));
+  return postsWithLikes.map((post) => ({ ...post, imageUrls: imageMap.get(post.id) ?? [] }));
 }
 
 export async function searchAuthors(query: string, offset = 0, limit = 30): Promise<SearchAuthor[]> {
@@ -37,8 +45,11 @@ export async function searchAuthors(query: string, offset = 0, limit = 30): Prom
   if (!keyword) return [];
   const { data, error } = await supabase.from("channel_profiles").select("owner_id,name,channel_id,profile_image_url").or(`name.ilike.%${keyword}%,channel_id.ilike.%${keyword}%`).range(offset, offset + limit - 1);
   if (error) throw error;
-  const rows = (data ?? []) as Array<{ owner_id: string; name: string | null; channel_id: string | null; profile_image_url: string | null }>;
-  const ids = rows.map((row) => row.owner_id).filter(Boolean);
+  const rows = (data ?? []) as Array<{ owner_id: string | null; name: string | null; channel_id: string | null; profile_image_url: string | null }>;
+  // Rows without an owner cannot be followed or opened as a real channel.
+  // Excluding them also prevents every anonymous row from sharing the same null key.
+  const authorRows = rows.filter((row): row is { owner_id: string; name: string | null; channel_id: string | null; profile_image_url: string | null } => Boolean(row.owner_id));
+  const ids = authorRows.map((row) => row.owner_id);
   const { data: posts } = ids.length ? await supabase.from("posts").select("author_id").eq("status", "published").in("author_id", ids) : { data: [] };
   const counts = new Map<string, number>();
   for (const row of posts ?? []) counts.set(row.author_id, (counts.get(row.author_id) ?? 0) + 1);
@@ -46,5 +57,5 @@ export async function searchAuthors(query: string, offset = 0, limit = 30): Prom
   if (followsError) throw followsError;
   const followerCounts = new Map<string, number>();
   for (const row of follows ?? []) followerCounts.set(row.following_id, (followerCounts.get(row.following_id) ?? 0) + 1);
-  return rows.map((row) => ({ ownerId: row.owner_id, name: row.name ?? "채널명", channelId: row.channel_id ?? "채널 아이디", profileImageUrl: row.profile_image_url, followerCount: followerCounts.get(row.owner_id) ?? 0, postCount: counts.get(row.owner_id) ?? 0 }));
+  return authorRows.map((row) => ({ ownerId: row.owner_id, name: row.name ?? "채널명", channelId: row.channel_id ?? "채널 아이디", profileImageUrl: row.profile_image_url, followerCount: followerCounts.get(row.owner_id) ?? 0, postCount: counts.get(row.owner_id) ?? 0 }));
 }
