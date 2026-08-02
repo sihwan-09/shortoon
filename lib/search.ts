@@ -14,26 +14,36 @@ export async function searchPublishedPosts(query: string, offset = 0, limit = 30
     .or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%`)
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("id", { ascending: false })
-    .range(offset, offset + limit - 1);
+    .limit(1000);
   if (error) throw error;
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const authorIds = Array.from(new Set(rows.map((row) => typeof row.author_id === "string" ? row.author_id : null).filter((id): id is string => Boolean(id))));
   const { data: profiles } = authorIds.length ? await supabase.from("channel_profiles").select("owner_id,channel_id,profile_image_url").in("owner_id", authorIds) : { data: [] };
   const profileMap = new Map((profiles ?? []).map((row) => [row.owner_id as string, row]));
+  const keywordLower = keyword.toLocaleLowerCase();
   const posts = rows.map((row) => {
     const id = String(row.id);
     const authorId = typeof row.author_id === "string" ? row.author_id : null;
     const profile = authorId ? profileMap.get(authorId) : undefined;
     return { id, authorId, authorChannelId: profile?.channel_id ?? null, authorImageUrl: profile?.profile_image_url ?? null, title: String(row.title ?? ""), coverUrl: String(row.cover_image_url ?? ""), imageUrls: [], genre: String(row.genre ?? ""), authorName: String(row.author_name ?? "시화 작가"), description: String(row.description ?? ""), createdAt: String(row.created_at ?? ""), publishedAt: typeof row.published_at === "string" ? row.published_at : undefined, likeCount: Number(row.like_count ?? 0), commentCount: Number(row.comment_count ?? 0), viewCount: 0, link: row.link_title && row.link_url ? { title: String(row.link_title), url: String(row.link_url) } : undefined } satisfies PublishedPost;
   });
-  const postIds = posts.map((post) => post.id);
+  const rankedPosts = posts.sort((a, b) => {
+    const rank = (post: PublishedPost) => post.title.toLocaleLowerCase() === keywordLower ? 0 : post.title.toLocaleLowerCase().includes(keywordLower) ? 1 : 2;
+    const rankDifference = rank(a) - rank(b);
+    if (rankDifference !== 0) return rankDifference;
+    const publishedDifference = new Date(b.publishedAt ?? b.createdAt ?? 0).getTime() - new Date(a.publishedAt ?? a.createdAt ?? 0).getTime();
+    if (publishedDifference !== 0) return publishedDifference;
+    return b.id.localeCompare(a.id);
+  });
+  const pagedPosts = rankedPosts.slice(offset, offset + limit);
+  const postIds = pagedPosts.map((post) => post.id);
   const { data: likeRows, error: likesError } = postIds.length
     ? await supabase.from("post_likes").select("post_id").in("post_id", postIds)
     : { data: [], error: null };
   if (likesError) console.error("검색 결과 좋아요 수 집계 실패", likesError);
   const likeCounts = new Map<string, number>();
   for (const row of likeRows ?? []) likeCounts.set(row.post_id, (likeCounts.get(row.post_id) ?? 0) + 1);
-  const postsWithLikes = posts.map((post) => ({ ...post, likeCount: likesError ? post.likeCount : likeCounts.get(post.id) ?? 0 }));
+  const postsWithLikes = pagedPosts.map((post) => ({ ...post, likeCount: likesError ? post.likeCount : likeCounts.get(post.id) ?? 0 }));
   const { data: images } = postsWithLikes.length ? await supabase.from("post_images").select("post_id,image_url,sort_order").in("post_id", postsWithLikes.map((post) => post.id)).order("sort_order", { ascending: true }) : { data: [] };
   const imageMap = new Map<string, string[]>();
   for (const image of images ?? []) imageMap.set(image.post_id, [...(imageMap.get(image.post_id) ?? []), image.image_url]);
