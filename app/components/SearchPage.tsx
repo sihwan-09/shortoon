@@ -24,6 +24,11 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
   const [hasMore, setHasMore] = useState(true);
   const resultEndRef = useRef<HTMLDivElement>(null);
 
+  const switchCategory = (next: "works" | "authors") => {
+    setCategory(next);
+    window.sessionStorage.setItem("shorttoon-search-category", next);
+  };
+
   const persistRecentSearches = (next: string[]) => {
     setRecentSearches(next);
     window.localStorage.setItem("shorttoon-recent-searches", JSON.stringify(next));
@@ -96,21 +101,25 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
       </div>
       {submittedQuery ? <section className="search-results" aria-label="검색 결과">
         <div className="search-category-tabs" role="tablist" aria-label="검색 결과 종류">
-          <button type="button" role="tab" aria-selected={category === "works"} className={category === "works" ? "is-active" : ""} onClick={() => { setCategory("works"); window.sessionStorage.setItem("shorttoon-search-category", "works"); }}>작품</button>
-          <button type="button" role="tab" aria-selected={category === "authors"} className={category === "authors" ? "is-active" : ""} onClick={() => { setCategory("authors"); window.sessionStorage.setItem("shorttoon-search-category", "authors"); }}>작가</button>
+          <button type="button" role="tab" aria-selected={category === "works"} className={category === "works" ? "is-active" : ""} onClick={() => switchCategory("works")}>작품</button>
+          <button type="button" role="tab" aria-selected={category === "authors"} className={category === "authors" ? "is-active" : ""} onClick={() => switchCategory("authors")}>작가</button>
         </div>
         <div className="search-results-title">‘{submittedQuery}’ 검색 결과</div>
-        {loadingResults ? <div className="search-results-empty"><span>검색 중입니다.</span></div> : category === "works" ? <div className="search-result-grid">
-          {workResults.map((post, index) => <button type="button" className="search-result-tile" key={post.id} onClick={() => onOpenPost?.(post, workResults, index)}><img src={post.coverUrl} alt="" /><span>{post.title}</span></button>)}
-          {!workResults.length && <div className="search-results-empty"><span>검색된 작품이 없습니다.</span></div>}
-        </div> : <div className="search-author-results">
-          {authorResults.map((author) => <article className="search-author-card" key={author.ownerId} onClick={() => onOpenAuthor?.(author.ownerId)}>
-            <button type="button" className="search-author-profile-button" onClick={() => onOpenAuthor?.(author.ownerId)} aria-label={`${author.name} 채널 보기`}><span className="search-author-avatar" role="img" aria-label="프로필 이미지" style={author.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} /></button>
-            <div className="search-author-info"><strong>{author.name}</strong><span>@{author.channelId}</span><small>팔로워 {author.followerCount}명 · 작품 {author.postCount}개</small></div>
-            {author.ownerId !== currentUserId && <button type="button" className={`search-follow-button${following[author.ownerId] ? " is-following" : ""}`} onClick={async (event) => { event.stopPropagation(); const next = !following[author.ownerId]; setFollowing((current) => ({ ...current, [author.ownerId]: next })); try { await setFollowedChannel(author.ownerId, next); } catch (error) { console.error("팔로우 처리 실패", error); setFollowing((current) => ({ ...current, [author.ownerId]: !next })); } }}>{following[author.ownerId] ? "팔로잉" : "팔로우"}</button>}
-          </article>)}
-          {!authorResults.length && <div className="search-results-empty"><span>검색된 작가가 없습니다.</span></div>}
-        </div>}
+        {loadingResults ? <div className="search-results-empty"><span>검색 중입니다.</span></div> : (
+          <div key={category} className={category === "works" ? "search-result-panel search-result-panel-works" : "search-result-panel search-result-panel-authors"}>
+            {category === "works" ? <div className="search-result-grid">
+              {workResults.map((post, index) => <button type="button" className="search-result-tile" key={post.id} onClick={() => onOpenPost?.(post, workResults, index)}><img src={post.coverUrl} alt="" /><span>{post.title}</span></button>)}
+              {!workResults.length && <div className="search-results-empty"><span>검색된 작품이 없습니다.</span></div>}
+            </div> : <div className="search-author-results">
+              {authorResults.map((author) => <article className="search-author-card" key={author.ownerId} onClick={() => onOpenAuthor?.(author.ownerId)}>
+                <button type="button" className="search-author-profile-button" onClick={() => onOpenAuthor?.(author.ownerId)} aria-label={`${author.name} 채널 보기`}><span className="search-author-avatar" role="img" aria-label="프로필 이미지" style={author.profileImageUrl ? { backgroundImage: `url("${author.profileImageUrl}")` } : undefined} /></button>
+                <div className="search-author-info"><strong>{author.name}</strong><span>@{author.channelId}</span><small>팔로워 {author.followerCount}명 · 작품 {author.postCount}개</small></div>
+                {author.ownerId !== currentUserId && <button type="button" className={`search-follow-button${following[author.ownerId] ? " is-following" : ""}`} onClick={async (event) => { event.stopPropagation(); const next = !following[author.ownerId]; setFollowing((current) => ({ ...current, [author.ownerId]: next })); try { await setFollowedChannel(author.ownerId, next); } catch (error) { console.error("팔로우 처리 실패", error); setFollowing((current) => ({ ...current, [author.ownerId]: !next })); } }}>{following[author.ownerId] ? "팔로잉" : "팔로우"}</button>}
+              </article>)}
+              {!authorResults.length && <div className="search-results-empty"><span>검색된 작가가 없습니다.</span></div>}
+            </div>}
+          </div>
+        )}
         <div ref={resultEndRef} className="search-results-end" aria-hidden="true" />
         {loadingMore && <div className="search-results-loading-more">더 불러오는 중...</div>}
       </section> : <section className="recent-searches" aria-label="최근 검색어">
