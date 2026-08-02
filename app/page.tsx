@@ -351,8 +351,18 @@ export default function Home() {
       setSearchReturnTab(returnTab);
       setActiveTab("search");
     };
+    const openGenreSearch = (event: Event) => {
+      const genre = (event as CustomEvent<{ genre?: string }>).detail?.genre?.trim();
+      if (!genre) return;
+      window.sessionStorage.setItem("shorttoon-search-query", genre);
+      window.sessionStorage.setItem("shorttoon-search-category", "works");
+      const returnTab = activeTab === "my" || activeTab === "channel" || activeTab === "post" || activeTab === "liked" ? activeTab : "home";
+      setSearchReturnTab(returnTab);
+      setActiveTab("search");
+    };
     document.addEventListener("click", openSearch);
-    return () => document.removeEventListener("click", openSearch);
+    window.addEventListener("shorttoon-search-genre", openGenreSearch);
+    return () => { document.removeEventListener("click", openSearch); window.removeEventListener("shorttoon-search-genre", openGenreSearch); };
   }, [activeTab]);
 
   return (

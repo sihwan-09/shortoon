@@ -11,7 +11,7 @@ export async function searchPublishedPosts(query: string, offset = 0, limit = 30
   const { data, error } = await supabase.from("posts")
     .select("id,author_id,title,genre,description,author_name,link_title,link_url,cover_image_url,like_count,comment_count,created_at,published_at")
     .eq("status", "published")
-    .or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%`)
+    .or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%,genre.ilike.%${keyword}%`)
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("id", { ascending: false })
     .limit(1000);
@@ -28,7 +28,7 @@ export async function searchPublishedPosts(query: string, offset = 0, limit = 30
     return { id, authorId, authorChannelId: profile?.channel_id ?? null, authorImageUrl: profile?.profile_image_url ?? null, title: String(row.title ?? ""), coverUrl: String(row.cover_image_url ?? ""), imageUrls: [], genre: String(row.genre ?? ""), authorName: String(row.author_name ?? "시화 작가"), description: String(row.description ?? ""), createdAt: String(row.created_at ?? ""), publishedAt: typeof row.published_at === "string" ? row.published_at : undefined, likeCount: Number(row.like_count ?? 0), commentCount: Number(row.comment_count ?? 0), viewCount: 0, link: row.link_title && row.link_url ? { title: String(row.link_title), url: String(row.link_url) } : undefined } satisfies PublishedPost;
   });
   const rankedPosts = posts.sort((a, b) => {
-    const rank = (post: PublishedPost) => post.title.toLocaleLowerCase() === keywordLower ? 0 : post.title.toLocaleLowerCase().includes(keywordLower) ? 1 : 2;
+    const rank = (post: PublishedPost) => post.title.toLocaleLowerCase() === keywordLower ? 0 : post.title.toLocaleLowerCase().includes(keywordLower) ? 1 : post.description?.toLocaleLowerCase().includes(keywordLower) ? 2 : 3;
     const rankDifference = rank(a) - rank(b);
     if (rankDifference !== 0) return rankDifference;
     const publishedDifference = new Date(b.publishedAt ?? b.createdAt ?? 0).getTime() - new Date(a.publishedAt ?? a.createdAt ?? 0).getTime();
