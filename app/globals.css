@@ -62,6 +62,8 @@ a { color: inherit; text-decoration: none; }
 }
 
 .header-tools { display: flex; align-items: center; gap: 2px; }
+.header-login-button { height: 34px; margin-right: 8px; padding: 0 9px; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.header-login-button:hover, .header-login-button:focus-visible { color: var(--primary); outline: none; }
 .header-login-floating { position: absolute; top: calc(env(safe-area-inset-top) + 15px); right: 64px; z-index: 26; height: 34px; padding: 0 9px; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
 .header-login-floating.header-login-channel { right: 112px; }
 .header-login-floating:hover, .header-login-floating:focus-visible { color: var(--primary); outline: none; }
