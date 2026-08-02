@@ -19,6 +19,10 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
   const [loadingResults, setLoadingResults] = useState(false);
   const [following, setFollowing] = useState<Record<string, boolean>>({});
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [resultPage, setResultPage] = useState(0);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const resultEndRef = useRef<HTMLDivElement>(null);
 
   const persistRecentSearches = (next: string[]) => {
     setRecentSearches(next);
@@ -32,7 +36,8 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
     window.sessionStorage.setItem("shorttoon-search-query", value);
     persistRecentSearches([value, ...recentSearches.filter((item) => item !== value)].slice(0, 30));
     setLoadingResults(true);
-    void Promise.all([searchPublishedPosts(value), searchAuthors(value)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false));
+    setResultPage(0); setHasMore(true);
+    void Promise.all([searchPublishedPosts(value, 0, 30), searchAuthors(value, 0, 30)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); setHasMore(posts.length === 30 || authors.length === 30); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false));
   };
 
   const openRecentSearch = (term: string) => {
@@ -40,7 +45,8 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
     setSubmittedQuery(term);
     window.sessionStorage.setItem("shorttoon-search-query", term);
     setLoadingResults(true);
-    void Promise.all([searchPublishedPosts(term), searchAuthors(term)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false));
+    setResultPage(0); setHasMore(true);
+    void Promise.all([searchPublishedPosts(term, 0, 30), searchAuthors(term, 0, 30)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); setHasMore(posts.length === 30 || authors.length === 30); }).catch((error) => console.error("검색 결과 조회 실패", error)).finally(() => setLoadingResults(false));
     inputRef.current?.focus();
   };
 
@@ -53,7 +59,7 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
       setQuery(restoredQuery);
       setSubmittedQuery(restoredQuery);
       setLoadingResults(true);
-      void Promise.all([searchPublishedPosts(restoredQuery), searchAuthors(restoredQuery)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); }).catch((error) => console.error("검색 결과 복원 실패", error)).finally(() => setLoadingResults(false));
+      setResultPage(0); setHasMore(true); void Promise.all([searchPublishedPosts(restoredQuery, 0, 30), searchAuthors(restoredQuery, 0, 30)]).then(([posts, authors]) => { setWorkResults(posts); setAuthorResults(authors); setHasMore(posts.length === 30 || authors.length === 30); }).catch((error) => console.error("검색 결과 복원 실패", error)).finally(() => setLoadingResults(false));
     }
     if (restoredCategory === "authors" || restoredCategory === "works") setCategory(restoredCategory);
     try {
@@ -63,6 +69,21 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
       // Ignore malformed device-local search history.
     }
   }, []);
+
+  useEffect(() => {
+    if (!submittedQuery || loadingResults || loadingMore || !hasMore) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      const nextPage = resultPage + 1;
+      setLoadingMore(true);
+      void Promise.all([searchPublishedPosts(submittedQuery, nextPage * 30, 30), searchAuthors(submittedQuery, nextPage * 30, 30)])
+        .then(([posts, authors]) => { setWorkResults((current) => [...current, ...posts.filter((post) => !current.some((item) => item.id === post.id))]); setAuthorResults((current) => [...current, ...authors.filter((author) => !current.some((item) => item.ownerId === author.ownerId))]); setHasMore(posts.length === 30 || authors.length === 30); setResultPage(nextPage); })
+        .catch((error) => console.error("검색 결과 추가 조회 실패", error))
+        .finally(() => setLoadingMore(false));
+    }, { rootMargin: "600px" });
+    if (resultEndRef.current) observer.observe(resultEndRef.current);
+    return () => observer.disconnect();
+  }, [submittedQuery, resultPage, loadingResults, loadingMore, hasMore]);
 
   return (
     <section className="search-page" aria-label="검색">
@@ -90,6 +111,8 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
           </article>)}
           {!authorResults.length && <div className="search-results-empty"><span>검색된 작가가 없습니다.</span></div>}
         </div>}
+        <div ref={resultEndRef} className="search-results-end" aria-hidden="true" />
+        {loadingMore && <div className="search-results-loading-more">더 불러오는 중...</div>}
       </section> : <section className="recent-searches" aria-label="최근 검색어">
         <div className="recent-searches-heading">
           <strong>최근 검색어</strong>

@@ -5,7 +5,7 @@ export type SearchAuthor = { ownerId: string; name: string; channelId: string; p
 
 const escapeSearchKeyword = (value: string) => value.replace(/[\\%_,()]/g, "").trim().slice(0, 80);
 
-export async function searchPublishedPosts(query: string): Promise<PublishedPost[]> {
+export async function searchPublishedPosts(query: string, offset = 0, limit = 30): Promise<PublishedPost[]> {
   const keyword = escapeSearchKeyword(query);
   if (!keyword) return [];
   const { data, error } = await supabase.from("posts")
@@ -14,7 +14,7 @@ export async function searchPublishedPosts(query: string): Promise<PublishedPost
     .or(`title.ilike.%${keyword}%,description.ilike.%${keyword}%`)
     .order("published_at", { ascending: false, nullsFirst: false })
     .order("id", { ascending: false })
-    .limit(20);
+    .range(offset, offset + limit - 1);
   if (error) throw error;
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const authorIds = Array.from(new Set(rows.map((row) => typeof row.author_id === "string" ? row.author_id : null).filter((id): id is string => Boolean(id))));
@@ -32,10 +32,10 @@ export async function searchPublishedPosts(query: string): Promise<PublishedPost
   return posts.map((post) => ({ ...post, imageUrls: imageMap.get(post.id) ?? [] }));
 }
 
-export async function searchAuthors(query: string): Promise<SearchAuthor[]> {
+export async function searchAuthors(query: string, offset = 0, limit = 30): Promise<SearchAuthor[]> {
   const keyword = escapeSearchKeyword(query);
   if (!keyword) return [];
-  const { data, error } = await supabase.from("channel_profiles").select("owner_id,name,channel_id,profile_image_url").or(`name.ilike.%${keyword}%,channel_id.ilike.%${keyword}%`).limit(20);
+  const { data, error } = await supabase.from("channel_profiles").select("owner_id,name,channel_id,profile_image_url").or(`name.ilike.%${keyword}%,channel_id.ilike.%${keyword}%`).range(offset, offset + limit - 1);
   if (error) throw error;
   const rows = (data ?? []) as Array<{ owner_id: string; name: string | null; channel_id: string | null; profile_image_url: string | null }>;
   const ids = rows.map((row) => row.owner_id).filter(Boolean);
