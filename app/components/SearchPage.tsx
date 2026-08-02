@@ -24,6 +24,14 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
   const [hasMore, setHasMore] = useState(true);
   const resultEndRef = useRef<HTMLDivElement>(null);
 
+  const handleBack = () => {
+    if (submittedQuery) {
+      setSubmittedQuery("");
+      return;
+    }
+    onBack();
+  };
+
   const switchCategory = (next: "works" | "authors") => {
     setCategory(next);
     window.sessionStorage.setItem("shorttoon-search-category", next);
@@ -93,7 +101,7 @@ export function SearchPage({ onBack, onOpenPost, onOpenAuthor }: SearchPageProps
   return (
     <section className="search-page" aria-label="검색">
       <div className="search-page-header">
-        <button type="button" className="search-page-back" onClick={onBack} aria-label="이전 페이지로 돌아가기">←</button>
+        <button type="button" className="search-page-back" onClick={handleBack} aria-label={submittedQuery ? "검색 화면으로 돌아가기" : "이전 페이지로 돌아가기"}>←</button>
         <div className="search-page-input-wrap">
           <input ref={inputRef} type="search" value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") submitSearch(); }} placeholder="작품 또는 작가 검색" aria-label="검색어 입력" />
           {query && <button type="button" className="search-page-clear" onClick={() => setQuery("")} aria-label="검색어 지우기" />}
