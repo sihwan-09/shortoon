@@ -6,6 +6,7 @@ import { createPostComment, loadPostComments, toggleCommentLike } from "../../li
 import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 import { deletePostFromSupabase, loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
 import { loadPostReports, reportPost, type PostReport } from "../../lib/reports";
+import { loadPostViewCounts, recordPostView } from "../../lib/views";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
 type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
@@ -42,6 +43,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const feedRequestRef = useRef(false);
   const [likedComics, setLikedComics] = useState<Record<number, boolean>>({});
   const [likeCountOverrides, setLikeCountOverrides] = useState<Record<number, number>>({});
+  const [viewCountOverrides, setViewCountOverrides] = useState<Record<number, number>>({});
   const [likedPostIds, setLikedPostIds] = useState<string[]>([]);
   const [savedComics, setSavedComics] = useState<Record<number, boolean>>({});
   const [metaHidden, setMetaHidden] = useState<Record<number, boolean>>({});
@@ -66,6 +68,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const horizontalGestureStartIndex = useRef(0);
   const homePositionedRef = useRef(false);
   const restoredCommentKey = useRef<string | null>(null);
+  const viewTimers = useRef<Map<string, number>>(new Map());
 
   useEffect(() => {
     const sync = () => setStoredProfileImageUrl(window.localStorage.getItem("shorttoon-profile-image"));
@@ -204,6 +207,44 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
   const selectedPostSetKey = selectedPosts?.map((post) => post.id ?? post.title).join("|") ?? "";
   const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, authorChannelId: post.authorChannelId, authorImageUrl: post.authorImageUrl, genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
+
+  useEffect(() => {
+    const postIds = visibleComics.map((comic) => comic.commentPostId).filter((id): id is string => Boolean(id));
+    if (!postIds.length) return;
+    loadPostViewCounts(postIds).then((counts) => {
+      setViewCountOverrides((current) => ({ ...current, ...Object.fromEntries(visibleComics.map((comic) => [comic.id, counts[comic.commentPostId ?? ""] ?? comic.viewCount ?? 0])) }));
+    }).catch((error) => console.error("게시물 조회수 불러오기 실패", error));
+  }, [selectedPostSetKey, comics.length]);
+
+  useEffect(() => {
+    viewTimers.current.forEach((timer) => window.clearTimeout(timer));
+    viewTimers.current.clear();
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const element = entry.target as HTMLElement;
+        const postId = element.dataset.postId;
+        if (!postId) return;
+        const existing = viewTimers.current.get(postId);
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+          if (existing) return;
+          const timer = window.setTimeout(() => {
+            void recordPostView(postId).then((counted) => {
+              if (counted) {
+                const comic = visibleComics.find((item) => item.commentPostId === postId);
+                if (comic) setViewCountOverrides((current) => ({ ...current, [comic.id]: (current[comic.id] ?? comic.viewCount ?? 0) + 1 }));
+              }
+            }).catch((error) => console.error("게시물 조회수 기록 실패", error)).finally(() => viewTimers.current.delete(postId));
+          }, 3000);
+          viewTimers.current.set(postId, timer);
+        } else if (existing) {
+          window.clearTimeout(existing);
+          viewTimers.current.delete(postId);
+        }
+      });
+    }, { threshold: [0.6] });
+    feedRef.current?.querySelectorAll<HTMLElement>(".comic-column[data-post-id]").forEach((element) => observer.observe(element));
+    return () => { observer.disconnect(); viewTimers.current.forEach((timer) => window.clearTimeout(timer)); viewTimers.current.clear(); };
+  }, [selectedPostSetKey, comics.length]);
 
   useEffect(() => {
     const pendingRestore = restoreComment ?? (() => {
@@ -374,7 +415,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         if (isHomeFeed && feedHasMore && !feedLoadingMore && nextIndex >= visibleComics.length - 3) void loadFeedPage(feedPage + 1, true);
       }}>
         {visibleComics.map((comic, comicIndex) => (
-          <article className={`comic-column ${comic.commentPostId ? "uploaded-comic" : ""} ${isHomeFeed ? "home-comic" : ""}`} key={comic.id} aria-label={comic.title}>
+          <article className={`comic-column ${comic.commentPostId ? "uploaded-comic" : ""} ${isHomeFeed ? "home-comic" : ""}`} data-post-id={comic.commentPostId} key={comic.id} aria-label={comic.title}>
             <button className="more-button post-kebab" type="button" aria-label="게시물 메뉴" onClick={() => void openPostMenu(comic)}>⋮</button>
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
@@ -461,7 +502,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             <h2>{infoComic.title}</h2>
             <div className="info-stats">
               <div><strong>{infoComic.likeCount ?? 0}</strong><span>좋아요</span></div>
-              <div><strong>{infoComic.viewCount ?? 0}</strong><span>조회수</span></div>
+              <div><strong>{viewCountOverrides[infoComic.id] ?? infoComic.viewCount ?? 0}</strong><span>조회수</span></div>
               <div><strong>{infoComic.createdAt ? new Date(infoComic.createdAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" }) : "-"}</strong><span>{infoComic.createdAt ? new Date(infoComic.createdAt).getFullYear() + "년" : "게시일"}</span></div>
             </div>
             <p className="info-description">{infoComic.description?.trim() || "설명이 없습니다."}</p>
