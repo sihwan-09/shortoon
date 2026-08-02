@@ -48,6 +48,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
   const introHasOverflow = viewProfile.intro.length > firstIntroLine.length;
   const displayedIntro = introHasOverflow ? `${firstIntroLine.trimEnd()}…` : firstIntroLine;
 
+  const requireLogin = (action: () => void) => { void supabase.auth.getSession().then(({ data }) => { if (data.session) action(); else window.dispatchEvent(new Event("shorttoon-login-required")); }).catch(() => window.dispatchEvent(new Event("shorttoon-login-required"))); };
   return (
     <section className="channel-page" aria-label="My channel">
       <button className="channel-back" type="button" onClick={() => window.dispatchEvent(new Event("shorttoon-channel-back"))} aria-label="Back to my page">←</button>
@@ -62,7 +63,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
       <button className="channel-intro" type="button" onClick={onOpenIntro} aria-label="소개 전체 보기">
         <p title={viewProfile.intro}>{displayedIntro}</p>
       </button>
-      <div className="channel-actions">
+      <div className="channel-actions" onClickCapture={(event) => { if (!viewIsOwner) return; if (document.querySelector(".header-login-floating")) { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new Event("shorttoon-login-required")); } }}>
         {viewIsOwner ? <><button className={activeAction === "analytics" ? "is-active" : ""} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button><button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button></> : <button className={`channel-follow-button ${viewFollowing ? "is-following" : ""}`} type="button" onClick={async () => { const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId) return; const next = !viewFollowing; setViewFollowing(next); try { await setFollowedChannel(ownerId, next); setFollowerCount((count) => Math.max(0, count + (next ? 1 : -1))); window.dispatchEvent(new Event("shorttoon-followed-channels")); } catch (error) { console.error("팔로우 변경 실패", error); setViewFollowing(!next); } }} aria-pressed={viewFollowing}>{viewFollowing ? "팔로잉" : "팔로우"}</button>}
       </div>
       <div className="channel-tabs" role="tablist" aria-label="Channel content">

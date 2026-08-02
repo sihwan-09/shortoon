@@ -15,6 +15,7 @@ import { loadUserLikedPostIds } from "../lib/likes";
 import { loadChannelProfile, loadChannelProfileByOwnerId, saveChannelProfile, uploadChannelProfileImage } from "../lib/channel";
 import { AuthPage } from "./components/AuthPage";
 import { SearchPage } from "./components/SearchPage";
+import { LoginPromptModal } from "./components/LoginPromptModal";
 
 const DEFAULT_CHANNEL_PROFILE: ChannelProfile = { name: "채널명", channelId: "채널 아이디", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null };
 
@@ -23,6 +24,7 @@ export default function Home() {
   const [authReturnTab, setAuthReturnTab] = useState<"home" | "my" | "channel">("home");
   const [searchReturnTab, setSearchReturnTab] = useState<"home" | "my" | "channel" | "post" | "liked">("home");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
   const [channelLinks, setChannelLinks] = useState<{ title: string; url: string }[]>([]);
@@ -87,6 +89,12 @@ export default function Home() {
       setViewedChannelOwnerId(ownerId); setViewedChannelProfile(DEFAULT_CHANNEL_PROFILE); setViewedChannelPosts([]); setActiveTab("channel");
     }
   };
+
+  useEffect(() => {
+    const showLoginPrompt = () => { if (!isAuthenticated) setLoginPromptOpen(true); };
+    window.addEventListener("shorttoon-login-required", showLoginPrompt);
+    return () => window.removeEventListener("shorttoon-login-required", showLoginPrompt);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     try {
@@ -345,6 +353,7 @@ export default function Home() {
   useEffect(() => {
     const openSearch = (event: MouseEvent) => {
       if (!(event.target instanceof Element) || !event.target.closest(".search-button")) return;
+      if (!isAuthenticated) { setLoginPromptOpen(true); return; }
       window.sessionStorage.removeItem("shorttoon-search-query");
       window.sessionStorage.removeItem("shorttoon-search-category");
       const returnTab = activeTab === "my" || activeTab === "channel" || activeTab === "post" || activeTab === "liked" ? activeTab : "home";
@@ -363,13 +372,13 @@ export default function Home() {
     document.addEventListener("click", openSearch);
     window.addEventListener("shorttoon-search-genre", openGenreSearch);
     return () => { document.removeEventListener("click", openSearch); window.removeEventListener("shorttoon-search-genre", openGenreSearch); };
-  }, [activeTab]);
+  }, [activeTab, isAuthenticated]);
 
   return (
     <main className={`app-shell ${activeTab === "login" || activeTab === "signup" ? "auth-mode" : ""} ${activeTab === "search" ? "search-mode" : ""}`}>
       {!isAuthenticated && (activeTab === "home" || activeTab === "my" || activeTab === "channel" || activeTab === "post") && <button type="button" className={`header-login-floating ${activeTab === "channel" ? "header-login-channel" : ""}`} onClick={openLogin}>로그인</button>}
       <header className="app-header" aria-label="Shorttoon header">
-        {activeTab === "upload" ? <><button className="edit-header-back upload-close" type="button" onClick={() => uploadStep > 1 ? setUploadStep((uploadStep - 1) as 1 | 2 | 3) : leaveUpload()} aria-label={uploadStep > 1 ? "이전 단계" : "업로드 닫기"}>{uploadStep > 1 ? "←" : "×"}</button><strong className="edit-header-title">숏툰 업로드</strong><span /></> : activeTab === "upload-link" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("upload")} aria-label="Back">←</button><strong className="edit-header-title">{uploadLink ? "링크 수정" : "링크 추가"}</strong><span /></> : activeTab === "channel-intro" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("channel")} aria-label="채널로 돌아가기">←</button><strong className="edit-header-title">{channelProfile.name}</strong><span /></> : activeTab === "edit" || activeTab === "link-edit" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab(activeTab === "link-edit" ? "edit" : "channel")} aria-label="Back">←</button><strong className="edit-header-title">{activeTab === "link-edit" ? (editingLink ? "링크 수정" : "링크 추가") : "채널 수정"}</strong><span /></> : <><a className="brand" href="/" aria-label="Shorttoon home"><span className="brand-logo" role="img" aria-label="Shorttoon" /></a><div className="header-tools"><button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>{activeTab === "channel" && <button className="more-button" type="button" aria-label="More channel options">⋮</button>}</div></>}
+        {activeTab === "upload" ? <><button className="edit-header-back upload-close" type="button" onClick={() => uploadStep > 1 ? setUploadStep((uploadStep - 1) as 1 | 2 | 3) : leaveUpload()} aria-label={uploadStep > 1 ? "이전 단계" : "업로드 닫기"}>{uploadStep > 1 ? "←" : "×"}</button><strong className="edit-header-title">숏툰 업로드</strong><span /></> : activeTab === "upload-link" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("upload")} aria-label="Back">←</button><strong className="edit-header-title">{uploadLink ? "링크 수정" : "링크 추가"}</strong><span /></> : activeTab === "channel-intro" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("channel")} aria-label="채널로 돌아가기">←</button><strong className="edit-header-title">{channelProfile.name}</strong><span /></> : activeTab === "edit" || activeTab === "link-edit" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab(activeTab === "link-edit" ? "edit" : "channel")} aria-label="Back">←</button><strong className="edit-header-title">{activeTab === "link-edit" ? (editingLink ? "링크 수정" : "링크 추가") : "채널 수정"}</strong><span /></> : <><a className="brand" href="/" aria-label="Shorttoon home"><span className="brand-logo" role="img" aria-label="Shorttoon" /></a><div className="header-tools"><button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>{activeTab === "channel" && <button className="more-button" type="button" aria-label="More channel options" onClick={() => { if (!isAuthenticated) setLoginPromptOpen(true); }}>⋮</button>}</div></>}
       </header>
       {activeTab === "search" && <SearchPage onBack={() => setActiveTab(searchReturnTab)} onOpenPost={(post, posts, index) => { setSearchPosts(posts); setPostOrigin("search"); setChannelTargetIndex(index); setSelectedPost(post); setActiveTab("post"); }} onOpenAuthor={(authorId) => { void openChannelForComic({ authorId }); }} />}
       {activeTab !== "search" && <>
@@ -378,10 +387,11 @@ export default function Home() {
       </>}
       <nav className="bottom-nav" aria-label="Main navigation">
         <button className={`bottom-nav-item ${activeTab === "home" || (activeTab === "channel" && Boolean(viewedChannelOwnerId)) ? "is-active" : ""}`} type="button" onClick={() => (activeTab === "upload" || activeTab === "upload-link") ? exitUploadTo("home") : setActiveTab("home")} aria-current={activeTab === "home" || (activeTab === "channel" && Boolean(viewedChannelOwnerId)) ? "page" : undefined} aria-label="Home"><span className="home-icon" aria-hidden="true" /></button>
-        <button className={`bottom-nav-item upload-nav-item ${activeTab === "upload" ? "is-active" : ""}`} type="button" onClick={() => { if (activeTab === "channel") setChannelScrollTop(document.querySelector<HTMLElement>(".channel-page")?.scrollTop ?? 0); setUploadOrigin(activeTab === "channel" ? "channel" : "home"); setUploadStep(1); setActiveTab("upload"); }} aria-label="Upload shorttoon"><span className="plus-icon" aria-hidden="true">+</span></button>
+        <button className={`bottom-nav-item upload-nav-item ${activeTab === "upload" ? "is-active" : ""}`} type="button" onClick={() => { if (!isAuthenticated) { setLoginPromptOpen(true); return; } if (activeTab === "channel") setChannelScrollTop(document.querySelector<HTMLElement>(".channel-page")?.scrollTop ?? 0); setUploadOrigin(activeTab === "channel" ? "channel" : "home"); setUploadStep(1); setActiveTab("upload"); }} aria-label="Upload shorttoon"><span className="plus-icon" aria-hidden="true">+</span></button>
         <button className={`bottom-nav-item ${activeTab === "my" || (activeTab === "channel" && !viewedChannelOwnerId) || activeTab === "channel-intro" || activeTab === "edit" || activeTab === "link-edit" || (activeTab === "post" && postOrigin === "channel" && !viewedChannelOwnerId) ? "is-active" : ""}`} type="button" onClick={() => (activeTab === "upload" || activeTab === "upload-link") ? exitUploadTo("my") : setActiveTab("my")} aria-current={activeTab === "my" || (activeTab === "channel" && !viewedChannelOwnerId) || activeTab === "channel-intro" || activeTab === "edit" || activeTab === "link-edit" || (activeTab === "post" && postOrigin === "channel" && !viewedChannelOwnerId) ? "page" : undefined} aria-label="My page"><span className="my-icon" aria-hidden="true">MY</span></button>
       </nav>
       {(activeTab === "login" || activeTab === "signup") && <AuthPage mode={activeTab} onBack={() => setActiveTab(activeTab === "signup" ? "login" : authReturnTab)} onChangeMode={(mode) => setActiveTab(mode)} onEmailLogin={signInWithEmail} onEmailSignup={signUpWithEmail} onOAuth={signInWithProvider} />}
+      {loginPromptOpen && <LoginPromptModal onClose={() => setLoginPromptOpen(false)} onLogin={() => { setLoginPromptOpen(false); openLogin(); }} />}
     </main>
   );
 }
