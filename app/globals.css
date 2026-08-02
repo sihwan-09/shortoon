@@ -174,6 +174,7 @@ a { color: inherit; text-decoration: none; }
 .login-prompt-close { position: absolute; top: 8px; right: 10px; padding: 4px 8px; color: var(--muted); background: transparent; border: 0; font-size: 26px; cursor: pointer; }
 .login-prompt-login { width: 100%; padding: 13px; color: #111; background: var(--primary); border: 0; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer; }
 .guest-mode .logout-button { display: none; }
+.onboarding-mode > .app-header, .onboarding-mode > .bottom-nav { display: none; }
 .search-result-tile span:not(.thumbnail-view-count) { position: absolute; right: 6px; bottom: 6px; left: 6px; overflow: hidden; color: #fff; font-size: 11px; font-weight: 800; text-align: left; text-overflow: ellipsis; text-shadow: 0 1px 3px #000; white-space: nowrap; }
 .search-author-results { display: grid; gap: 12px; padding: 8px 20px 24px; }
 .search-author-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 13px; align-items: center; padding: 14px; background: var(--card); border: 1px solid var(--divider); border-radius: 12px; cursor: pointer; }

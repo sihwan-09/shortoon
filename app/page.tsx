@@ -25,6 +25,7 @@ export default function Home() {
   const [searchReturnTab, setSearchReturnTab] = useState<"home" | "my" | "channel" | "post" | "liked">("home");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [onboardingEdit, setOnboardingEdit] = useState(false);
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
   const [channelLinks, setChannelLinks] = useState<{ title: string; url: string }[]>([]);
@@ -95,6 +96,18 @@ export default function Home() {
     window.addEventListener("shorttoon-login-required", showLoginPrompt);
     return () => window.removeEventListener("shorttoon-login-required", showLoginPrompt);
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const completeOnboarding = () => {
+      const userId = currentUserIdRef.current;
+      if (!onboardingEdit || !userId) return;
+      window.localStorage.setItem(`shorttoon-onboarding-complete:${userId}`, "1");
+      setOnboardingEdit(false);
+      setActiveTab("home");
+    };
+    window.addEventListener("shorttoon-channel-saved", completeOnboarding);
+    return () => window.removeEventListener("shorttoon-channel-saved", completeOnboarding);
+  }, [onboardingEdit]);
 
   useEffect(() => {
     try {
@@ -169,6 +182,7 @@ export default function Home() {
     window.sessionStorage.removeItem("shorttoon-viewed-channel-owner");
     setChannelProfileLoaded(true);
     setIsAuthenticated(false);
+    setOnboardingEdit(false);
     setActiveTab("home");
   };
   const signInWithEmail = async (email: string, password: string): Promise<string | null> => {
@@ -260,12 +274,18 @@ export default function Home() {
       currentUserIdRef.current = data.session?.user.id ?? null;
       setCurrentUserId(data.session?.user.id ?? null);
       setIsAuthenticated(Boolean(data.session));
+      const initialKey = data.session?.user.id ? `shorttoon-onboarding-complete:${data.session.user.id}` : null;
+      setOnboardingEdit(Boolean(initialKey && !window.localStorage.getItem(initialKey)));
+      if (initialKey && !window.localStorage.getItem(initialKey)) setActiveTab("edit");
       void syncChannelProfile(data.session?.user.id ?? null);
     });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
       currentUserIdRef.current = session?.user.id ?? null;
       setCurrentUserId(session?.user.id ?? null);
       setIsAuthenticated(Boolean(session));
+      const onboardingKey = session?.user.id ? `shorttoon-onboarding-complete:${session.user.id}` : null;
+      setOnboardingEdit(Boolean(onboardingKey && !window.localStorage.getItem(onboardingKey)));
+      if (onboardingKey && !window.localStorage.getItem(onboardingKey)) setActiveTab("edit");
       void syncChannelProfile(session?.user.id ?? null);
     });
     return () => authListener.subscription.unsubscribe();
@@ -375,7 +395,7 @@ export default function Home() {
   }, [activeTab, isAuthenticated]);
 
   return (
-    <main className={`app-shell ${!isAuthenticated ? "guest-mode" : ""} ${activeTab === "login" || activeTab === "signup" ? "auth-mode" : ""} ${activeTab === "search" ? "search-mode" : ""}`}>
+    <main className={`app-shell ${!isAuthenticated ? "guest-mode" : ""} ${onboardingEdit ? "onboarding-mode" : ""} ${activeTab === "login" || activeTab === "signup" ? "auth-mode" : ""} ${activeTab === "search" ? "search-mode" : ""}`}>
       <header className="app-header" aria-label="Shorttoon header">
         {activeTab === "upload" ? <><button className="edit-header-back upload-close" type="button" onClick={() => uploadStep > 1 ? setUploadStep((uploadStep - 1) as 1 | 2 | 3) : leaveUpload()} aria-label={uploadStep > 1 ? "이전 단계" : "업로드 닫기"}>{uploadStep > 1 ? "←" : "×"}</button><strong className="edit-header-title">숏툰 업로드</strong><span /></> : activeTab === "upload-link" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("upload")} aria-label="Back">←</button><strong className="edit-header-title">{uploadLink ? "링크 수정" : "링크 추가"}</strong><span /></> : activeTab === "channel-intro" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab("channel")} aria-label="채널로 돌아가기">←</button><strong className="edit-header-title">{channelProfile.name}</strong><span /></> : activeTab === "edit" || activeTab === "link-edit" ? <><button className="edit-header-back" type="button" onClick={() => setActiveTab(activeTab === "link-edit" ? "edit" : "channel")} aria-label="Back">←</button><strong className="edit-header-title">{activeTab === "link-edit" ? (editingLink ? "링크 수정" : "링크 추가") : "채널 수정"}</strong><span /></> : <><a className="brand" href="/" aria-label="Shorttoon home"><span className="brand-logo" role="img" aria-label="Shorttoon" /></a><div className="header-tools">{!isAuthenticated && (activeTab === "home" || activeTab === "my" || activeTab === "channel" || activeTab === "post") && <button type="button" className="header-login-button" onClick={openLogin}>로그인</button>}<button className="search-button" type="button" aria-label="Search shorttoons"><span aria-hidden="true" /></button>{activeTab === "channel" && <button className="more-button" type="button" aria-label="More channel options" onClick={() => { if (!isAuthenticated) setLoginPromptOpen(true); }}>⋮</button>}</div></>}
       </header>
