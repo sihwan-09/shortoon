@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { loadChannelProfileByOwnerId } from "../../lib/channel";
 import { loadPostsFromSupabase } from "../../lib/posts";
 import { loadFollowedChannelIds, loadFollowerCount, setFollowedChannel } from "../../lib/follows";
@@ -19,6 +19,19 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
   const [viewFollowing, setViewFollowing] = useState(isFollowing);
   const [storedProfileImageUrl, setStoredProfileImageUrl] = useState(profile.profileImageUrl ?? null);
   const [followerCount, setFollowerCount] = useState(0);
+  const [visiblePostCount, setVisiblePostCount] = useState(30);
+  const endRef = useRef<HTMLDivElement>(null);
+  useEffect(() => setVisiblePostCount(30), [viewPosts]);
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) setVisiblePostCount((count) => Math.min(viewPosts.length, count + 30)); }, { rootMargin: "600px" });
+    const grid = document.querySelector<HTMLElement>(".channel-page .channel-thumbnail-grid");
+    const target = grid?.querySelector<HTMLElement>(`[data-post-index="${Math.max(0, Math.min(viewPosts.length - 1, visiblePostCount - 1))}"]`);
+    if (target) observer.observe(target);
+    return () => observer.disconnect();
+  }, [viewPosts.length, visiblePostCount]);
+  useEffect(() => {
+    document.querySelectorAll<HTMLElement>(".channel-page .channel-thumbnail-grid .channel-thumbnail-tile").forEach((tile, index) => { tile.style.display = index < visiblePostCount ? "" : "none"; });
+  }, [viewPosts, visiblePostCount]);
   useEffect(() => { let cancelled = false; const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId || viewIsOwner) { setViewFollowing(false); return; } void loadFollowedChannelIds().then((ids) => { if (!cancelled) setViewFollowing(ids.includes(ownerId)); }).catch((error) => console.error("팔로우 상태 조회 실패", error)); return () => { cancelled = true; }; }, [channelOwnerId, viewIsOwner]);
   useEffect(() => { let cancelled = false; const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); void loadFollowerCount(ownerId).then((count) => { if (!cancelled) setFollowerCount(count); }).catch((error) => console.error("팔로워 수 조회 실패", error)); return () => { cancelled = true; }; }, [channelOwnerId, isOwner, profile.channelId]);
   useEffect(() => {
