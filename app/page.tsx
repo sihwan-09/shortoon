@@ -345,6 +345,8 @@ export default function Home() {
   useEffect(() => {
     const openSearch = (event: MouseEvent) => {
       if (!(event.target instanceof Element) || !event.target.closest(".search-button")) return;
+      window.sessionStorage.removeItem("shorttoon-search-query");
+      window.sessionStorage.removeItem("shorttoon-search-category");
       const returnTab = activeTab === "my" || activeTab === "channel" || activeTab === "post" || activeTab === "liked" ? activeTab : "home";
       setSearchReturnTab(returnTab);
       setActiveTab("search");
