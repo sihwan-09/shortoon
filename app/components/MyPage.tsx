@@ -63,13 +63,19 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     void sync();
     window.addEventListener("shorttoon-liked-posts", sync);
     const bugReportButton = document.querySelector<HTMLButtonElement>(".my-links > button:first-child");
-    if (bugReportButton) {
-      const bugReportUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdfbnLEV-MuGF6qEoxbD90kQLmbEhSbfPcKI-3FaZ3mf72wqg/viewform?usp=dialog";
-      const openBugReport = () => { window.location.href = bugReportUrl; };
-      bugReportButton.addEventListener("click", openBugReport);
-      return () => { cancelled = true; window.removeEventListener("shorttoon-liked-posts", sync); bugReportButton.removeEventListener("click", openBugReport); };
-    }
-    return () => { cancelled = true; window.removeEventListener("shorttoon-liked-posts", sync); };
+    const ideaButton = document.querySelector<HTMLButtonElement>(".my-links > button:nth-child(2)");
+    const bugReportUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdfbnLEV-MuGF6qEoxbD90kQLmbEhSbfPcKI-3FaZ3mf72wqg/viewform?usp=dialog";
+    const ideaUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdUttrfaJqL3ThshpKTl6NU-Iw4hraVvYGeLCJE9mambn-6bw/viewform?usp=publish-editor";
+    const openBugReport = () => { window.location.href = bugReportUrl; };
+    const openIdeaForm = () => { window.location.href = ideaUrl; };
+    bugReportButton?.addEventListener("click", openBugReport);
+    ideaButton?.addEventListener("click", openIdeaForm);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("shorttoon-liked-posts", sync);
+      bugReportButton?.removeEventListener("click", openBugReport);
+      ideaButton?.removeEventListener("click", openIdeaForm);
+    };
   }, []);
   return <section className="my-page" aria-label="MY 페이지">
     <button className="my-profile" type="button" onClick={() => { window.sessionStorage.removeItem("shorttoon-viewed-channel-owner"); window.sessionStorage.setItem("shorttoon-open-channel-top", "1"); onOpenChannel(); }} aria-label="내 채널 보기">
