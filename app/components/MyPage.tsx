@@ -62,6 +62,13 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     };
     void sync();
     window.addEventListener("shorttoon-liked-posts", sync);
+    const bugReportButton = document.querySelector<HTMLButtonElement>(".my-links > button:first-child");
+    if (bugReportButton) {
+      const bugReportUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdfbnLEV-MuGF6qEoxbD90kQLmbEhSbfPcKI-3FaZ3mf72wqg/viewform?usp=dialog";
+      const openBugReport = () => { window.location.href = bugReportUrl; };
+      bugReportButton.addEventListener("click", openBugReport);
+      return () => { cancelled = true; window.removeEventListener("shorttoon-liked-posts", sync); bugReportButton.removeEventListener("click", openBugReport); };
+    }
     return () => { cancelled = true; window.removeEventListener("shorttoon-liked-posts", sync); };
   }, []);
   return <section className="my-page" aria-label="MY 페이지">
