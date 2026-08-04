@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { isChannelIdTaken, uploadChannelProfileImage } from "../../lib/channel";
 
 export type ChannelLink = { title: string; url: string };
-export type ChannelProfile = { name: string; channelId: string; intro: string; links: ChannelLink[]; profileImageUrl?: string | null };
+export type ChannelProfile = { name: string; channelId: string; intro: string; links: ChannelLink[]; profileImageUrl?: string | null; joinedAt?: string | null };
 type Props = { onBack: () => void; onAddLink: () => void; onEditLink: (index: number) => void; links: ChannelLink[]; profile: ChannelProfile; onSave: (profile: ChannelProfile) => void | Promise<void>; onDraftChange?: (profile: ChannelProfile) => void };
 const limitIntroLines = (value: string) => value.split("\n").flatMap((line) => line.match(/.{1,52}/gu) ?? [""]).join("\n").slice(0, 150);
 function channelIdError(value: string) { if (value.length < 3 || value.length > 30) return "채널 아이디는 3자 이상 30자 이하로 입력해주세요."; if (!/^[\p{L}\p{N}._]+$/u.test(value)) return "채널 아이디에는 문자, 숫자, 밑줄( _ ), 및 마침표( . )만 사용할 수 있습니다."; if (value.startsWith(".")) return "채널 아이디는 마침표( . )로 시작할 수 없습니다."; if (value.endsWith(".")) return "채널 아이디의 끝에는 마침표( . )를 사용할 수 없습니다."; if (value.includes("..")) return "마침표( . )를 한 줄에 한 개 이상 포함할 수 없습니다."; return ""; }

@@ -9,12 +9,14 @@ create table if not exists public.channel_profiles (
   links jsonb not null default '[]'::jsonb,
   link_title text,
   link_url text,
+  joined_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
 alter table public.channel_profiles add column if not exists link_title text;
 alter table public.channel_profiles add column if not exists link_url text;
 alter table public.channel_profiles add column if not exists links jsonb not null default '[]'::jsonb;
+alter table public.channel_profiles add column if not exists joined_at timestamptz;
 create unique index if not exists channel_profiles_owner_id_idx on public.channel_profiles(owner_id) where owner_id is not null;
 
 create table if not exists public.channel_follows (

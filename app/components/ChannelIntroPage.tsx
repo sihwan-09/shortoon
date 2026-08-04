@@ -15,13 +15,16 @@ type ChannelIntroPageProps = {
   onBack: () => void;
   channelOwnerId?: string | null;
   postIds?: string[];
+  joinedAt?: string | null;
 };
 
-export function ChannelIntroPage({ intro, links, postCount, onBack: _onBack, channelOwnerId, postIds = [] }: ChannelIntroPageProps) {
+export function ChannelIntroPage({ intro, links, postCount, onBack: _onBack, channelOwnerId, postIds = [], joinedAt }: ChannelIntroPageProps) {
   const [viewIntro, setViewIntro] = useState(intro);
   const [viewLinks, setViewLinks] = useState(links);
   const [followerCount, setFollowerCount] = useState(0);
   const [totalViewCount, setTotalViewCount] = useState(0);
+  const [viewJoinedAt, setViewJoinedAt] = useState<string | null>(joinedAt ?? null);
+  const joinedDateLabel = (viewJoinedAt ?? joinedAt) ? new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric" }).format(new Date((viewJoinedAt ?? joinedAt) as string)) : "-";
 
   useEffect(() => {
     let cancelled = false;
@@ -55,10 +58,14 @@ export function ChannelIntroPage({ intro, links, postCount, onBack: _onBack, cha
 
   useEffect(() => {
     const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner");
-    if (!ownerId) { setViewIntro(intro); setViewLinks(links); return; }
+    if (!ownerId) {
+      setViewIntro(intro); setViewLinks(links); setViewJoinedAt(joinedAt ?? null);
+      void supabase.auth.getSession().then(({ data }) => data.session?.user.id ? loadChannelProfileByOwnerId(data.session.user.id) : null).then((profile) => { if (profile) setViewJoinedAt(profile.joinedAt ?? null); }).catch(() => undefined);
+      return;
+    }
     if (ownerId === "anonymous-external") { setViewIntro(""); setViewLinks([]); return; }
     void loadChannelProfileByOwnerId(ownerId).then((profile) => {
-      if (profile) { setViewIntro(profile.intro); setViewLinks(profile.links); }
+      if (profile) { setViewIntro(profile.intro); setViewLinks(profile.links); setViewJoinedAt(profile.joinedAt ?? null); }
     }).catch((error) => console.error("채널 소개 불러오기 실패", error));
   }, [intro, links]);
 
@@ -71,7 +78,7 @@ export function ChannelIntroPage({ intro, links, postCount, onBack: _onBack, cha
       <h2 className="channel-intro-subtitle">정보</h2>
       <div className="channel-intro-info" aria-label="채널 정보">
         {viewLinks.slice(0, 5).map((link, index) => <div className="channel-intro-info-row" key={`info-${link.url}-${index}`}><span className="channel-info-icon link-info-icon" aria-hidden="true">⌁</span><span>{link.url}</span></div>)}
-        <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">ⓘ</span><span>가입일: -</span></div>
+        <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">ⓘ</span><span>가입일: {joinedDateLabel}</span></div>
         <div className="channel-intro-info-row"><span className="channel-info-icon follower-info-icon" aria-hidden="true"><span className="follower-person" /></span><span>팔로워 {followerCount}명</span></div>
         <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">▣</span><span>작품 {postCount}개</span></div>
         <div className="channel-intro-info-row"><span className="channel-info-icon" aria-hidden="true">⌁</span><span>조회수 {totalViewCount}회</span></div>

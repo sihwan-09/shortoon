@@ -20,15 +20,15 @@ export async function isChannelIdTaken(channelId: string): Promise<boolean> {
 
 export async function loadChannelProfileByOwnerId(ownerId: string | null): Promise<ChannelProfile | null> {
   if (!ownerId) return null;
-  let { data, error } = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url,links,profile_image_url").eq("owner_id", ownerId).maybeSingle();
+  let { data, error } = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url,links,profile_image_url,joined_at").eq("owner_id", ownerId).maybeSingle();
   if (error) {
-    const fallback = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url").eq("owner_id", ownerId).maybeSingle();
+    const fallback = await supabase.from("channel_profiles").select("name,channel_id,intro,link_title,link_url,profile_image_url").eq("owner_id", ownerId).maybeSingle();
     data = fallback.data;
     error = fallback.error;
   }
   if (error) throw error;
   const links = Array.isArray(data?.links) ? data.links.filter((link: unknown): link is ChannelLink => Boolean(link && typeof link === "object" && "title" in link && "url" in link)).slice(0, 5) : data?.link_title && data?.link_url ? [{ title: data.link_title, url: data.link_url }] : [];
-  return data ? { name: data.name, channelId: data.channel_id, intro: data.intro, links, profileImageUrl: data.profile_image_url ?? null } : null;
+  return data ? { name: data.name, channelId: data.channel_id, intro: data.intro, links, profileImageUrl: data.profile_image_url ?? null, joinedAt: data.joined_at ?? null } : null;
 }
 
 export type FollowedChannelProfile = {
@@ -57,15 +57,17 @@ export async function loadChannelProfile(): Promise<ChannelProfile | null> {
 export async function saveChannelProfile(profile: ChannelProfile, links: ChannelLink[]): Promise<ChannelProfile> {
   const ownerId = await getCurrentUserId();
   if (!ownerId) return profile;
+  const { data: userData } = await supabase.auth.getUser();
+  const joinedAt = profile.joinedAt ?? userData.user?.created_at ?? new Date().toISOString();
   const nextLinks = links.slice(0, 5);
-  let { data, error } = await supabase.from("channel_profiles").upsert({ id: ownerId, owner_id: ownerId, name: profile.name, channel_id: profile.channelId, intro: profile.intro, links: nextLinks, profile_image_url: profile.profileImageUrl ?? null, link_title: nextLinks[0]?.title ?? null, link_url: nextLinks[0]?.url ?? null, updated_at: new Date().toISOString() }).select("name,channel_id,intro,link_title,link_url,links,profile_image_url").single();
+  let { data, error } = await supabase.from("channel_profiles").upsert({ id: ownerId, owner_id: ownerId, name: profile.name, channel_id: profile.channelId, intro: profile.intro, links: nextLinks, profile_image_url: profile.profileImageUrl ?? null, joined_at: joinedAt, link_title: nextLinks[0]?.title ?? null, link_url: nextLinks[0]?.url ?? null, updated_at: new Date().toISOString() }).select("name,channel_id,intro,link_title,link_url,links,profile_image_url,joined_at").single();
   if (error) {
     const fallback = await supabase.from("channel_profiles").upsert({ id: ownerId, owner_id: ownerId, name: profile.name, channel_id: profile.channelId, intro: profile.intro, link_title: nextLinks[0]?.title ?? null, link_url: nextLinks[0]?.url ?? null, updated_at: new Date().toISOString() }).select("name,channel_id,intro,link_title,link_url").single();
     data = fallback.data;
     error = fallback.error;
   }
   if (error) throw error;
-  return { name: data.name, channelId: data.channel_id, intro: data.intro, links: nextLinks, profileImageUrl: data.profile_image_url ?? profile.profileImageUrl ?? null };
+  return { name: data.name, channelId: data.channel_id, intro: data.intro, links: nextLinks, profileImageUrl: data.profile_image_url ?? profile.profileImageUrl ?? null, joinedAt: data.joined_at ?? joinedAt };
 }
 
 export async function uploadChannelProfileImage(file: File): Promise<string> {
