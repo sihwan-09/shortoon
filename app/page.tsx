@@ -16,6 +16,7 @@ import { loadChannelProfile, loadChannelProfileByOwnerId, saveChannelProfile, up
 import { AuthPage } from "./components/AuthPage";
 import { SearchPage } from "./components/SearchPage";
 import { LoginPromptModal } from "./components/LoginPromptModal";
+import { ChannelReportPage } from "./components/ChannelReportPage";
 
 const DEFAULT_CHANNEL_PROFILE: ChannelProfile = { name: "채널명", channelId: "채널 아이디", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null };
 
@@ -25,6 +26,8 @@ export default function Home() {
   const [searchReturnTab, setSearchReturnTab] = useState<"home" | "my" | "channel" | "post" | "liked">("home");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
+  const [channelMenuOpen, setChannelMenuOpen] = useState(false);
+  const [channelReportOpen, setChannelReportOpen] = useState(false);
   const [onboardingEdit, setOnboardingEdit] = useState(false);
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
@@ -96,6 +99,20 @@ export default function Home() {
     window.addEventListener("shorttoon-login-required", showLoginPrompt);
     return () => window.removeEventListener("shorttoon-login-required", showLoginPrompt);
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const openChannelMenu = () => { if (!isViewingOwnChannel) setChannelMenuOpen(true); };
+    window.addEventListener("shorttoon-open-channel-menu", openChannelMenu);
+    return () => window.removeEventListener("shorttoon-open-channel-menu", openChannelMenu);
+  }, [isViewingOwnChannel]);
+
+  useEffect(() => {
+    const handleChannelMenuClick = (event: MouseEvent) => {
+      if (activeTab === "channel" && isAuthenticated && !isViewingOwnChannel && (event.target as Element).closest(".more-button")) setChannelMenuOpen(true);
+    };
+    document.addEventListener("click", handleChannelMenuClick);
+    return () => document.removeEventListener("click", handleChannelMenuClick);
+  }, [activeTab, isAuthenticated, isViewingOwnChannel]);
 
   useEffect(() => {
     const completeOnboarding = () => {
@@ -410,6 +427,8 @@ export default function Home() {
         <button className={`bottom-nav-item ${activeTab === "my" || (activeTab === "channel" && !viewedChannelOwnerId) || activeTab === "channel-intro" || activeTab === "edit" || activeTab === "link-edit" || (activeTab === "post" && postOrigin === "channel" && !viewedChannelOwnerId) ? "is-active" : ""}`} type="button" onClick={() => (activeTab === "upload" || activeTab === "upload-link") ? exitUploadTo("my") : setActiveTab("my")} aria-current={activeTab === "my" || (activeTab === "channel" && !viewedChannelOwnerId) || activeTab === "channel-intro" || activeTab === "edit" || activeTab === "link-edit" || (activeTab === "post" && postOrigin === "channel" && !viewedChannelOwnerId) ? "page" : undefined} aria-label="My page"><span className="my-icon" aria-hidden="true">MY</span></button>
       </nav>
       {(activeTab === "login" || activeTab === "signup") && <AuthPage mode={activeTab} onBack={() => setActiveTab(activeTab === "signup" ? "login" : authReturnTab)} onChangeMode={(mode) => setActiveTab(mode)} onEmailLogin={signInWithEmail} onEmailSignup={signUpWithEmail} onOAuth={signInWithProvider} />}
+      {channelMenuOpen && <div className="sheet-backdrop" role="presentation" onClick={() => setChannelMenuOpen(false)}><aside className="comment-sheet post-menu-sheet" role="dialog" aria-modal="true" aria-label="채널 메뉴" onClick={(event) => event.stopPropagation()}><div className="sheet-handle" /><button className="post-menu-action" type="button" onClick={() => { setChannelMenuOpen(false); setChannelReportOpen(true); }}>채널 신고</button></aside></div>}
+      {channelReportOpen && <ChannelReportPage onClose={() => setChannelReportOpen(false)} />}
       {loginPromptOpen && <LoginPromptModal onClose={() => setLoginPromptOpen(false)} onLogin={() => { setLoginPromptOpen(false); openLogin(); }} />}
     </main>
   );
