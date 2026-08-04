@@ -236,6 +236,7 @@ a { color: inherit; text-decoration: none; }
 .cut-count { font-size: 12px; font-weight: 900; font-variant-numeric: tabular-nums; }
 .action-rail { position: absolute; z-index: 9; right: 16px; bottom: 100px; display: flex; flex-direction: column; gap: 12px; }
 .action-rail a, .action-rail button { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; padding: 0; color: var(--text); background: transparent; border: 0; cursor: pointer; }
+.action-rail .share-action { display: none; }
 .action-rail span { display: grid; width: 44px; height: 44px; place-items: center; background: rgba(17,17,17,.82); border: 1px solid rgba(255,255,255,.18); border-radius: 50%; font-size: 18px; font-weight: 900; backdrop-filter: blur(9px); }
 .action-rail .like-action span { color: rgba(255,255,255,.9); transition: color .2s ease, background .2s ease, transform .2s ease; }
 .action-rail .like-action.liked span { color: var(--like); background: rgba(255,77,109,.16); border-color: rgba(255,77,109,.65); transform: scale(1.06); }
@@ -425,6 +426,7 @@ a { color: inherit; text-decoration: none; }
 .channel-identity > span { color: var(--text-muted); font-size: 12px; }
 .channel-actions { display: flex; width: 100%; gap: 10px; margin: 18px 0 4px; }
 .channel-actions button { flex: 1; min-width: 0; height: 46px; padding: 0 12px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 9px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
+.channel-actions .channel-analysis-button { display: none; }
 .channel-actions button.is-active { color: #111; background: var(--primary); border-color: var(--primary); }
 .channel-actions .channel-follow-button { color: #111; background: var(--primary); border-color: var(--primary); }
 .channel-actions .channel-follow-button.is-following { color: var(--text); background: var(--card); border-color: var(--divider); }
@@ -451,6 +453,8 @@ a { color: inherit; text-decoration: none; }
 .follower-person::before { content: ""; position: absolute; top: 0; left: 6px; width: 10px; height: 10px; border: 2px solid currentColor; border-radius: 50%; }
 .follower-person::after { content: ""; position: absolute; bottom: 0; left: 0; width: 21px; height: 13px; border: 2px solid currentColor; border-bottom: 0; border-radius: 14px 14px 0 0; }
 .channel-tabs { display: grid; grid-template-columns: repeat(2, 1fr); border-bottom: 1px solid var(--divider); }
+.channel-tabs.channel-tabs-single { grid-template-columns: 1fr; }
+.channel-tabs .channel-work-list-tab { display: none; }
 .channel-tabs button { position: relative; min-height: 58px; color: var(--text-muted); background: transparent; border: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .channel-tabs button span { margin-left: 4px; color: inherit; font-size: 12px; font-weight: 500; }
 .channel-tabs button.is-active { color: var(--primary); }
