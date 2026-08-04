@@ -395,7 +395,9 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         horizontalGestureStartX.current = event.clientX;
         horizontalGestureStartY.current = event.clientY;
         horizontalGestureStartIndex.current = feedRef.current ? Math.round(feedRef.current.scrollLeft / feedRef.current.clientWidth) : 0;
-        event.currentTarget.setPointerCapture?.(event.pointerId);
+        // 마우스는 포인터 캡처를 하지 않아 버튼의 일반 click 이벤트가 유지되게 한다.
+        // 터치·펜은 기존처럼 캡처해 한 게시물 단위 스와이프를 안정적으로 처리한다.
+        if (event.pointerType !== "mouse") event.currentTarget.setPointerCapture?.(event.pointerId);
       }} onPointerUp={(event) => {
         const startX = horizontalGestureStartX.current;
         horizontalGestureStartX.current = null;
