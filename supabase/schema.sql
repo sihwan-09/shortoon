@@ -89,19 +89,37 @@ create table if not exists public.post_reports (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
   reporter_id uuid not null references auth.users(id) on delete cascade,
-  category text,
+  category_sexual boolean not null default false,
+  category_violent boolean not null default false,
+  category_hate boolean not null default false,
+  category_harassment boolean not null default false,
+  category_misinformation boolean not null default false,
+  category_spam boolean not null default false,
+  total_report_count integer not null default 0,
+  sexual_report_count integer not null default 0,
+  violent_report_count integer not null default 0,
+  hate_report_count integer not null default 0,
+  harassment_report_count integer not null default 0,
+  misinformation_report_count integer not null default 0,
+  spam_report_count integer not null default 0,
   created_at timestamptz not null default now(),
   unique (post_id, reporter_id)
 );
 
-alter table public.post_reports add column if not exists category text;
-do $$
-begin
-  alter table public.post_reports
-    add constraint post_reports_category_check
-    check (category is null or category in ('sexual', 'violent', 'hate', 'harassment', 'misinformation', 'spam'));
-exception when duplicate_object then null;
-end $$;
+alter table public.post_reports add column if not exists category_sexual boolean not null default false;
+alter table public.post_reports add column if not exists category_violent boolean not null default false;
+alter table public.post_reports add column if not exists category_hate boolean not null default false;
+alter table public.post_reports add column if not exists category_harassment boolean not null default false;
+alter table public.post_reports add column if not exists category_misinformation boolean not null default false;
+alter table public.post_reports add column if not exists category_spam boolean not null default false;
+alter table public.post_reports add column if not exists total_report_count integer not null default 0;
+alter table public.post_reports add column if not exists sexual_report_count integer not null default 0;
+alter table public.post_reports add column if not exists violent_report_count integer not null default 0;
+alter table public.post_reports add column if not exists hate_report_count integer not null default 0;
+alter table public.post_reports add column if not exists harassment_report_count integer not null default 0;
+alter table public.post_reports add column if not exists misinformation_report_count integer not null default 0;
+alter table public.post_reports add column if not exists spam_report_count integer not null default 0;
+alter table public.post_reports drop column if exists category;
 
 alter table public.comments add column if not exists author_id uuid references auth.users(id) on delete set null;
 alter table public.comments add column if not exists parent_id uuid references public.comments(id) on delete cascade;
@@ -113,28 +131,38 @@ create index if not exists comments_author_id_idx on public.comments (author_id)
 create index if not exists comments_parent_id_idx on public.comments (parent_id, created_at desc);
 create index if not exists post_reports_post_id_idx on public.post_reports (post_id, created_at desc);
 create index if not exists post_reports_reporter_id_idx on public.post_reports (reporter_id, created_at desc);
-create index if not exists post_reports_category_idx on public.post_reports (post_id, category);
-
 drop view if exists public.post_report_summary;
 
-create view public.post_report_summary as
-select
-  pr.post_id,
-  p.title as post_title,
-  coalesce(cp.channel_id, '(채널 아이디 없음)') as reported_channel_id,
-  count(*)::integer as report_count,
-  count(*) filter (where pr.category = 'sexual')::integer as sexual_count,
-  count(*) filter (where pr.category = 'violent')::integer as violent_count,
-  count(*) filter (where pr.category = 'hate')::integer as hate_count,
-  count(*) filter (where pr.category = 'harassment')::integer as harassment_count,
-  count(*) filter (where pr.category = 'misinformation')::integer as misinformation_count,
-  count(*) filter (where pr.category = 'spam')::integer as spam_count,
-  min(pr.created_at) as first_reported_at,
-  max(pr.created_at) as last_reported_at
-from public.post_reports pr
-join public.posts p on p.id = pr.post_id
-left join public.channel_profiles cp on cp.owner_id = p.author_id
-group by pr.post_id, p.title, cp.channel_id;
+create or replace function public.refresh_post_report_counts(target_post_id uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  with counts as (
+    select count(*)::integer as total_count,
+      count(*) filter (where category_sexual)::integer as sexual_count,
+      count(*) filter (where category_violent)::integer as violent_count,
+      count(*) filter (where category_hate)::integer as hate_count,
+      count(*) filter (where category_harassment)::integer as harassment_count,
+      count(*) filter (where category_misinformation)::integer as misinformation_count,
+      count(*) filter (where category_spam)::integer as spam_count
+    from public.post_reports where post_id = target_post_id
+  )
+  update public.post_reports pr set total_report_count = counts.total_count,
+    sexual_report_count = counts.sexual_count, violent_report_count = counts.violent_count,
+    hate_report_count = counts.hate_count, harassment_report_count = counts.harassment_count,
+    misinformation_report_count = counts.misinformation_count, spam_report_count = counts.spam_count
+  from counts where pr.post_id = target_post_id;
+end; $$;
+
+create or replace function public.sync_post_report_counts()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  perform public.refresh_post_report_counts(coalesce(new.post_id, old.post_id));
+  return coalesce(new, old);
+end; $$;
+
+drop trigger if exists post_reports_counts_after_change on public.post_reports;
+create trigger post_reports_counts_after_change after insert or delete on public.post_reports
+for each row execute function public.sync_post_report_counts();
 
 create table if not exists public.comment_likes (
   comment_id uuid not null references public.comments(id) on delete cascade,

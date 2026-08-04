@@ -19,7 +19,12 @@ export async function reportPost(postId: string, category: ReportCategory) {
   const { error } = await supabase.from("post_reports").insert({
     post_id: postId,
     reporter_id: userId,
-    category,
+    category_sexual: category === "sexual",
+    category_violent: category === "violent",
+    category_hate: category === "hate",
+    category_harassment: category === "harassment",
+    category_misinformation: category === "misinformation",
+    category_spam: category === "spam",
   });
   if (error) {
     if (error.code === "23505") throw new Error("이미 신고한 게시물입니다.");
