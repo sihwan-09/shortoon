@@ -28,6 +28,7 @@ export default function Home() {
   const [loginPromptOpen, setLoginPromptOpen] = useState(false);
   const [channelMenuOpen, setChannelMenuOpen] = useState(false);
   const [channelReportOpen, setChannelReportOpen] = useState(false);
+  const [channelReportTarget, setChannelReportTarget] = useState("");
   const [onboardingEdit, setOnboardingEdit] = useState(false);
   const [uploadStep, setUploadStep] = useState<1 | 2 | 3>(1);
   const [uploadOrigin, setUploadOrigin] = useState<"home" | "channel">("home");
@@ -427,8 +428,8 @@ export default function Home() {
         <button className={`bottom-nav-item ${activeTab === "my" || (activeTab === "channel" && !viewedChannelOwnerId) || activeTab === "channel-intro" || activeTab === "edit" || activeTab === "link-edit" || (activeTab === "post" && postOrigin === "channel" && !viewedChannelOwnerId) ? "is-active" : ""}`} type="button" onClick={() => (activeTab === "upload" || activeTab === "upload-link") ? exitUploadTo("my") : setActiveTab("my")} aria-current={activeTab === "my" || (activeTab === "channel" && !viewedChannelOwnerId) || activeTab === "channel-intro" || activeTab === "edit" || activeTab === "link-edit" || (activeTab === "post" && postOrigin === "channel" && !viewedChannelOwnerId) ? "page" : undefined} aria-label="My page"><span className="my-icon" aria-hidden="true">MY</span></button>
       </nav>
       {(activeTab === "login" || activeTab === "signup") && <AuthPage mode={activeTab} onBack={() => setActiveTab(activeTab === "signup" ? "login" : authReturnTab)} onChangeMode={(mode) => setActiveTab(mode)} onEmailLogin={signInWithEmail} onEmailSignup={signUpWithEmail} onOAuth={signInWithProvider} />}
-      {channelMenuOpen && <div className="sheet-backdrop" role="presentation" onClick={() => setChannelMenuOpen(false)}><aside className="comment-sheet post-menu-sheet" role="dialog" aria-modal="true" aria-label="채널 메뉴" onClick={(event) => event.stopPropagation()}><div className="sheet-handle" /><button className="post-menu-action" type="button" onClick={() => { setChannelMenuOpen(false); setChannelReportOpen(true); }}>채널 신고</button></aside></div>}
-      {channelReportOpen && <ChannelReportPage onClose={() => setChannelReportOpen(false)} />}
+      {channelMenuOpen && <div className="sheet-backdrop" role="presentation" onClick={() => setChannelMenuOpen(false)}><aside className="comment-sheet post-menu-sheet" role="dialog" aria-modal="true" aria-label="채널 메뉴" onClick={(event) => event.stopPropagation()}><div className="sheet-handle" /><button className="post-menu-action" type="button" onClick={() => { setChannelMenuOpen(false); setChannelReportTarget(displayedChannelProfile.channelId); setChannelReportOpen(true); }}>채널 신고</button></aside></div>}
+      {channelReportOpen && channelReportTarget && <ChannelReportPage channelId={channelReportTarget} onClose={() => { setChannelReportOpen(false); setChannelReportTarget(""); }} />}
       {loginPromptOpen && <LoginPromptModal onClose={() => setLoginPromptOpen(false)} onLogin={() => { setLoginPromptOpen(false); openLogin(); }} />}
     </main>
   );

@@ -10,6 +10,7 @@ export const REPORT_CATEGORIES = [
   { id: "spam", label: "스팸 또는 혼동을 야기하는 콘텐츠" },
 ] as const;
 export type ReportCategory = (typeof REPORT_CATEGORIES)[number]["id"];
+export type ChannelReportCategory = ReportCategory | "impersonation" | "privacy";
 
 export async function reportPost(postId: string, category: ReportCategory) {
   const { data: sessionData } = await supabase.auth.getSession();
@@ -28,6 +29,28 @@ export async function reportPost(postId: string, category: ReportCategory) {
   });
   if (error) {
     if (error.code === "23505") throw new Error("이미 신고한 게시물입니다.");
+    throw error;
+  }
+}
+
+export async function reportChannel(channelId: string, category: ChannelReportCategory) {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const userId = sessionData.session?.user.id;
+  if (!userId) throw new Error("로그인이 필요합니다.");
+  const { error } = await supabase.from("channel_reports").insert({
+    channel_id: channelId,
+    reporter_id: userId,
+    category_sexual: category === "sexual",
+    category_violent: category === "violent",
+    category_hate: category === "hate",
+    category_harassment: category === "harassment",
+    category_misinformation: category === "misinformation",
+    category_spam: category === "spam",
+    category_impersonation: category === "impersonation",
+    category_privacy: category === "privacy",
+  });
+  if (error) {
+    if (error.code === "23505") throw new Error("이미 신고한 채널입니다.");
     throw error;
   }
 }
