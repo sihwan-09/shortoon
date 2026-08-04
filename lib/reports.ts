@@ -1,8 +1,17 @@
 import { supabase } from "./supabase";
 
 export type PostReport = { reporterId: string; channelId: string; createdAt: string };
+export const REPORT_CATEGORIES = [
+  { id: "sexual", label: "성적인 콘텐츠" },
+  { id: "violent", label: "폭력적 또는 혐오스러운 콘텐츠" },
+  { id: "hate", label: "증오 또는 악의적인 콘텐츠" },
+  { id: "harassment", label: "괴롭힘 또는 폭력" },
+  { id: "misinformation", label: "잘못된 정보" },
+  { id: "spam", label: "스팸 또는 혼동을 야기하는 콘텐츠" },
+] as const;
+export type ReportCategory = (typeof REPORT_CATEGORIES)[number]["id"];
 
-export async function reportPost(postId: string) {
+export async function reportPost(postId: string, category: ReportCategory) {
   const { data: sessionData } = await supabase.auth.getSession();
   const userId = sessionData.session?.user.id;
   if (!userId) throw new Error("로그인이 필요합니다.");
@@ -10,6 +19,7 @@ export async function reportPost(postId: string) {
   const { error } = await supabase.from("post_reports").insert({
     post_id: postId,
     reporter_id: userId,
+    category,
   });
   if (error) {
     if (error.code === "23505") throw new Error("이미 신고한 게시물입니다.");

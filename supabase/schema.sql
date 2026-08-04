@@ -89,9 +89,19 @@ create table if not exists public.post_reports (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
   reporter_id uuid not null references auth.users(id) on delete cascade,
+  category text,
   created_at timestamptz not null default now(),
   unique (post_id, reporter_id)
 );
+
+alter table public.post_reports add column if not exists category text;
+do $$
+begin
+  alter table public.post_reports
+    add constraint post_reports_category_check
+    check (category is null or category in ('sexual', 'violent', 'hate', 'harassment', 'misinformation', 'spam'));
+exception when duplicate_object then null;
+end $$;
 
 alter table public.comments add column if not exists author_id uuid references auth.users(id) on delete set null;
 alter table public.comments add column if not exists parent_id uuid references public.comments(id) on delete cascade;
@@ -103,6 +113,7 @@ create index if not exists comments_author_id_idx on public.comments (author_id)
 create index if not exists comments_parent_id_idx on public.comments (parent_id, created_at desc);
 create index if not exists post_reports_post_id_idx on public.post_reports (post_id, created_at desc);
 create index if not exists post_reports_reporter_id_idx on public.post_reports (reporter_id, created_at desc);
+create index if not exists post_reports_category_idx on public.post_reports (post_id, category);
 
 drop view if exists public.post_report_summary;
 
@@ -112,6 +123,12 @@ select
   p.title as post_title,
   coalesce(cp.channel_id, '(채널 아이디 없음)') as reported_channel_id,
   count(*)::integer as report_count,
+  count(*) filter (where pr.category = 'sexual')::integer as sexual_count,
+  count(*) filter (where pr.category = 'violent')::integer as violent_count,
+  count(*) filter (where pr.category = 'hate')::integer as hate_count,
+  count(*) filter (where pr.category = 'harassment')::integer as harassment_count,
+  count(*) filter (where pr.category = 'misinformation')::integer as misinformation_count,
+  count(*) filter (where pr.category = 'spam')::integer as spam_count,
   min(pr.created_at) as first_reported_at,
   max(pr.created_at) as last_reported_at
 from public.post_reports pr

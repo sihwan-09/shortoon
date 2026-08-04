@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { createPostComment, loadPostComments, toggleCommentLike } from "../../lib/comments";
 import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 import { deletePostFromSupabase, loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
-import { loadPostReports, reportPost, type PostReport } from "../../lib/reports";
+import { REPORT_CATEGORIES, reportPost, type ReportCategory } from "../../lib/reports";
 import { loadPostViewCounts, recordPostView } from "../../lib/views";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
@@ -13,15 +13,6 @@ type Comic = { id: number; title: string; creator: string; authorId?: string | n
 type SelectedPost = { id?: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
 type Comment = { id: number | string; comicId: number | string; author: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
 type CommentRestore = { postId: string; commentId?: string; scrollTop?: number };
-const REPORT_CATEGORIES = [
-  "\uC131\uC801\uC778 \uCF58\uD150\uCE20",
-  "\uD3ED\uB825\uC801 \uB610\uB294 \uD610\uC624\uC2A4\uB7EC\uC6B4 \uCF58\uD150\uCE20",
-  "\uC99D\uC624 \uB610\uB294 \uC545\uC758\uC801\uC778 \uCF58\uD150\uCE20",
-  "\uAD34\uB86D\uD798 \uB610\uB294 \uD3ED\uB825",
-  "\uC798\uBABB\uB41C \uC815\uBCF4",
-  "\uC2A4\uD338 \uB610\uB294 \uD63C\uB780\uC744 \uC57C\uAE30\uD558\uB294 \uCF58\uD150\uCE20",
-] as const;
-
 const fallbackComics: Comic[] = [
   { id: 1, title: "Midnight Delivery", creator: "Haru", genre: "Mystery", accent: "#C7FF3D", publisher: "NAVER", fullUrl: "https://comic.naver.com", panels: [
     { id: 1, position: 1, eyebrow: "11:58 PM", line: "The order said: deliver before midnight.", tone: "lime" },
@@ -58,10 +49,9 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
   const [menuComic, setMenuComic] = useState<Comic | null>(null);
   const [menuIsOwner, setMenuIsOwner] = useState(false);
-  const [menuReports, setMenuReports] = useState<PostReport[]>([]);
   const [infoComic, setInfoComic] = useState<Comic | null>(null);
   const [reportComic, setReportComic] = useState<Comic | null>(null);
-  const [reportCategory, setReportCategory] = useState<string | null>(null);
+  const [reportCategory, setReportCategory] = useState<ReportCategory | null>(null);
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
@@ -162,15 +152,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     const { data } = await supabase.auth.getUser();
     const isOwner = Boolean(data.user?.id && comic.authorId && data.user.id === comic.authorId);
     setMenuIsOwner(isOwner);
-    setMenuReports([]);
     setMenuComic(comic);
-    if (isOwner && comic.commentPostId) {
-      try {
-        setMenuReports(await loadPostReports(comic.commentPostId));
-      } catch (error) {
-        console.error("게시물 신고 내역을 불러오지 못했습니다", error);
-      }
-    }
   };
 
   const handlePostMenuAction = async () => {
@@ -190,14 +172,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         console.error("게시물 삭제에 실패했습니다", error);
         window.alert("게시물을 삭제하지 못했습니다.");
       }
-    } else if (menuComic.commentPostId) {
-      try {
-        await reportPost(menuComic.commentPostId);
-        window.alert("게시물 신고가 접수되었습니다.");
-      } catch (error) {
-        console.error("게시물 신고에 실패했습니다", error);
-        window.alert(error instanceof Error ? error.message : "게시물 신고에 실패했습니다.");
-      }
     }
     setMenuComic(null);
   };
@@ -206,7 +180,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     if (!reportComic?.commentPostId || !reportCategory) return;
     setReportSubmitting(true);
     try {
-      await reportPost(reportComic.commentPostId);
+      await reportPost(reportComic.commentPostId, reportCategory);
       setReportComic(null);
       setReportCategory(null);
       window.alert("\uAC8C\uC2DC\uBB3C \uC2E0\uACE0\uAC00 \uC811\uC218\uB418\uC5C8\uC2B5\uB2C8\uB2E4.");
@@ -523,7 +497,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         <aside className="comment-sheet post-menu-sheet" role="dialog" aria-modal="true" aria-label="게시물 메뉴" onClick={(event) => event.stopPropagation()}>
           <div className="sheet-handle" />
           <header><strong>{menuIsOwner ? "게시물 관리" : "게시물 신고"}</strong><button type="button" onClick={() => setMenuComic(null)} aria-label="닫기">×</button></header>
-          {menuIsOwner && <div className="post-report-summary"><strong>신고 {menuReports.length}건</strong>{menuReports.length > 0 ? <ul>{menuReports.map((report) => <li key={`${report.reporterId}-${report.createdAt}`}><span>@{report.channelId}</span><time dateTime={report.createdAt}>{new Date(report.createdAt).toLocaleString("ko-KR")}</time></li>)}</ul> : <p>접수된 신고가 없습니다.</p>}</div>}
           <button className={`post-menu-action ${menuIsOwner ? "danger" : ""}`} type="button" onClick={() => void handlePostMenuAction()}>{menuIsOwner ? "게시물 삭제" : "게시물 신고"}</button>
         </aside>
       </div>}
@@ -532,7 +505,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         <div className="report-page-body">
           <h2>{"\uC5B4\uB5A4 \uBB38\uC81C\uC778\uAC00\uC694?"}</h2>
           <div className="report-category-list">
-            {REPORT_CATEGORIES.map((category) => <button type="button" key={category} className={reportCategory === category ? "selected" : ""} onClick={() => setReportCategory(category)}><span className="report-radio" aria-hidden="true" />{category}</button>)}
+            {REPORT_CATEGORIES.map((category) => <button type="button" key={category.id} className={reportCategory === category.id ? "selected" : ""} onClick={() => setReportCategory(category.id)}><span className="report-radio" aria-hidden="true" />{category.label}</button>)}
           </div>
           <button type="button" className="report-submit" disabled={!reportCategory || reportSubmitting} onClick={() => void submitReport()}>{reportSubmitting ? "\uC811\uC218 \uC911..." : "\uC2E0\uACE0\uD558\uAE30"}</button>
         </div>
