@@ -85,6 +85,8 @@ create table if not exists public.comments (
   deleted_at timestamptz
 );
 
+drop view if exists public.post_report_summary;
+
 create table if not exists public.post_reports (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.posts(id) on delete cascade,
@@ -131,8 +133,6 @@ create index if not exists comments_author_id_idx on public.comments (author_id)
 create index if not exists comments_parent_id_idx on public.comments (parent_id, created_at desc);
 create index if not exists post_reports_post_id_idx on public.post_reports (post_id, created_at desc);
 create index if not exists post_reports_reporter_id_idx on public.post_reports (reporter_id, created_at desc);
-drop view if exists public.post_report_summary;
-
 create or replace function public.refresh_post_report_counts(target_post_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 begin

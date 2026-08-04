@@ -1,6 +1,9 @@
 -- 기존 post_reports를 신고 카테고리/집계 컬럼 구조로 변경합니다.
 -- 새 테이블은 만들지 않습니다. Supabase SQL Editor에서 한 번 실행하세요.
 
+-- category를 참조하는 기존 뷰를 먼저 제거해야 컬럼 삭제가 가능합니다.
+drop view if exists public.post_report_summary;
+
 alter table public.post_reports add column if not exists category_sexual boolean not null default false;
 alter table public.post_reports add column if not exists category_violent boolean not null default false;
 alter table public.post_reports add column if not exists category_hate boolean not null default false;
@@ -93,5 +96,3 @@ begin
   end loop;
 end;
 $$;
-
-drop view if exists public.post_report_summary;
