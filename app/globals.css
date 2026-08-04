@@ -252,6 +252,19 @@ a { color: inherit; text-decoration: none; }
 .comment-sheet > header strong { font-size: 17px; }
 .comment-sheet > header button { width: 36px; height: 36px; color: var(--text); background: #2b2b2e; border: 0; border-radius: 50%; font-size: 24px; cursor: pointer; }
 .post-menu-sheet { max-height: 240px; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+.post-menu-sheet > header { display: none; }
+.report-page { position: fixed; z-index: 70; inset: 0; overflow-y: auto; color: var(--text); background: var(--background); }
+.report-page-header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; min-height: 72px; padding: 0 20px; background: rgba(17,17,17,.96); border-bottom: 1px solid var(--divider); backdrop-filter: blur(14px); }
+.report-page-header strong { font-size: 22px; }
+.report-page-header button { width: 42px; height: 42px; padding: 0; color: var(--text); background: transparent; border: 0; font-size: 34px; line-height: 1; cursor: pointer; }
+.report-page-body { padding: 28px 20px calc(28px + env(safe-area-inset-bottom)); }
+.report-page-body h2 { margin: 0 0 24px; font-size: 22px; }
+.report-category-list { display: grid; gap: 2px; }
+.report-category-list button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 58px; padding: 0; color: var(--text); background: transparent; border: 0; font: inherit; font-size: 15px; text-align: left; cursor: pointer; }
+.report-radio { width: 24px; height: 24px; flex: 0 0 24px; border: 2px solid var(--text); border-radius: 50%; }
+.report-category-list button.selected .report-radio { border: 7px solid var(--primary); }
+.report-submit { width: 100%; min-height: 54px; margin-top: 28px; color: #111; background: var(--primary); border: 0; border-radius: 14px; font: inherit; font-weight: 800; cursor: pointer; }
+.report-submit:disabled { color: var(--text-muted); background: var(--divider); cursor: not-allowed; }
 .post-menu-action { width: 100%; min-height: 48px; margin-top: 16px; color: var(--text); background: #2b2b2e; border: 1px solid var(--divider); border-radius: 10px; font: inherit; font-weight: 800; cursor: pointer; }
 .post-menu-action.danger { color: var(--like); }
 .post-menu-action:hover, .post-menu-action:focus-visible { border-color: var(--text-muted); outline: none; }
