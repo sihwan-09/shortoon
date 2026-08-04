@@ -98,7 +98,7 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     </section>
     <div className="my-stats" aria-label="숏툰 활동">
       <button type="button" className="my-stat-row" onClick={() => window.dispatchEvent(new Event("open-liked-posts"))}><span>좋아요 표시한 작품</span></button>
-      <button type="button" className="my-stat-row"><span>저장한 숏툰</span></button>
+      <button type="button" className="my-stat-row saved-posts-row"><span>저장한 숏툰</span></button>
     </div>
     <div className="my-links"><button type="button">버그 제보</button><button type="button">아이디어 제안</button><button type="button" className="my-links-section-start">이용약관</button><button type="button">개인정보 처리방침</button><button type="button" className="logout-button" onClick={() => setShowLogoutConfirm(true)}>로그아웃</button></div>
     {showLogoutConfirm && <div className="logout-modal-backdrop" role="presentation" onClick={() => !isLoggingOut && setShowLogoutConfirm(false)}>
