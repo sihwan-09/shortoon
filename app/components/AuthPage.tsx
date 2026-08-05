@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 type SignupResult = { message: string | null; success: boolean };
-type AuthPageProps = { mode: "login" | "signup"; onBack: () => void; onChangeMode: (mode: "login" | "signup") => void; onEmailLogin: (email: string, password: string) => Promise<string | null>; onEmailSignup: (email: string, password: string) => Promise<SignupResult>; onOAuth: (provider: "google" | "kakao") => Promise<string | null> };
+type AuthPageProps = { mode: "login" | "signup"; onBack: () => void; onChangeMode: (mode: "login" | "signup") => void; onEmailLogin: (email: string, password: string) => Promise<string | null>; onEmailSignup: (email: string, password: string) => Promise<SignupResult>; onOAuth: (provider: "google" | "kakao") => Promise<string | null>; onOpenTerms: () => void; onOpenPrivacy: () => void };
 
-export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSignup, onOAuth }: AuthPageProps) {
+export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSignup, onOAuth, onOpenTerms, onOpenPrivacy }: AuthPageProps) {
   const isSignup = mode === "signup";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -68,7 +68,14 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
         <label>비밀번호<div className="auth-password"><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} maxLength={13} placeholder={isSignup ? "영문 대소문자 + 숫자 + !, @, #, $, %, ^, &, *, -, _, + 로 8자 이상 입력" : "비밀번호 입력"} autoComplete={isSignup ? "new-password" : "current-password"} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label="비밀번호 표시">{showPassword ? "◉" : "◌"}</button></div></label>
         {isSignup && <label>비밀번호 확인<div className="auth-password"><input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} maxLength={13} placeholder="8자 이상 입력" autoComplete="new-password" /><button type="button" onClick={() => setShowConfirmPassword((value) => !value)} aria-label="비밀번호 확인 표시">{showConfirmPassword ? "◉" : "◌"}</button></div></label>}
         {!isSignup && <button type="button" className="auth-forgot">비밀번호 찾기</button>}
-        {isSignup && <div className="auth-terms">
+        {isSignup && <div className="auth-terms" onClick={(event) => {
+          const clickedButton = (event.target as HTMLElement).closest("button");
+          if (!clickedButton) return;
+          const buttons = Array.from(event.currentTarget.querySelectorAll("button"));
+          const buttonIndex = buttons.indexOf(clickedButton);
+          if (buttonIndex === 1) onOpenTerms();
+          if (buttonIndex === 2) onOpenPrivacy();
+        }}>
           <label className="auth-term all"><input type="checkbox" checked={allTermsChecked} onChange={(event) => setAllTerms(event.target.checked)} />전체 동의</label>
           <label className="auth-term"><input type="checkbox" checked={terms.age} onChange={(event) => setTerms((current) => ({ ...current, age: event.target.checked }))} /><span>[필수] 만 14세 이상입니다.</span><button type="button" aria-label="만 14세 이상 약관 상세">›</button></label>
           <label className="auth-term"><input type="checkbox" checked={terms.service} onChange={(event) => setTerms((current) => ({ ...current, service: event.target.checked }))} /><span>[필수] 이용약관에 동의합니다.</span><button type="button" aria-label="이용약관 상세">›</button></label>
