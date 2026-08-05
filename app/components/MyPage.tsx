@@ -64,17 +64,21 @@ export function MyPage({ onOpenChannel, channelName, channelId, profileImageUrl,
     window.addEventListener("shorttoon-liked-posts", sync);
     const bugReportButton = document.querySelector<HTMLButtonElement>(".my-links > button:first-child");
     const ideaButton = document.querySelector<HTMLButtonElement>(".my-links > button:nth-child(2)");
+    const termsButton = document.querySelector<HTMLButtonElement>(".my-links-section-start");
     const bugReportUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdfbnLEV-MuGF6qEoxbD90kQLmbEhSbfPcKI-3FaZ3mf72wqg/viewform?usp=dialog";
     const ideaUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdUttrfaJqL3ThshpKTl6NU-Iw4hraVvYGeLCJE9mambn-6bw/viewform?usp=publish-editor";
     const openBugReport = () => { window.location.href = bugReportUrl; };
     const openIdeaForm = () => { window.location.href = ideaUrl; };
+    const openTerms = () => { window.dispatchEvent(new Event("shorttoon-open-terms")); };
     bugReportButton?.addEventListener("click", openBugReport);
     ideaButton?.addEventListener("click", openIdeaForm);
+    termsButton?.addEventListener("click", openTerms);
     return () => {
       cancelled = true;
       window.removeEventListener("shorttoon-liked-posts", sync);
       bugReportButton?.removeEventListener("click", openBugReport);
       ideaButton?.removeEventListener("click", openIdeaForm);
+      termsButton?.removeEventListener("click", openTerms);
     };
   }, []);
   return <section className="my-page" aria-label="MY 페이지">
