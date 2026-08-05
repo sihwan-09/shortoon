@@ -349,6 +349,7 @@ a { color: inherit; text-decoration: none; }
 .auth-social.google { color: #111; background: #fff; }
 .auth-social.google { display: none; }
 .auth-social.kakao { color: #191919; background: #fee500; }
+.auth-social.kakao { display: none; }
 .auth-social:disabled { opacity: .55; cursor: wait; }
 .auth-social b { font-size: 20px; font-weight: 900; }
 .auth-social .kakao-mark { display: block; width: 24px; height: 24px; color: transparent; background: transparent url('/kakao-talk.png') center / contain no-repeat; border-radius: 0; font-size: 0; }
