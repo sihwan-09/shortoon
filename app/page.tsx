@@ -175,7 +175,14 @@ export default function Home() {
   const leaveUpload = () => { setUploadLink(null); setActiveTab(uploadOrigin); if (uploadOrigin === "channel") restoreChannelScroll(); };
   const exitUploadTo = (destination: "home" | "my") => { setUploadLink(null); setActiveTab(destination); };
   const openLogin = () => { setAuthReturnTab(activeTab === "my" || activeTab === "channel" || activeTab === "post" ? (activeTab === "post" ? "channel" : activeTab) : "home"); setActiveTab("login"); };
-  const completeAuth = () => { setIsAuthenticated(true); setActiveTab(authReturnTab); };
+  const completeAuth = (userId?: string | null) => {
+    setIsAuthenticated(true);
+    const authenticatedUserId = userId ?? currentUserIdRef.current;
+    const onboardingKey = authenticatedUserId ? `shorttoon-onboarding-complete:${authenticatedUserId}` : null;
+    const requiresOnboarding = Boolean(onboardingKey && !window.localStorage.getItem(onboardingKey));
+    setOnboardingEdit(requiresOnboarding);
+    setActiveTab(requiresOnboarding ? "edit" : authReturnTab);
+  };
   const signOut = async () => {
     if (supabaseConfigured) {
       const { error } = await supabase.auth.signOut();
@@ -205,12 +212,12 @@ export default function Home() {
   };
   const signInWithEmail = async (email: string, password: string): Promise<string | null> => {
     if (!supabaseConfigured) return "Supabase 인증 환경변수가 설정되지 않았습니다.";
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       console.error("이메일 로그인 실패", error);
       return "이메일 또는 비밀번호를 확인해 주세요.";
     }
-    completeAuth();
+    completeAuth(data.user?.id ?? data.session?.user.id ?? null);
     return null;
   };
   const signUpWithEmail = async (email: string, password: string): Promise<{ message: string | null; success: boolean }> => {
@@ -221,7 +228,7 @@ export default function Home() {
       return { message: "회원가입에 실패했습니다. 입력한 이메일을 확인해 주세요.", success: false };
     }
     if (data.session) {
-      completeAuth();
+      completeAuth(data.user?.id ?? data.session.user.id);
       return { message: null, success: true };
     }
     return { message: "가입이 완료되었습니다. 이메일 인증 후 로그인해 주세요.", success: true };
