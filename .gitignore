@@ -41,3 +41,6 @@ next-env.d.ts
 /outputs/
 /work/
 .codex-dev.*.log
+/deploy-stage-kakao-009db98/
+/shorttoon-*.tar.gz
+/supabase/test-fixtures-t1-t31.sql
