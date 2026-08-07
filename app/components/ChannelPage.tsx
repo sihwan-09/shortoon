@@ -6,12 +6,12 @@ import { loadPostsFromSupabase } from "../../lib/posts";
 import { loadFollowedChannelIds, loadFollowerCount, setFollowedChannel } from "../../lib/follows";
 import { ViewCountBadge } from "./ViewCountBadge";
 
-type ChannelPageProps = { onBack: () => void; onEdit: () => void; isOwner?: boolean; isFollowing?: boolean; onFollow?: () => void; channelOwnerId?: string | null };
+type ChannelPageProps = { onBack: () => void; onEdit: () => void; isOwner?: boolean; isAuthenticated?: boolean; isFollowing?: boolean; onFollow?: () => void; channelOwnerId?: string | null };
 type ChannelProfile = { name: string; channelId: string; intro: string; profileImageUrl?: string | null };
 
 type ChannelPost = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; viewCount?: number; isTest?: boolean };
 
-export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, profile, isOwner = true, isFollowing = false, onFollow, channelOwnerId }: ChannelPageProps & { posts: ChannelPost[]; onOpenIntro: () => void; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
+export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, profile, isOwner = true, isAuthenticated = false, isFollowing = false, onFollow, channelOwnerId }: ChannelPageProps & { posts: ChannelPost[]; onOpenIntro: () => void; onOpenPost: (post: ChannelPost, index: number, scrollTop: number) => void; profile: ChannelProfile }) {
   const [activeAction, setActiveAction] = useState<"analytics" | "edit" | null>(null);
   const [viewProfile, setViewProfile] = useState(profile);
   const [viewPosts, setViewPosts] = useState(posts);
@@ -76,7 +76,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
       <button className="channel-intro" type="button" onClick={onOpenIntro} aria-label="소개 전체 보기">
         <p title={viewProfile.intro}>{displayedIntro}</p>
       </button>
-      <div className="channel-actions" onClickCapture={(event) => { if (!viewIsOwner) return; if (document.querySelector(".header-login-floating")) { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new Event("shorttoon-login-required")); } }}>
+      <div className="channel-actions" onClickCapture={(event) => { if (!viewIsOwner || isAuthenticated) return; event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new Event("shorttoon-login-required")); }}>
         {viewIsOwner ? <><button className={`channel-analysis-button ${activeAction === "analytics" ? "is-active" : ""}`} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button><button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button></> : <button className={`channel-follow-button ${viewFollowing ? "is-following" : ""}`} type="button" onClick={async () => { const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId) return; const next = !viewFollowing; setViewFollowing(next); try { await setFollowedChannel(ownerId, next); setFollowerCount((count) => Math.max(0, count + (next ? 1 : -1))); window.dispatchEvent(new Event("shorttoon-followed-channels")); } catch (error) { console.error("팔로우 변경 실패", error); setViewFollowing(!next); } }} aria-pressed={viewFollowing}>{viewFollowing ? "팔로잉" : "팔로우"}</button>}
       </div>
       <div className="channel-tabs channel-tabs-single" role="tablist" aria-label="Channel content">

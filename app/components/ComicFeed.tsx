@@ -31,7 +31,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, initialHomeIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, onSearchGenre, channelName, channelId, profileImageUrl, legacyChannelNames = [], restoreComment, onCommentRestored }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; initialHomeIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; onSearchGenre?: (genre: string) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[]; restoreComment?: CommentRestore | null; onCommentRestored?: () => void }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, initialHomeIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, onSearchGenre, channelName, channelId, profileImageUrl, legacyChannelNames = [], restoreComment, onCommentRestored, isAuthenticated = false }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; initialHomeIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; onSearchGenre?: (genre: string) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[]; restoreComment?: CommentRestore | null; onCommentRestored?: () => void; isAuthenticated?: boolean }) {
   const [comics, setComics] = useState<Comic[]>([]);
   const [feedPage, setFeedPage] = useState(0);
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
@@ -386,7 +386,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       {isHomeFeed && feedError && <div className="feed-state feed-error" role="alert"><p>숏툰을 불러오지 못했습니다.</p><button type="button" onClick={() => void loadFeedPage(0, false)}>다시 시도</button></div>}
       {isHomeFeed && !feedLoading && !feedError && visibleComics.length === 0 && <div className="feed-state" role="status">아직 게시된 숏툰이 없습니다.</div>}
       {selectedPost && onExitPost && <button className="post-view-back" type="button" onClick={() => { onExitPost(); window.dispatchEvent(new Event("shorttoon-post-back")); }} aria-label="이전 페이지로 돌아가기">←</button>}
-      <div ref={feedRef} onClickCapture={(event) => { const target = event.target as HTMLElement; if (!target.closest(".action-rail, .post-kebab, .comic-author, .comic-tag-pill")) return; if (document.querySelector(".header-login-floating")) { event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new Event("shorttoon-login-required")); } }} className={`comic-feed ${selectedPosts?.length ? "channel-feed" : ""} ${isHomeFeed && (feedLoading || feedError || visibleComics.length === 0) ? "feed-content-hidden" : ""}`} onWheel={(event) => {
+      <div ref={feedRef} onClickCapture={(event) => { const target = event.target as HTMLElement; if (isAuthenticated || !target.closest(".action-rail button, .action-rail a, .post-kebab, .comic-author, .comic-title-button, .comic-tag-pill")) return; event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new Event("shorttoon-login-required")); }} className={`comic-feed ${selectedPosts?.length ? "channel-feed" : ""} ${isHomeFeed && (feedLoading || feedError || visibleComics.length === 0) ? "feed-content-hidden" : ""}`} onWheel={(event) => {
         if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) && !event.shiftKey) return;
         event.preventDefault();
         moveOnePost(event.deltaX >= 0 || event.deltaY >= 0 ? 1 : -1);
@@ -523,7 +523,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
               <div><strong>{viewCountOverrides[infoComic.id] ?? infoComic.viewCount ?? 0}</strong><span>조회수</span></div>
               <div><strong>{infoComic.createdAt ? new Date(infoComic.createdAt).toLocaleDateString("ko-KR", { month: "long", day: "numeric" }) : "-"}</strong><span>{infoComic.createdAt ? new Date(infoComic.createdAt).getFullYear() + "년" : "게시일"}</span></div>
             </div>
-            <p className="info-description">{infoComic.description?.trim() || "설명이 없습니다."}</p>
+            <div className="info-description"><p>{infoComic.description?.trim() || "설명이 없습니다."}</p><div className="info-meta-tags">{(infoComic.link ? [infoComic.link] : []).map((link) => <a key={`${link.title}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" onClick={(event) => { if (!isAuthenticated) { event.preventDefault(); window.dispatchEvent(new Event("shorttoon-login-required")); } }}>#{link.title}</a>)}{infoComic.genre.split(" · ").filter(Boolean).map((genre) => <button type="button" key={genre} onClick={() => { if (!isAuthenticated) { window.dispatchEvent(new Event("shorttoon-login-required")); return; } setInfoComic(null); onSearchGenre?.(genre); window.dispatchEvent(new CustomEvent("shorttoon-search-genre", { detail: { genre } })); }}>#{genre}</button>)}</div></div>
           </div>
         </aside>
       </div>}
