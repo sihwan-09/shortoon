@@ -67,7 +67,6 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
         <label>이메일<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="example@email.com" autoComplete="email" /></label>
         <label>비밀번호<div className="auth-password"><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} maxLength={13} placeholder={isSignup ? "영문 대소문자 + 숫자 + !, @, #, $, %, ^, &, *, -, _, + 로 8자 이상 입력" : "비밀번호 입력"} autoComplete={isSignup ? "new-password" : "current-password"} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label="비밀번호 표시">{showPassword ? "◉" : "◌"}</button></div></label>
         {isSignup && <label>비밀번호 확인<div className="auth-password"><input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} maxLength={13} placeholder="8자 이상 입력" autoComplete="new-password" /><button type="button" onClick={() => setShowConfirmPassword((value) => !value)} aria-label="비밀번호 확인 표시">{showConfirmPassword ? "◉" : "◌"}</button></div></label>}
-        {!isSignup && <button type="button" className="auth-forgot">비밀번호 찾기</button>}
         {isSignup && <div className="auth-terms" onClick={(event) => {
           const clickedButton = (event.target as HTMLElement).closest("button");
           if (!clickedButton) return;

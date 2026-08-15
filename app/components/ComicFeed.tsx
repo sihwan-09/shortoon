@@ -9,8 +9,8 @@ import { REPORT_CATEGORIES, reportPost, type ReportCategory } from "../../lib/re
 import { loadPostViewCounts, recordPostView } from "../../lib/views";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string };
-type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
-type SelectedPost = { id?: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
+type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; allowComments?: boolean; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string };
+type SelectedPost = { id?: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; allowComments?: boolean; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string };
 type Comment = { id: number | string; comicId: number | string; author: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
 type CommentRestore = { postId: string; commentId?: string; scrollTop?: number };
 const fallbackComics: Comic[] = [
@@ -98,7 +98,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   }, []);
 
   const isHomeFeed = !selectedPost && !selectedPosts;
-  const toComic = (post: PublishedPost, index: number): Comic => ({ id: Number.parseInt(post.id.replace(/-/g, "").slice(0, 8), 16) || index + 1, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, authorChannelId: post.authorChannelId, authorImageUrl: post.authorImageUrl, genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, commentCount: post.commentCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, imageIndex) => ({ id: index * 100 + imageIndex, position: imageIndex + 1, eyebrow: `${imageIndex + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) });
+  const toComic = (post: PublishedPost, index: number): Comic => ({ id: Number.parseInt(post.id.replace(/-/g, "").slice(0, 8), 16) || index + 1, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, authorChannelId: post.authorChannelId, authorImageUrl: post.authorImageUrl, genre: post.genre, description: post.description, allowComments: post.allowComments, createdAt: post.createdAt, likeCount: post.likeCount, commentCount: post.commentCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, imageIndex) => ({ id: index * 100 + imageIndex, position: imageIndex + 1, eyebrow: `${imageIndex + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) });
   const loadFeedPage = async (page: number, append: boolean) => {
     if (!isHomeFeed || feedRequestRef.current || (!append && page !== 0)) return;
     feedRequestRef.current = true;
@@ -213,7 +213,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
   const selectedPostSetKey = selectedPosts?.map((post) => post.id ?? post.title).join("|") ?? "";
-  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, authorChannelId: post.authorChannelId, authorImageUrl: post.authorImageUrl, genre: post.genre, description: post.description, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
+  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, authorChannelId: post.authorChannelId, authorImageUrl: post.authorImageUrl, genre: post.genre, description: post.description, allowComments: post.allowComments, createdAt: post.createdAt, likeCount: post.likeCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.id, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: `${index + 1} / ${post.imageUrls.length || 1}`, line: post.title, tone: "lime", imageUrl })) })) : comics;
 
   useEffect(() => {
     const postIds = visibleComics.map((comic) => comic.commentPostId).filter((id): id is string => Boolean(id));
@@ -464,7 +464,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
         <aside className="comment-sheet" role="dialog" aria-modal="true" aria-label={`${commentComic.title} 댓글`} onClick={(event) => event.stopPropagation()}>
           <div className="sheet-handle" />
           <header><div aria-hidden="true" /><button type="button" onClick={() => setCommentComic(null)} aria-label="댓글창 닫기">×</button></header>
-          <div className="comment-list">
+          {commentComic.allowComments === false ? <div className="comments-disabled-message">해당 게시물은 댓글이 허용되지 않은 게시물입니다.</div> : <><div className="comment-list">
             {comments.length === 0 && <p className="no-comments">첫 댓글을 남겨보세요.</p>}
             {visibleComments.map((comment) => {
               const hidden = Boolean(comment.isSpoiler) && !revealed.has(comment.id);
@@ -492,7 +492,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             {replyingTo && <div className="replying-to">{replyingTo.authorChannelId ? `@${replyingTo.authorChannelId}` : replyingTo.author}에게 답글 <button type="button" onClick={() => setReplyingTo(null)}>취소</button></div>}
             <textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder={replyingTo ? "답글을 입력하세요" : "댓글을 입력하세요"} maxLength={500} aria-label={replyingTo ? "답글" : "댓글"} required />
             <div><label><input type="checkbox" checked={isSpoiler} onChange={(event) => setIsSpoiler(event.target.checked)} /> 스포일러 포함</label><button type="submit" disabled={submitting}>{submitting ? "등록 중..." : "등록"}</button></div>
-          </form>
+          </form></>}
         </aside>
       </div>}
       {menuComic && <div className="sheet-backdrop" role="presentation" onClick={() => setMenuComic(null)}>

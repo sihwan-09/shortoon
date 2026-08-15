@@ -10,7 +10,7 @@ const MAX_SIZE = 3 * 1024 * 1024;
 const MAX_HEIGHT = 30000;
 const genres = ["로맨스", "판타지", "일상", "액션", "개그", "공포", "스릴러", "순정", "드라마", "시대극", "스포츠", "감성"];
 
-export type PublishedShorttoon = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string; coverFile?: File | null; imageFiles?: File[]; isTest?: boolean };
+export type PublishedShorttoon = { id?: string; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; allowComments?: boolean; createdAt?: string; likeCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string; coverFile?: File | null; imageFiles?: File[]; isTest?: boolean };
 
 export function UploadPage({ onClose, step, onStepChange, onPublish, onAddLink, onEditLink, link, visible = true }: { onClose: () => void; step: UploadStep; onStepChange: (step: UploadStep) => void; onPublish: (post: PublishedShorttoon) => void; onAddLink: () => void; onEditLink: () => void; link?: { title: string; url: string } | null; visible?: boolean }) {
   const [items, setItems] = useState<UploadItem[]>([]);
@@ -24,7 +24,6 @@ export function UploadPage({ onClose, step, onStepChange, onPublish, onAddLink, 
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
   const [allowComments, setAllowComments] = useState(true);
-  const [showFullLink, setShowFullLink] = useState(true);
   const [rightsConfirmed, setRightsConfirmed] = useState([false, false, false]);
   const [publishCooldown, setPublishCooldown] = useState(false);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -86,14 +85,14 @@ export function UploadPage({ onClose, step, onStepChange, onPublish, onAddLink, 
     if (publishCooldown || !coverUrl || !title.trim()) return;
     setPublishCooldown(true);
     window.setTimeout(() => setPublishCooldown(false), 3000);
-    onPublish({ title: title.trim(), description, link: link ?? undefined, coverUrl, coverFile, imageUrls: items.map((item) => item.url), imageFiles: items.map((item) => item.file), genre: selectedGenres.join(" · ") });
+    onPublish({ title: title.trim(), description, allowComments, link: link ?? undefined, coverUrl, coverFile, imageUrls: items.map((item) => item.url), imageFiles: items.map((item) => item.file), genre: selectedGenres.join(" · ") });
   };
 
   const progress = <div className="upload-progress"><span className="progress-label is-active">이미지</span><i className={`progress-line ${step >= 2 ? "is-active" : ""}`} /><span className={`progress-label ${step >= 2 ? "is-active" : ""}`}>정보</span><i className={`progress-line ${step >= 3 ? "is-active" : ""}`} /><span className={`progress-label ${step >= 3 ? "is-active" : ""}`}>게시</span></div>;
 
   if (step === 3) return <section className={`upload-page upload-publish-page${visibilityClass}`} aria-label="숏툰 게시">
     {progress}
-    <div className="upload-section publish-settings-section"><h2>게시 설정</h2><label className="publish-toggle-row"><span>댓글 허용</span><input type="checkbox" checked={allowComments} onChange={(event) => setAllowComments(event.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label><label className="publish-toggle-row"><span>풀버전 링크 표시</span><input type="checkbox" checked={showFullLink} onChange={(event) => setShowFullLink(event.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label></div>
+    <div className="upload-section publish-settings-section"><h2>게시 설정</h2><label className="publish-toggle-row"><span>댓글 허용</span><input type="checkbox" checked={allowComments} onChange={(event) => setAllowComments(event.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label></div>
     <div className="upload-section rights-section"><h2>저작권 및 권리 확인</h2>{["이 콘텐츠를 업로드하고 공개할 권리가 있습니다.", "타인의 저작물을 무단으로 사용하지 않았습니다.", "타 플랫폼 연재 작품인 경우 외부 홍보 권한을 확인했습니다."].map((right, index) => <label className="right-check-row" key={right}><input type="checkbox" checked={rightsConfirmed[index]} onChange={(event) => setRightsConfirmed((current) => current.map((value, itemIndex) => itemIndex === index ? event.target.checked : value))} /><span>{right}</span></label>)}</div>
     <button className="next-upload-button publish-button" type="button" disabled={publishCooldown || !rightsConfirmed.every(Boolean) || !coverUrl || !title.trim()} onClick={publish}>{publishCooldown ? "게시 준비 중..." : "게시하기"}</button>
   </section>;
