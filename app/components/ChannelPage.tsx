@@ -32,7 +32,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
   useEffect(() => {
     document.querySelectorAll<HTMLElement>(".channel-page .channel-thumbnail-grid .channel-thumbnail-tile").forEach((tile, index) => { tile.style.display = index < visiblePostCount ? "" : "none"; });
   }, [viewPosts, visiblePostCount]);
-  useEffect(() => { let cancelled = false; const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId || viewIsOwner) { setViewFollowing(false); return; } void loadFollowedChannelIds().then((ids) => { if (!cancelled) setViewFollowing(ids.includes(ownerId)); }).catch((error) => console.error("팔로우 상태 조회 실패", error)); return () => { cancelled = true; }; }, [channelOwnerId, viewIsOwner]);
+  useEffect(() => { let cancelled = false; const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId || isOwner) { setViewFollowing(false); return; } void loadFollowedChannelIds().then((ids) => { if (!cancelled) setViewFollowing(ids.includes(ownerId)); }).catch((error) => console.error("팔로우 상태 조회 실패", error)); return () => { cancelled = true; }; }, [channelOwnerId, isOwner]);
   useEffect(() => { let cancelled = false; const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); void loadFollowerCount(ownerId).then((count) => { if (!cancelled) setFollowerCount(count); }).catch((error) => console.error("팔로워 수 조회 실패", error)); return () => { cancelled = true; }; }, [channelOwnerId, isOwner, profile.channelId]);
   useEffect(() => {
     const sync = () => setStoredProfileImageUrl(isOwner ? window.localStorage.getItem("shorttoon-profile-image") : (profile.profileImageUrl ?? null));
@@ -41,7 +41,8 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
     return () => window.removeEventListener("shorttoon-profile-image", sync);
   }, [isOwner, profile.profileImageUrl]);
   useEffect(() => {
-    const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner");
+    if (isOwner) { setViewProfile(profile); setViewPosts(posts); setViewIsOwner(true); setStoredProfileImageUrl(profile.profileImageUrl ?? null); return; }
+    const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner");
     if (!ownerId) { setViewProfile(profile); setViewPosts(posts); setViewIsOwner(true); setStoredProfileImageUrl(profile.profileImageUrl ?? null); return; }
     let cancelled = false;
     setViewIsOwner(false);
@@ -56,7 +57,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
       setViewPosts(nextPosts);
     }).catch((error) => console.error("남의 채널 불러오기 실패", error));
     return () => { cancelled = true; };
-  }, [profile, posts, isOwner]);
+  }, [channelOwnerId, profile, posts, isOwner]);
   const firstIntroLine = viewProfile.intro.split(/\r?\n/)[0] ?? "";
   const introHasOverflow = viewProfile.intro.length > firstIntroLine.length;
   const displayedIntro = introHasOverflow ? `${firstIntroLine.trimEnd()}…` : firstIntroLine;
@@ -77,7 +78,7 @@ export function ChannelPage({ onBack, onEdit, onOpenIntro, posts, onOpenPost, pr
         <p title={viewProfile.intro}>{displayedIntro}</p>
       </button>
       <div className="channel-actions" onClickCapture={(event) => { if (!viewIsOwner || isAuthenticated) return; event.preventDefault(); event.stopPropagation(); window.dispatchEvent(new Event("shorttoon-login-required")); }}>
-        {viewIsOwner ? <><button className={`channel-analysis-button ${activeAction === "analytics" ? "is-active" : ""}`} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button><button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button></> : <button className={`channel-follow-button ${viewFollowing ? "is-following" : ""}`} type="button" onClick={async () => { const ownerId = window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId) return; const next = !viewFollowing; setViewFollowing(next); try { await setFollowedChannel(ownerId, next); setFollowerCount((count) => Math.max(0, count + (next ? 1 : -1))); window.dispatchEvent(new Event("shorttoon-followed-channels")); } catch (error) { console.error("팔로우 변경 실패", error); setViewFollowing(!next); } }} aria-pressed={viewFollowing}>{viewFollowing ? "팔로잉" : "팔로우"}</button>}
+        {viewIsOwner ? <><button className={`channel-analysis-button ${activeAction === "analytics" ? "is-active" : ""}`} type="button" onClick={() => setActiveAction("analytics")} aria-pressed={activeAction === "analytics"}>분석</button><button className={activeAction === "edit" ? "is-active" : ""} type="button" onClick={() => { setActiveAction("edit"); onEdit(); }} aria-pressed={activeAction === "edit"}>채널 수정</button></> : <button className={`channel-follow-button ${viewFollowing ? "is-following" : ""}`} type="button" onClick={async () => { const ownerId = channelOwnerId ?? window.sessionStorage.getItem("shorttoon-viewed-channel-owner"); if (!ownerId) return; const next = !viewFollowing; setViewFollowing(next); try { await setFollowedChannel(ownerId, next); setFollowerCount((count) => Math.max(0, count + (next ? 1 : -1))); window.dispatchEvent(new Event("shorttoon-followed-channels")); } catch (error) { console.error("팔로우 변경 실패", error); setViewFollowing(!next); } }} aria-pressed={viewFollowing}>{viewFollowing ? "팔로잉" : "팔로우"}</button>}
       </div>
       <div className="channel-tabs channel-tabs-single" role="tablist" aria-label="Channel content">
         <button className="is-active" type="button" role="tab" aria-selected="true">숏툰 <span>{viewPosts.length}</span></button>

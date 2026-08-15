@@ -30,7 +30,11 @@ export async function setFollowedChannel(ownerId: string, following: boolean): P
 export async function loadFollowerCount(ownerId: string | null): Promise<number> {
   const resolvedOwnerId = ownerId ?? await getCurrentUserId();
   if (!resolvedOwnerId) return 0;
-  const { count, error } = await supabase.from("channel_follows").select("follower_id", { count: "exact", head: true }).eq("following_id", resolvedOwnerId);
-  if (error) throw error;
+  const { data, error } = await supabase.rpc("get_channel_follower_count", { target_owner_id: resolvedOwnerId });
+  if (!error) return Number(data ?? 0);
+
+  console.warn("팔로워 수 집계 함수 호출 실패, 기존 조회 방식으로 재시도합니다.", error);
+  const { count, error: countError } = await supabase.from("channel_follows").select("follower_id", { count: "exact", head: true }).eq("following_id", resolvedOwnerId);
+  if (countError) throw countError;
   return count ?? 0;
 }
