@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-export type PostComment = { id: string; comicId: string; author: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; body: string; isSpoiler: boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
+export type PostComment = { id: string; comicId: string; author: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; replyToOwnerId?: string; replyToChannelId?: string; body: string; isSpoiler: boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
 
 export async function loadPostComments(postId: string): Promise<PostComment[]> {
   const { data, error } = await supabase.from("comments").select("id,post_id,parent_id,author_id,author_name,body,is_spoiler,created_at").eq("post_id", postId).is("deleted_at", null).order("created_at", { ascending: false }).limit(100);
