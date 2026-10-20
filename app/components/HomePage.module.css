@@ -1,0 +1,71 @@
+.home { padding: 22px 20px calc(90px + env(safe-area-inset-bottom)); color: var(--text); }
+.home button { font: inherit; cursor: pointer; }
+.home button:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; }
+.edition { display: flex; justify-content: flex-end; align-items: center; margin-bottom: 18px; color: #92958b; font-size: 9px; letter-spacing: .08em; }
+.hero { position: relative; isolation: isolate; overflow: hidden; padding: 28px 20px 0; background: #e9eddf; border-radius: 4px; color: #182016; }
+.heroCopy { position: relative; z-index: 2; }
+.eyebrow { font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+.hero h1 { margin: 20px 0 16px; font-size: clamp(32px, 9vw, 42px); font-weight: 900; line-height: 1.16; letter-spacing: -.075em; }
+.hero h1 span { position: relative; }
+.hero h1 span::before { position: absolute; z-index: -1; inset: 49% -3px 0; content: ""; background: #c7ff3d; transform: rotate(-3deg); }
+.hero p { margin: 0; font-size: 11px; line-height: 1.8; color: #5c6557; letter-spacing: -.02em; }
+.heroButton { display: inline-flex; align-items: center; gap: 15px; min-height: 42px; margin: 22px 0 30px; padding: 0 13px; border: 0; border-radius: 3px; background: #182016; color: #fff; font-size: 11px !important; font-weight: 700 !important; }
+.heroButton svg { width: 17px; }
+.heroButton:disabled { opacity: .45; cursor: default; }
+.highlightRetry { display: block; padding: 4px 0; border: 0; color: #182016; background: transparent; text-decoration: underline; font-size: 11px !important; }
+.art { position: absolute; z-index: 1; right: -15px; top: 67px; width: 173px; height: 245px; transform: rotate(9deg); }
+.backPage { position: absolute; inset: 10px 12px 24px 4px; padding: 16px; transform: rotate(-13deg); border: 1px solid #172016; background: #c7ff3d; }
+.backPage > span { font-size: 13px; font-weight: 900; line-height: 1.3; }
+.backPage i { display: block; height: 75px; margin-top: 20px; border: 1px solid #172016; }
+.frontPage { position: absolute; inset: 32px -6px 0 28px; overflow: hidden; padding: 12px; border: 1.5px solid #172016; background: #fafaf4; box-shadow: -8px 6px 0 #18201612; }
+.frontPage > img { width: calc(100% + 24px); height: calc(100% + 24px); margin: -12px; object-fit: cover; object-position: top; }
+.artStar { display: block; margin: -8px 0 0 58px; font-size: 42px; }
+.artType { display: block; font-size: 20px; line-height: .95; font-weight: 950; letter-spacing: -.07em; }
+.artType > span { display: block; text-align: right; font-size: 26px; }
+.artBubble { display: block; width: 90px; margin: 9px auto 0; padding: 9px 5px; border: 1px solid #182016; border-radius: 50%; text-align: center; font-size: 11px; font-weight: 700; line-height: 1.3; }
+.artStamp { position: absolute; z-index: 2; left: 0; bottom: 6px; width: 67px; height: 67px; display: grid; align-content: center; border: 1px dashed #182016; border-radius: 50%; background: #c7ff3d; color: #182016; text-align: center; font-size: 10px; transform: rotate(-20deg); }
+.artStamp b { font-size: 8px; margin-top: 5px; }
+.heroFoot { position: relative; z-index: 3; display: flex; justify-content: space-between; gap: 6px; margin: 0 -20px; padding: 13px 14px; border-top: 1px solid #18201622; background: #e9eddf; font-size: 8px; color: #5c6557; }
+.heroFoot > span:last-child { font-size: 7px; letter-spacing: .08em; }
+.latest { margin-top: 36px; }
+.sectionHead { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-bottom: 18px; }
+.sectionHead .eyebrow { color: #92958b; font-size: 8px; }
+.sectionHead h2 { margin: 8px 0 0; font-size: 21px; line-height: 1.3; font-weight: 850; letter-spacing: -.06em; }
+.sectionHead h2 > span { color: var(--primary); }
+.sectionHead > button { display: inline-flex; align-items: center; flex-shrink: 0; gap: 3px; min-height: 32px; padding: 0; background: none; border: 0; color: #aaa; font-size: 10px; }
+.sectionHead svg { width: 14px; }
+.filters { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 9px; margin: 0 -2px 9px; scrollbar-width: thin; }
+.filters > button { flex: 0 0 auto; min-height: 30px; padding: 0 12px; border: 1px solid #34362f; border-radius: 30px; color: #aaa; background: transparent; font-size: 11px; }
+.filters > button[aria-pressed="true"] { color: #182016; background: var(--primary); border-color: var(--primary); }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 23px 12px; }
+.work { min-width: 0; padding: 0; border: 0; color: #fff; background: none; text-align: left; }
+.cover { position: relative; aspect-ratio: 3 / 4; overflow: hidden; border-radius: 4px; background: #262820; }
+.cover > img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; transition: transform .2s; }
+.work:hover .cover > img { transform: scale(1.035); }
+.readMark { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; color: #182016; background: #e9eddf; }
+.readMark svg { width: 15px; }
+.genre { position: absolute; left: 8px; bottom: 8px; padding: 4px 7px; color: #fff; background: #111c; font-size: 9px; border-radius: 2px; }
+.work > strong { display: block; overflow: hidden; margin: 10px 0 4px; font-size: 13px; font-weight: 700; white-space: nowrap; text-overflow: ellipsis; }
+.author { display: block; overflow: hidden; color: #8e9287; font-size: 10px; white-space: nowrap; text-overflow: ellipsis; }
+.noCover { display: block; padding: 20px 14px; color: #c7ff3d; font-size: 26px; font-weight: 900; line-height: .95; letter-spacing: -.06em; }
+.skeleton { aspect-ratio: 3 / 4; background: #22241e; border-radius: 4px; }
+.empty { display: grid; justify-items: center; gap: 10px; padding: 32px 15px; border-block: 1px solid #30322b; color: #aaa; font-size: 12px; text-align: center; }
+.emptySymbol { color: var(--primary); font-size: 30px; font-weight: 300; }
+.empty strong { color: #e9eddf; font-size: 14px; }
+.empty p { margin: 0; color: #8e9287; font-size: 11px; }
+.empty button { display: inline-flex; align-items: center; gap: 12px; min-height: 36px; padding: 0; border: 0; background: none; color: var(--primary); font-size: 11px; }
+.relay { position: relative; overflow: hidden; margin-top: 36px; padding: 22px 20px 0; color: #e9eddf; border: 1px solid #45483b; border-radius: 4px; background: #20251c; }
+.relayLabel { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #c7ff3d; font-size: 9px; font-weight: 700; letter-spacing: .12em; }
+.relayDots { font-size: 5px; letter-spacing: 3px; }
+.relay h2 { position: relative; z-index: 2; margin: 23px 0 12px; font-size: 28px; font-weight: 850; line-height: 1.25; letter-spacing: -.065em; }
+.relay h2 > span { color: var(--primary); }
+.relay p { position: relative; z-index: 2; margin: 0 0 25px; color: #a2aa97; font-size: 11px; line-height: 1.7; }
+.relayBottom { position: relative; z-index: 2; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 -20px; padding: 12px 17px; border-top: 1px solid #45483b; background: #20251c; font-size: 10px; color: #b5bcaa; }
+.relayBottom button { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 50%; color: #182016; background: var(--primary); }
+.relayIllustration { position: absolute; right: -2px; top: 103px; display: flex; align-items: center; transform: rotate(12deg); }
+.relayIllustration > span { display: grid; place-items: center; width: 55px; height: 82px; margin-left: -26px; border: 1px solid #aab599; background: #20251c; font-size: 12px; transform: rotate(-10deg); }
+.relayIllustration > span:last-child { color: #182016; background: #c7ff3d; font-size: 26px; transform: rotate(5deg); }
+.footer { display: flex; flex-direction: column; align-items: center; gap: 9px; margin-top: 35px; color: #72766b; font-size: 10px; }
+.footer > span:last-child { font-size: 8px; letter-spacing: .15em; }
+@media (max-width: 360px) { .home { padding-inline: 16px; } .hero { padding-inline: 16px; } .art { right: -46px; opacity: .8; } .heroCopy { max-width: 205px; } .heroFoot { margin-inline: -16px; } .sectionHead h2 { font-size: 19px; } .relayIllustration { right: -30px; opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .cover > img { transition: none; } }

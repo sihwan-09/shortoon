@@ -55,9 +55,9 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
       {isSignup && <strong>회원가입</strong>}
     </header>
     <div className="auth-scroll">
-      <div className="auth-brand"><span className="brand-logo" role="img" aria-label="숏툰" /></div>
+      <div className="auth-brand"><span className="brand-logo" role="img" aria-label="하이라이툰" /></div>
       <p className="auth-lead">{isSignup ? "새로운 웹툰과 작가를 만나러 가볼까요?" : "다시 만나 반가워요"}</p>
-      <p className="auth-sublead">{isSignup ? "" : "숏툰에서 새로운 작품을 발견해보세요"}</p>
+      <p className="auth-sublead">{isSignup ? "" : "하이라이툰에서 새로운 작품을 발견해보세요"}</p>
       <div className="auth-socials">
         <button type="button" className="auth-social google" disabled={busy} onClick={() => void socialLogin("google")}><b>G</b>{isSignup ? "Google로 가입" : "Google로 로그인"}</button>
         <button type="button" className="auth-social kakao" disabled={busy} onClick={() => void socialLogin("kakao")}><b className="kakao-mark">●</b>{isSignup ? "카카오로 가입" : "카카오로 로그인"}</button>

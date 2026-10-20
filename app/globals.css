@@ -48,17 +48,18 @@ a { color: inherit; text-decoration: none; }
 .brand {
   display: grid;
   place-items: center;
-  width: 68px;
-  height: 40px;
+  width: 140px;
+  height: 44px;
+  flex: 0 0 auto;
   overflow: hidden;
   border-radius: 10px;
 }
 
 .brand-logo {
   display: block;
-  width: 68px;
-  height: 36px;
-  background: url("/shorttoon-logo.png") center / 92px 92px no-repeat;
+  width: 140px;
+  height: 44px;
+  background: url("/hilightoon-logo.png") center / 175px auto no-repeat;
 }
 
 .header-tools { display: flex; align-items: center; gap: 2px; }
@@ -371,7 +372,7 @@ a { color: inherit; text-decoration: none; }
 .auth-back { position: absolute; top: env(safe-area-inset-top); left: 16px; width: 44px; height: 54px; padding: 0; color: var(--text); background: transparent; border: 0; font-size: 30px; font-weight: 300; cursor: pointer; }
 .auth-scroll { width: min(100%, 480px); margin: 0 auto; padding: 34px 24px 42px; overflow-y: auto; text-align: center; }
 .auth-brand { display: grid; place-items: center; height: 58px; margin-bottom: 30px; }
-.auth-brand .brand-logo { width: 92px; height: 52px; background-size: 120px 120px; }
+.auth-brand .brand-logo { width: 200px; height: 58px; background-size: 250px auto; }
 .auth-lead { margin: 0 auto 8px; font-size: 21px; font-weight: 800; letter-spacing: -.04em; }
 .auth-sublead { max-width: 230px; margin: 0 auto 30px; color: var(--text-muted); font-size: 14px; line-height: 1.55; }
 .auth-socials { display: grid; gap: 10px; }
@@ -412,7 +413,8 @@ a { color: inherit; text-decoration: none; }
 .compass-icon { position: relative; display: block; width: 25px; height: 25px; border: 2px solid currentColor; border-radius: 50%; }
 .compass-icon::before { position: absolute; top: 3px; left: 8px; width: 6px; height: 15px; content: ""; background: currentColor; clip-path: polygon(50% 0, 100% 100%, 50% 72%, 0 100%); transform: rotate(35deg); }
 .compass-icon::after { position: absolute; inset: 4px; content: ""; border: 1px solid currentColor; border-radius: 50%; opacity: .45; }
-.bottom-nav-game-placeholder { cursor: default; }
+.bottom-nav-game-placeholder { position: relative; cursor: pointer; }
+.relay-new-badge { position: absolute; top: 0; left: calc(50% + 3px); padding: 2px 5px; border: 2px solid var(--background); border-radius: 5px; color: #111; background: #ff8a3d; font-size: 8px; font-weight: 900; line-height: 1.1; letter-spacing: .02em; pointer-events: none; }
 .gamepad-icon { display: block; width: 34px; height: 25px; overflow: visible; color: currentColor; }
 .plus-icon { display: grid; width: 27px; height: 27px; place-items: center; color: #111; background: var(--primary); border-radius: 50%; font-size: 24px; font-weight: 500; line-height: 1; }
 .my-icon { display: grid; min-width: 30px; height: 24px; place-items: center; color: currentColor; font-size: 13px; font-weight: 900; letter-spacing: -.04em; }
