@@ -566,7 +566,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
                 lastScrollTop.current[comic.id] = element.scrollTop;
               }
             }}>
-              {comic.panels.map((panel, panelIndex) => (
+              {comic.panels.map((panel) => (
                 <section className={`comic-panel tone-${panel.tone} ${comic.commentPostId || comic.isRelay ? "uploaded-panel" : ""}`} key={panel.id}>
                   <div className="panel-art" aria-hidden="true">{panel.imageUrl ? <img className="panel-art-image" src={panel.imageUrl} alt="" loading={comic.commentPostId ? "eager" : "lazy"} /> : <><i /><b /><em /></>}</div>
                   {!comic.isRelay && <div className="panel-copy">
@@ -574,7 +574,6 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
                     <h2>{panel.line}</h2>
                     <em className="post-genre">{comic.genre}</em>
                   </div>}
-                  {panelIndex === 0 && <div className="swipe-tip">Swipe up for next cut</div>}
                 </section>
               ))}
             </div>

@@ -72,7 +72,7 @@ export function HomePage({ relayTopics, onOpenFeed, onOpenPost, onOpenRelay }: P
   const visiblePosts = posts.filter((post) => genre === "전체" || post.genre.split(" · ").includes(genre));
 
   return <div className={styles.home}>
-    <div className={styles.edition}><span>HILIGHTOON</span></div>
+    <div className={styles.edition}><span>HIGHLIGHTOON</span></div>
 
     <section className={styles.hero} aria-labelledby="home-title">
       <div className={styles.heroCopy}>
