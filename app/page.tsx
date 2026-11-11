@@ -25,6 +25,8 @@ import { PrivacyPage } from "./components/PrivacyPage";
 import { loadRelayTopics, saveRelayTopic, appendRelayTopicImage, getRelayTopicParticipationLock, toggleRelayTopicLike, recordRelayTopicView, deleteRelayTopic, RelayTopic, type RelayParticipant } from "../lib/relay";
 
 const DEFAULT_CHANNEL_PROFILE: ChannelProfile = { name: "채널명", channelId: "채널 아이디", intro: "숏툰으로 전하는 짧고 강한 이야기", links: [], profileImageUrl: null };
+const AUTH_RETURN_TAB_KEY = "shorttoon-auth-return-tab";
+const AUTH_RETURN_TABS = new Set(["home", "landing", "my", "channel"]);
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"home" | "landing" | "my" | "channel" | "liked" | "relay" | "relay-list" | "relay-upload" | "relay-join" | "channel-intro" | "edit" | "link-edit" | "upload" | "upload-link" | "post" | "login" | "signup" | "search" | "terms" | "privacy">("landing");
@@ -316,12 +318,14 @@ export default function Home() {
   };
   const signInWithProvider = async (provider: "google" | "kakao"): Promise<string | null> => {
     if (!supabaseConfigured) return "Supabase 인증 환경변수가 설정되지 않았습니다.";
+    window.sessionStorage.setItem(AUTH_RETURN_TAB_KEY, authReturnTab);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: new URL("/auth/callback", window.location.origin).toString() },
     });
     if (error) {
       console.error(`${provider} OAuth 로그인 실패`, error);
+      window.sessionStorage.removeItem(AUTH_RETURN_TAB_KEY);
       return `${provider === "google" ? "Google" : "카카오"} 로그인 설정을 확인해 주세요.`;
     }
     return null;
@@ -381,8 +385,15 @@ export default function Home() {
       setCurrentUserId(data.session?.user.id ?? null);
       setIsAuthenticated(Boolean(data.session));
       const initialKey = data.session?.user.id ? `shorttoon-onboarding-complete:${data.session.user.id}` : null;
-      setOnboardingEdit(Boolean(initialKey && !window.localStorage.getItem(initialKey)));
-      if (initialKey && !window.localStorage.getItem(initialKey)) setActiveTab("edit");
+      const requiresOnboarding = Boolean(initialKey && !window.localStorage.getItem(initialKey));
+      setOnboardingEdit(requiresOnboarding);
+      const pendingReturnTab = window.sessionStorage.getItem(AUTH_RETURN_TAB_KEY);
+      window.sessionStorage.removeItem(AUTH_RETURN_TAB_KEY);
+      if (requiresOnboarding) setActiveTab("edit");
+      else if (data.session && pendingReturnTab && AUTH_RETURN_TABS.has(pendingReturnTab)) {
+        setAuthReturnTab(pendingReturnTab as "home" | "landing" | "my" | "channel");
+        setActiveTab(pendingReturnTab as "home" | "landing" | "my" | "channel");
+      }
       void syncChannelProfile(data.session?.user.id ?? null);
     });
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {

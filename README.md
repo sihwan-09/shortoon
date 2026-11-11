@@ -85,6 +85,14 @@ or enforce explicit server-side membership or allowlist checks.
 Use SIWC for account pages, user-specific dashboards, saved records, and write
 actions tied to the current ChatGPT user. Leave public content anonymous.
 
+## Supabase OAuth configuration
+
+The browser client uses the publishable Supabase key, persists sessions in browser storage, and uses the PKCE flow. OAuth providers return to `/auth/callback`, where the existing client completes the code exchange before returning to the page the user started from.
+
+In Supabase Authentication settings, set the Site URL to the production origin and add an exact Redirect URL for every origin that can serve the app, such as `https://your-production-domain.example/auth/callback` and the local development callback URL. Enable Kakao in Providers and keep the Kakao client secret in Supabase provider settings. Do not add the client secret or a `service_role` key to `.env*`, client code, or public hosting settings.
+
+The implementation does not link or merge an OAuth identity with an existing email or Google identity. If Supabase reports an existing identity conflict, the user must continue with the original sign-in method.
+
 ## Useful Commands
 
 - `npm run dev`: start local development

@@ -15,6 +15,10 @@ export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    flowType: "pkce",
+    // OAuth callbacks use /auth/callback. Keep URL detection enabled for
+    // existing email confirmation links that still return to the Site URL,
+    // while the callback page handles OAuth errors and exchange fallbacks.
+    detectSessionInUrl: (url) => url.pathname !== "/auth/callback",
   },
 });

@@ -380,10 +380,12 @@ a { color: inherit; text-decoration: none; }
 .auth-social.google { color: #111; background: #fff; }
 .auth-social.google { display: none; }
 .auth-social.kakao { color: #191919; background: #fee500; }
-.auth-social.kakao { display: none; }
+.auth-social.kakao { display: flex !important; }
 .auth-social:disabled { opacity: .55; cursor: wait; }
 .auth-social b { font-size: 20px; font-weight: 900; }
 .auth-social .kakao-mark { display: block; width: 24px; height: 24px; color: transparent; background: transparent url('/kakao-talk.png') center / contain no-repeat; border-radius: 0; font-size: 0; }
+.auth-callback-page { min-height: 100dvh; display: grid; place-content: center; gap: 16px; padding: 24px; text-align: center; color: #191919; background: #fff; }
+.auth-callback-page a { color: inherit; font-weight: 700; text-decoration: underline; }
 .auth-divider { display: flex; align-items: center; gap: 12px; margin: 26px 0 22px; color: var(--text-muted); font-size: 12px; }
 .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--divider); }
 .auth-form { display: grid; gap: 15px; text-align: left; }
