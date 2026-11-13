@@ -5,6 +5,20 @@ import { useState } from "react";
 type SignupResult = { message: string | null; success: boolean };
 type AuthPageProps = { mode: "login" | "signup"; onBack: () => void; onChangeMode: (mode: "login" | "signup") => void; onEmailLogin: (email: string, password: string) => Promise<string | null>; onEmailSignup: (email: string, password: string) => Promise<SignupResult>; onOAuth: (provider: "google" | "kakao") => Promise<string | null>; onOpenTerms: () => void; onOpenPrivacy: () => void };
 
+type TermKey = "age" | "service" | "privacy";
+
+const TERM_DETAILS: Record<TermKey, string> = {
+  age: "하이라이툰 회원가입은 만 14세 이상만 가능합니다. 만 14세 미만으로 확인되면 계정과 관련 정보를 삭제하거나 이용을 제한할 수 있습니다.",
+  service: "하이라이툰은 웹툰 작품을 감상하고 게시물, 댓글, 좋아요, 팔로우 등의 기능을 이용하는 서비스입니다. 회원은 정확한 정보를 제공하고 계정을 안전하게 관리해야 하며, 타인의 권리 침해나 불법·혐오·괴롭힘·스팸 등 금지행위를 해서는 안 됩니다.",
+  privacy: "회원가입 시 이메일 주소, 인증 계정 식별자, 비밀번호 인증 정보(비밀번호 원문은 저장하지 않음), 가입 시각을 수집합니다. 계정 인증과 서비스 제공, 부정 이용 방지, 신고·문의 처리 및 법령 준수를 위해 이용하며, 회원 탈퇴 후에도 법령상 보존이나 분쟁 처리에 필요한 정보는 해당 기간 동안 보관할 수 있습니다.",
+};
+
+const TERM_LABELS: Record<TermKey, string> = {
+  age: "[필수] 만 14세 이상입니다.",
+  service: "[필수] 이용약관에 동의합니다.",
+  privacy: "[필수] 개인정보 수집 및 이용에 동의합니다.",
+};
+
 export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSignup, onOAuth, onOpenTerms, onOpenPrivacy }: AuthPageProps) {
   const isSignup = mode === "signup";
   const [email, setEmail] = useState("");
@@ -12,7 +26,8 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [terms, setTerms] = useState({ age: false, service: false, privacy: false, marketing: false });
+  const [terms, setTerms] = useState({ age: false, service: false, privacy: false });
+  const [expandedTerm, setExpandedTerm] = useState<TermKey | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -22,8 +37,8 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
   const canSubmit = isSignup
     ? validSignupEmail && validSignupPassword && password === confirmPassword && requiredTermsAccepted
     : email.trim().length > 0 && password.length > 0;
-  const allTermsChecked = requiredTermsAccepted && terms.marketing;
-  const setAllTerms = (checked: boolean) => setTerms({ age: checked, service: checked, privacy: checked, marketing: checked });
+  const allTermsChecked = requiredTermsAccepted;
+  const setAllTerms = (checked: boolean) => setTerms({ age: checked, service: checked, privacy: checked });
   const submit = async () => {
     setBusy(true);
     setMessage(null);
@@ -67,19 +82,21 @@ export function AuthPage({ mode, onBack, onChangeMode, onEmailLogin, onEmailSign
         <label>이메일<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="example@email.com" autoComplete="email" /></label>
         <label>비밀번호<div className="auth-password"><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} maxLength={13} placeholder={isSignup ? "영문 대소문자 + 숫자 + !, @, #, $, %, ^, &, *, -, _, + 로 8자 이상 입력" : "비밀번호 입력"} autoComplete={isSignup ? "new-password" : "current-password"} /><button type="button" onClick={() => setShowPassword((value) => !value)} aria-label="비밀번호 표시">{showPassword ? "◉" : "◌"}</button></div></label>
         {isSignup && <label>비밀번호 확인<div className="auth-password"><input type={showConfirmPassword ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} maxLength={13} placeholder="8자 이상 입력" autoComplete="new-password" /><button type="button" onClick={() => setShowConfirmPassword((value) => !value)} aria-label="비밀번호 확인 표시">{showConfirmPassword ? "◉" : "◌"}</button></div></label>}
-        {isSignup && <div className="auth-terms" onClick={(event) => {
-          const clickedButton = (event.target as HTMLElement).closest("button");
-          if (!clickedButton) return;
-          const buttons = Array.from(event.currentTarget.querySelectorAll("button"));
-          const buttonIndex = buttons.indexOf(clickedButton);
-          if (buttonIndex === 1) onOpenTerms();
-          if (buttonIndex === 2) onOpenPrivacy();
-        }}>
+        {isSignup && <div className="auth-terms">
           <label className="auth-term all"><input type="checkbox" checked={allTermsChecked} onChange={(event) => setAllTerms(event.target.checked)} />전체 동의</label>
-          <label className="auth-term"><input type="checkbox" checked={terms.age} onChange={(event) => setTerms((current) => ({ ...current, age: event.target.checked }))} /><span>[필수] 만 14세 이상입니다.</span><button type="button" aria-label="만 14세 이상 약관 상세">›</button></label>
-          <label className="auth-term"><input type="checkbox" checked={terms.service} onChange={(event) => setTerms((current) => ({ ...current, service: event.target.checked }))} /><span>[필수] 이용약관에 동의합니다.</span><button type="button" aria-label="이용약관 상세">›</button></label>
-          <label className="auth-term"><input type="checkbox" checked={terms.privacy} onChange={(event) => setTerms((current) => ({ ...current, privacy: event.target.checked }))} /><span>[필수] 개인정보 수집 및 이용에 동의합니다.</span><button type="button" aria-label="개인정보 수집 약관 상세">›</button></label>
-          <label className="auth-term"><input type="checkbox" checked={terms.marketing} onChange={(event) => setTerms((current) => ({ ...current, marketing: event.target.checked }))} /><span>[선택] 새로운 작품과 서비스 소식을 받습니다.</span><button type="button" aria-label="마케팅 수신 약관 상세">›</button></label>
+          {(["age", "service", "privacy"] as const).map((termKey) => {
+            const detailId = `auth-term-detail-${termKey}`;
+            const checkboxId = `auth-term-checkbox-${termKey}`;
+            const isExpanded = expandedTerm === termKey;
+            return <div className="auth-term-group" key={termKey}>
+              <div className="auth-term"><input id={checkboxId} type="checkbox" checked={terms[termKey]} onChange={(event) => setTerms((current) => ({ ...current, [termKey]: event.target.checked }))} /><label htmlFor={checkboxId}>{TERM_LABELS[termKey]}</label><button type="button" aria-expanded={isExpanded} aria-controls={detailId} aria-label={`${TERM_LABELS[termKey]} 상세`} onClick={() => setExpandedTerm((current) => current === termKey ? null : termKey)}>{isExpanded ? "⌄" : "›"}</button></div>
+              {isExpanded && <div className="auth-term-detail" id={detailId}>
+                <p>{TERM_DETAILS[termKey]}</p>
+                {termKey === "service" && <button type="button" className="auth-term-detail-link" onClick={onOpenTerms}>이용약관 전문 보기</button>}
+                {termKey === "privacy" && <button type="button" className="auth-term-detail-link" onClick={onOpenPrivacy}>개인정보 처리방침 전문 보기</button>}
+              </div>}
+            </div>;
+          })}
         </div>}
         {message && <p className="auth-message" role="alert">{message}</p>}
         <button type="submit" className="auth-submit" disabled={!canSubmit || busy}>{busy ? "처리 중..." : isSignup ? "가입하기" : "로그인"}</button>

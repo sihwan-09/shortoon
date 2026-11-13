@@ -401,11 +401,16 @@ a { color: inherit; text-decoration: none; }
 .auth-submit:disabled { opacity: .38; cursor: not-allowed; }
 .auth-message { margin: 2px 0 0; color: var(--warning); font-size: 12px; line-height: 1.45; text-align: center; }
 .auth-terms { display: grid; gap: 11px; margin: 5px 0 2px; }
+.auth-term-group { display: grid; gap: 8px; }
 .auth-term { display: flex; align-items: center; gap: 8px; color: var(--text-muted); font-size: 12px; font-weight: 500; }
 .auth-term input { width: 16px; height: 16px; accent-color: var(--primary); }
 .auth-term.all { padding-bottom: 10px; color: var(--text); border-bottom: 1px solid var(--divider); font-weight: 800; }
-.auth-term span { flex: 1; }
-.auth-term button { padding: 0 3px; color: var(--text-muted); background: transparent; border: 0; font-size: 19px; cursor: pointer; }
+.auth-term > label { flex: 1; cursor: pointer; }
+.auth-term button { width: 24px; height: 24px; padding: 0; color: var(--text-muted); background: transparent; border: 0; font-size: 19px; line-height: 1; cursor: pointer; }
+.auth-term button:hover, .auth-term button:focus-visible { color: var(--primary); }
+.auth-term-detail { margin: -2px 0 2px 24px; padding: 11px 12px; color: var(--text-muted); background: var(--card); border-left: 2px solid var(--primary); border-radius: 0 7px 7px 0; font-size: 11px; line-height: 1.6; }
+.auth-term-detail p { margin: 0; }
+.auth-term-detail-link { margin-top: 8px; padding: 0; color: var(--primary); background: transparent; border: 0; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
 .auth-switch { margin: 28px 0 0; color: var(--text-muted); font-size: 13px; }
 .auth-switch button { margin-left: 5px; padding: 0; color: var(--primary); background: transparent; border: 0; font: inherit; font-weight: 900; cursor: pointer; }
 .home-icon { position: relative; width: 19px; height: 15px; margin-top: 3px; border: 2px solid currentColor; border-top: 0; border-radius: 2px; }
