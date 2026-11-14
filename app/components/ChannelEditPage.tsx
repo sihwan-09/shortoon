@@ -12,6 +12,7 @@ function channelIdError(value: string) { if (value.length < 3 || value.length > 
 export function ChannelEditPage({ onBack, onAddLink, onEditLink, links, profile, onSave, onDraftChange, isOnboarding = false }: Props) {
   const [channelName, setChannelName] = useState(isOnboarding ? "" : profile.name); const [channelId, setChannelId] = useState(isOnboarding ? "" : profile.channelId.toLowerCase()); const [intro, setIntro] = useState(isOnboarding ? "" : profile.intro); const [saving, setSaving] = useState(false); const [pendingProfileImageFile, setPendingProfileImageFile] = useState<File | null>(null); const [profileImagePreview, setProfileImagePreview] = useState(profile.profileImageUrl ?? null); const [duplicateId, setDuplicateId] = useState(false); const [hasEditedChannelId, setHasEditedChannelId] = useState(false);
   useEffect(() => {
+    if (isOnboarding) return;
     setChannelName(isOnboarding ? "" : profile.name);
     setChannelId(isOnboarding ? "" : profile.channelId.toLowerCase());
     setIntro(isOnboarding ? "" : profile.intro);
