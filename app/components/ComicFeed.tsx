@@ -6,12 +6,12 @@ import { createPostComment, loadPostComments, toggleCommentLike } from "../../li
 import { loadUserLikedPostIds, syncPostLike } from "../../lib/likes";
 import { deletePostFromSupabase, loadPublishedPostsPage, type PublishedPost } from "../../lib/posts";
 import { REPORT_CATEGORIES, reportPost, type ReportCategory } from "../../lib/reports";
-import { reportRelayTopic, loadRelayTopicComments, loadRelayTopicCommentCount, createRelayTopicComment, toggleRelayTopicCommentLike, type RelayParticipant } from "../../lib/relay";
+import { reportRelayTopic, loadRelayTopicComments, loadRelayTopicCommentCount, createRelayTopicComment, toggleRelayTopicCommentLike, isRelayTopicActivityExpired, type RelayParticipant } from "../../lib/relay";
 import { loadPostViewCounts, recordPostView } from "../../lib/views";
 
 type Panel = { id: number; position: number; eyebrow: string; line: string; tone: string; imageUrl?: string; relayParticipant?: RelayParticipant | null };
-type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; participantCount?: number; participants?: RelayParticipant[]; pageParticipants?: Array<RelayParticipant | null>; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; allowComments?: boolean; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string; isRelay?: boolean; relayId?: string };
-type SelectedPost = { id?: string; authorId?: string | null; authorChannelId?: string | null; participantCount?: number; participants?: RelayParticipant[]; pageParticipants?: Array<RelayParticipant | null>; authorImageUrl?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; allowComments?: boolean; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string; isRelay?: boolean; relayId?: string };
+type Comic = { id: number; title: string; creator: string; authorId?: string | null; authorChannelId?: string | null; participantCount?: number; participants?: RelayParticipant[]; pageParticipants?: Array<RelayParticipant | null>; authorImageUrl?: string | null; genre: string; accent: string; publisher: string; fullUrl: string; panels: Panel[]; description?: string; allowComments?: boolean; createdAt?: string; relayDays?: number; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; commentPostId?: string; isRelay?: boolean; relayId?: string };
+type SelectedPost = { id?: string; authorId?: string | null; authorChannelId?: string | null; participantCount?: number; participants?: RelayParticipant[]; pageParticipants?: Array<RelayParticipant | null>; authorImageUrl?: string | null; title: string; coverUrl: string; imageUrls: string[]; genre: string; description?: string; allowComments?: boolean; createdAt?: string; relayDays?: number; likeCount?: number; commentCount?: number; viewCount?: number; link?: { title: string; url: string }; authorName?: string; isRelay?: boolean; relayId?: string };
 type Comment = { id: number | string; comicId: number | string; author: string; authorId?: string | null; authorChannelId?: string | null; authorImageUrl?: string | null; replyToOwnerId?: string; replyToChannelId?: string; body: string; isSpoiler: number | boolean; createdAt: number; parentId?: string | null; likeCount: number; likedByMe: boolean; replyCount: number };
 type CommentMentionTarget = { ownerId: string; channelId: string };
 type CommentRestore = { postId?: string; relayId?: string; commentId?: string; scrollTop?: number; body?: string; mentionTarget?: CommentMentionTarget | null };
@@ -51,7 +51,7 @@ const fallbackComics: Comic[] = [
   ]},
 ];
 
-export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, initialHomeIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, onOpenRelayParticipants, onSearchGenre, onRelayLike, onRelayView, onRelayDelete, onRelayJoin, channelName, channelId, profileImageUrl, legacyChannelNames = [], restoreComment, onCommentRestored, isAuthenticated = false }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; initialHomeIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; onOpenRelayParticipants?: (participants: RelayParticipant[], relayId: string) => void; onRelayLike?: (relayId: string, liked: boolean) => Promise<number | null>; onRelayView?: (relayId: string) => Promise<{ counted: boolean; count: number } | null>; onRelayDelete?: (relayId: string) => Promise<void>; onRelayJoin?: (relayId: string) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[]; restoreComment?: CommentRestore | null; onCommentRestored?: () => void; isAuthenticated?: boolean }) {
+export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, initialHomeIndex = 0, onSelectedPostChange, onExitPost, onOpenChannel, onOpenRelayParticipants, onSearchGenre, onRelayLike, onRelayView, onRelayDelete, onRelayJoin, channelName, channelId, profileImageUrl, legacyChannelNames = [], restoreComment, onCommentRestored, isAuthenticated = false }: { selectedPost?: SelectedPost | null; selectedPosts?: SelectedPost[]; selectedPostIndex?: number; initialHomeIndex?: number; onSelectedPostChange?: (index: number) => void; onExitPost?: () => void; onOpenChannel?: (comic: Comic) => void; onOpenRelayParticipants?: (participants: RelayParticipant[], relayId: string) => void; onRelayLike?: (relayId: string, liked: boolean) => Promise<number | null>; onRelayView?: (relayId: string) => Promise<{ counted: boolean; count: number } | null>; onRelayDelete?: (relayId: string) => Promise<void>; onRelayJoin?: (relayId: string, activityExpired?: boolean) => void; channelName?: string; channelId?: string; profileImageUrl?: string | null; legacyChannelNames?: string[]; restoreComment?: CommentRestore | null; onCommentRestored?: () => void; isAuthenticated?: boolean }) {
   const [comics, setComics] = useState<Comic[]>([]);
   const [feedPage, setFeedPage] = useState(0);
   const [feedCurrentIndex, setFeedCurrentIndex] = useState(0);
@@ -70,6 +70,8 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
   const [commentComic, setCommentComic] = useState<Comic | null>(null);
   const [menuComic, setMenuComic] = useState<Comic | null>(null);
   const [menuIsOwner, setMenuIsOwner] = useState(false);
+  const [deleteComic, setDeleteComic] = useState<Comic | null>(null);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const [infoComic, setInfoComic] = useState<Comic | null>(null);
   const [reportComic, setReportComic] = useState<Comic | null>(null);
   const [reportCategory, setReportCategory] = useState<ReportCategory | null>(null);
@@ -186,7 +188,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
     setMenuComic(comic);
   };
 
-  const handlePostMenuAction = async () => {
+  const handlePostMenuAction = () => {
     if (!menuComic) return;
     if (!menuIsOwner && (menuComic.commentPostId || menuComic.relayId)) {
       setReportComic(menuComic);
@@ -194,26 +196,32 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       setMenuComic(null);
       return;
     }
-    if (menuIsOwner && menuComic.isRelay && menuComic.relayId) {
-      try {
-        await onRelayDelete?.(menuComic.relayId);
-        setComics((current) => current.filter((comic) => comic.relayId !== menuComic.relayId));
-        window.dispatchEvent(new Event("shorttoon-post-deleted"));
-      } catch (error) {
-        console.error("릴레이툰 삭제에 실패했습니다", error);
-        window.alert("릴레이툰을 삭제하지 못했습니다.");
-      }
-    } else if (menuIsOwner && menuComic.commentPostId) {
-      try {
-        await deletePostFromSupabase(menuComic.commentPostId);
-        setComics((current) => current.filter((comic) => comic.commentPostId !== menuComic.commentPostId));
-        window.dispatchEvent(new Event("shorttoon-post-deleted"));
-      } catch (error) {
-        console.error("게시물 삭제에 실패했습니다", error);
-        window.alert("게시물을 삭제하지 못했습니다.");
-      }
+    if (menuIsOwner && (menuComic.commentPostId || menuComic.relayId)) {
+      setDeleteComic(menuComic);
+      setMenuComic(null);
     }
-    setMenuComic(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteComic || deleteSubmitting) return;
+    setDeleteSubmitting(true);
+    try {
+      if (deleteComic.isRelay && deleteComic.relayId) {
+        await onRelayDelete?.(deleteComic.relayId);
+        setComics((current) => current.filter((comic) => comic.relayId !== deleteComic.relayId));
+        window.dispatchEvent(new Event("shorttoon-post-deleted"));
+      } else if (deleteComic.commentPostId) {
+        await deletePostFromSupabase(deleteComic.commentPostId);
+        setComics((current) => current.filter((comic) => comic.commentPostId !== deleteComic.commentPostId));
+        window.dispatchEvent(new Event("shorttoon-post-deleted"));
+      }
+      setDeleteComic(null);
+    } catch (error) {
+      console.error("게시물 삭제에 실패했습니다", error);
+      window.alert("게시물을 삭제하지 못했습니다.");
+    } finally {
+      setDeleteSubmitting(false);
+    }
   };
 
   const submitReport = async () => {
@@ -260,7 +268,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
 
   const selectedCollection = selectedPosts?.length ? selectedPosts : selectedPost ? [selectedPost] : [];
   const selectedPostSetKey = selectedPosts?.map((post) => post.id ?? post.title).join("|") ?? "";
-  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, authorChannelId: post.authorChannelId, participantCount: post.participantCount, participants: post.participants, pageParticipants: post.pageParticipants, authorImageUrl: post.authorImageUrl, genre: post.genre, description: post.description, allowComments: post.allowComments, createdAt: post.createdAt, likeCount: post.likeCount, commentCount: post.commentCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.isRelay ? undefined : post.id, isRelay: post.isRelay, relayId: post.relayId, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: post.isRelay ? "" : `${index + 1} / ${post.imageUrls.length || 1}`, line: post.isRelay ? "" : post.title, tone: "lime", imageUrl, relayParticipant: post.pageParticipants?.[index] ?? null })) })) : comics;
+  const visibleComics = selectedCollection.length ? selectedCollection.map((post, postIndex) => ({ id: -1000 - postIndex, title: post.title, creator: post.authorName ?? "시화 작가", authorId: post.authorId, authorChannelId: post.authorChannelId, participantCount: post.participantCount, participants: post.participants, pageParticipants: post.pageParticipants, authorImageUrl: post.authorImageUrl, genre: post.genre, description: post.description, allowComments: post.allowComments, createdAt: post.createdAt, relayDays: post.relayDays, likeCount: post.likeCount, commentCount: post.commentCount, viewCount: post.viewCount, accent: "#C7FF3D", publisher: "", fullUrl: "", link: post.link, commentPostId: post.isRelay ? undefined : post.id, isRelay: post.isRelay, relayId: post.relayId, panels: (post.imageUrls.length ? post.imageUrls : [post.coverUrl]).map((imageUrl, index) => ({ id: -100000 - postIndex * 100 - index, position: index + 1, eyebrow: post.isRelay ? "" : `${index + 1} / ${post.imageUrls.length || 1}`, line: post.isRelay ? "" : post.title, tone: "lime", imageUrl, relayParticipant: post.pageParticipants?.[index] ?? null })) })) : comics;
 
   useEffect(() => {
     const openRelayComment = (event: Event) => {
@@ -532,7 +540,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
       }}>
         {visibleComics.map((comic, comicIndex) => (
           <article className={`comic-column ${comic.commentPostId || comic.isRelay ? "uploaded-comic" : ""} ${isHomeFeed ? "home-comic" : ""}`} data-post-id={comic.commentPostId} data-relay-id={comic.relayId} key={comic.id} aria-label={comic.title}>
-            <button className="more-button post-kebab" type="button" aria-label="게시물 메뉴" onClick={() => void openPostMenu(comic)}>⋮</button>
+            {!reportComic && <button className="more-button post-kebab" type="button" aria-label="게시물 메뉴" onClick={() => void openPostMenu(comic)}>⋮</button>}
             <div className="panel-stack" onScroll={(event) => {
               const element = event.currentTarget;
               if (comic.isRelay) {
@@ -579,7 +587,7 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
             </div>
             <div className="action-rail">
               <button type="button" className={`like-action ${likedComics[comic.id] ? "liked" : ""}`} onClick={() => { const nextLiked = !likedComics[comic.id]; setLikedComics((current) => ({ ...current, [comic.id]: nextLiked })); if (comic.isRelay && comic.relayId) void Promise.resolve(onRelayLike?.(comic.relayId, nextLiked)).then((count) => { if (count !== null && count !== undefined) setLikeCountOverrides((current) => ({ ...current, [comic.id]: count })); }).catch((error) => { console.error("릴레이툰 좋아요 저장 실패", error); setLikedComics((current) => ({ ...current, [comic.id]: !nextLiked })); }); }} aria-label={`${likedComics[comic.id] ? "Unlike" : "Like"} ${comic.title}`} aria-pressed={Boolean(likedComics[comic.id])}><span aria-hidden="true">♥</span><small>{likeCountOverrides[comic.id] ?? comic.likeCount ?? 0}</small></button>
-              <button type="button" onClick={() => openComments(comic)} aria-label={`${comic.title} 댓글 보기`}><span>•••</span><small>{commentCounts[comic.id] ?? comic.commentCount ?? 0}</small></button>{comic.isRelay && <button type="button" className="relay-add-action" onClick={() => comic.relayId && onRelayJoin?.(comic.relayId)} aria-label={`${comic.title} 릴레이 참여`}><span aria-hidden="true">+</span></button>}
+              <button type="button" onClick={() => openComments(comic)} aria-label={`${comic.title} 댓글 보기`}><span>•••</span><small>{commentCounts[comic.id] ?? comic.commentCount ?? 0}</small></button>{comic.isRelay && <button type="button" className="relay-add-action" onClick={() => comic.relayId && onRelayJoin?.(comic.relayId, isRelayTopicActivityExpired(comic.createdAt, comic.relayDays))} aria-label={`${comic.title} 릴레이 참여`}><span aria-hidden="true">+</span></button>}
               <button type="button" className={`save-action ${savedComics[comic.id] ? "saved" : ""}`} onClick={() => setSavedComics((current) => ({ ...current, [comic.id]: !current[comic.id] }))} aria-label={`${savedComics[comic.id] ? "Remove" : "Save"} ${comic.title}`} aria-pressed={Boolean(savedComics[comic.id])}><span className="save-symbol" aria-hidden="true" /><small>저장</small></button>
               <a className="share-action" href={comic.fullUrl} target="_blank" rel="noreferrer" aria-label={`Open full ${comic.title} on ${comic.publisher}`}><span>↗</span><small>공유</small></a>
             </div>
@@ -632,6 +640,16 @@ export function ComicFeed({ selectedPost, selectedPosts, selectedPostIndex = 0, 
           <header><strong>{menuIsOwner ? "게시물 관리" : "게시물 신고"}</strong><button type="button" onClick={() => setMenuComic(null)} aria-label="닫기">×</button></header>
           <button className={`post-menu-action ${menuIsOwner ? "danger" : ""}`} type="button" onClick={() => void handlePostMenuAction()}>{menuIsOwner ? "게시물 삭제" : "게시물 신고"}</button>
         </aside>
+      </div>}
+      {deleteComic && <div className="delete-confirm-backdrop" role="presentation" onClick={() => !deleteSubmitting && setDeleteComic(null)}>
+        <section className="delete-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="delete-confirm-title" aria-describedby="delete-confirm-description" onClick={(event) => event.stopPropagation()}>
+          <h2 id="delete-confirm-title">게시물을 삭제하시겠습니까?</h2>
+          <p id="delete-confirm-description">삭제한 게시물은 복구할 수 없습니다.</p>
+          <div className="delete-confirm-actions">
+            <button type="button" className="delete-confirm-cancel" disabled={deleteSubmitting} onClick={() => setDeleteComic(null)}>취소</button>
+            <button type="button" className="delete-confirm-delete" disabled={deleteSubmitting} onClick={() => void confirmDelete()}>{deleteSubmitting ? "삭제 중..." : "삭제하기"}</button>
+          </div>
+        </section>
       </div>}
       {reportComic && <div className="report-page" role="dialog" aria-modal="true" aria-labelledby="report-page-title">
         <header className="report-page-header"><strong id="report-page-title">{"\uC2E0\uACE0"}</strong><button type="button" onClick={() => { setReportComic(null); setReportCategory(null); }} aria-label={"\uB2EB\uAE30"}>×</button></header>

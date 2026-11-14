@@ -498,6 +498,15 @@ a { color: inherit; text-decoration: none; }
 .logout-modal-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .logout-modal-actions button { height: 44px; border: 0; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
 .logout-modal-actions button:disabled { opacity: .5; cursor: wait; }
+.delete-confirm-backdrop { position: fixed; z-index: 95; inset: 0; display: flex; align-items: center; justify-content: center; padding: 22px; background: rgba(0,0,0,.72); }
+.delete-confirm-modal { width: min(100%, 360px); padding: 26px 20px 18px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.55); text-align: center; }
+.delete-confirm-modal h2 { margin: 0 0 10px; font-size: 18px; font-weight: 800; }
+.delete-confirm-modal p { margin: 0 0 24px; color: var(--text-muted); font-size: 13px; line-height: 1.5; }
+.delete-confirm-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.delete-confirm-actions button { height: 44px; border: 0; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 800; cursor: pointer; }
+.delete-confirm-actions button:disabled { opacity: .5; cursor: wait; }
+.delete-confirm-cancel { color: var(--text); background: var(--divider); }
+.delete-confirm-delete { color: #fff; background: var(--like); }
 
 .relay-notice-backdrop { position: fixed; z-index: 90; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(0,0,0,.72); }
 .relay-notice-modal { position: relative; width: min(100%, 390px); padding: 32px 24px 22px; color: var(--text); background: var(--card); border: 1px solid var(--divider); border-radius: 20px; box-shadow: 0 22px 70px rgba(0,0,0,.55); text-align: center; }

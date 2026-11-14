@@ -5,6 +5,24 @@ import { loadFollowerCount } from "./follows";
 export type RelayParticipant = { ownerId: string; name: string; channelId: string; profileImageUrl: string | null; followerCount: number };
 export type RelayTopic = { id: string; ownerId?: string; ownerName?: string; ownerChannelId?: string; ownerImageUrl?: string | null; participants?: RelayParticipant[]; pageParticipants?: Array<RelayParticipant | null>; title: string; imageUrl: string; imageUrls?: string[]; participantCount?: number; relayDays: number; participantHours: number; commentsEnabled?: boolean; createdAt?: string; likeCount?: number; commentCount?: number; viewCount?: number; likedByMe?: boolean };
 
+const RELAY_DAY_MS = 24 * 60 * 60 * 1000;
+
+export function isRelayTopicActivityExpired(createdAt?: string, relayDays?: number, now = Date.now()) {
+  const startedAt = Date.parse(createdAt ?? "");
+  const activityDays = Number(relayDays);
+  if (!Number.isFinite(startedAt) || !Number.isFinite(activityDays)) return false;
+  return now >= startedAt + activityDays * RELAY_DAY_MS;
+}
+
+export function getRelayTopicActivityLabel(createdAt?: string, relayDays?: number, now = Date.now()) {
+  if (isRelayTopicActivityExpired(createdAt, relayDays, now)) return "종료됨";
+  const activityDays = Number(relayDays);
+  const startedAt = Date.parse(createdAt ?? "");
+  if (!Number.isFinite(startedAt) || !Number.isFinite(activityDays)) return "남은 기간";
+  const remainingDays = Math.max(1, Math.ceil((startedAt + activityDays * RELAY_DAY_MS - now) / RELAY_DAY_MS));
+  return `남은 기간 ${remainingDays}일`;
+}
+
 export async function saveRelayTopic(input: { title: string; imageFile?: File; imageUrl: string; relayDays: number; participantHours: number; allowComments: boolean }) {
   const { data: sessionData } = await supabase.auth.getSession();
   const ownerId = sessionData.session?.user.id;
@@ -106,6 +124,10 @@ export async function appendRelayTopicImage(topicId: string, imageFile: File) {
   const { data: sessionData } = await supabase.auth.getSession();
   const participantId = sessionData.session?.user.id;
   if (!participantId) throw new Error("로그인이 필요합니다.");
+  const { data: activityTopic, error: topicError } = await supabase.from("relay_topics").select("created_at,activity_days").eq("id", topicId).maybeSingle();
+  if (topicError) throw topicError;
+  if (!activityTopic) throw new Error("릴레이툰을 찾을 수 없습니다.");
+  if (isRelayTopicActivityExpired(activityTopic.created_at, activityTopic.activity_days)) throw new Error("이 릴레이툰은 활동 기간이 종료되어 추가 게시물을 등록할 수 없습니다.");
   const entryId = crypto.randomUUID();
   const path = `relay-topics/${topicId}/entries/${entryId}`;
   const { error: uploadError } = await supabase.storage.from("shorttoon-posts").upload(path, imageFile, { contentType: imageFile.type, upsert: false });
